@@ -10,6 +10,8 @@ Google group is bamf-plt-group
 *Describe the language that you plan to implement.*
 
 The language, hereafter referred to as MIDILC (pronounced MIDDLE C, standing for MIDI Language Compiler), allows programmers to compose music.  It compiles into MIDI format and has syntax that is similar to Java, but changes the basic primitives and the meaning of various operators.  The basic primitives are:
+
+
 Number
 	immutable, limited to [-128,128]
 Note 
