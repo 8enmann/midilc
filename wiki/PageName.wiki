@@ -13,7 +13,7 @@ The language, hereafter referred to as MIDILC (pronounced MIDDLE C, standing for
 
 
 Number
-	immutable, limited to [-128,128]
+	immutable, limited to (-128,128)
 Note 
 	immutable
 	stores pitch, volume, and duration
@@ -38,7 +38,7 @@ The MIDILC language allows programmers to algorithmically generate notes, chords
 
 *Describe an interesting, representative program in your language.*
 
-One interesting program that could be implemented in our language is the creation of counterpoints based on a given melody. Given a melody sequence M containing a series of W whole notes N, one could easily manipulate the notes in M to create sequences of counterpoints to the melody. One way to do to so is to use the notes of a chord in the key of each note. First, the user would use library functions such as Major(), Minor(), or implement their own chord-creating method to obtain a chord based on N. Each of these methods should return a Chord object containing the notes of the given chord. Now, the user would call a function that generates an arpeggio from the input chord, separating the notes making up the chord so that they would play sequentially instead of simultaneously. Given these notes, the user could build a new sequence with permutations of the notes, as whole, half, or quarter note as needed, to be the counterpoint for the original melody. Finally, when all the notes of melody M have been used to provide chords, and all the chords have given rise to permutations of notes in the chords, the user would merge the two sequences using brace notation on the earlier sequence (M[0]). Now, when the sequences are written to midi and played back, there will be a counterpoint in addition to the melody. 
+One interesting program that could be implemented in our language is the creation of counterpoints based on a given melody. Given a melody sequence M containing a series of W whole notes N, one could easily manipulate the notes in M to create sequences of counterpoints to the melody. One way to do to so is to use the notes of a chord in the key of each note. First, the user would use library functions such as Major(), Minor(), or implement their own chord-creating method to obtain a chord based on N. Each of these methods should return a Chord object containing the notes of the given chord. Now, the user would call a function that generates an arpeggio from the input chord, separating the notes making up the chord so that they would play sequentially instead of simultaneously. Given these notes, the user could build a new sequence with permutations of the notes, as whole, half, or quarter note as needed, to be the counterpoint for the original melody. Finally, when all the notes of melody M have been used to provide chords, and all the chords have given rise to permutations of notes in the chords, the user would merge the two sequences using brace notation on the earlier sequence (M[[0]]). Now, when the sequences are written to midi and played back, there will be a counterpoint in addition to the melody. 
 
 Give some examples of its syntax and an explanation of what it does.
 
