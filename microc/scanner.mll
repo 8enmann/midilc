@@ -28,7 +28,6 @@ rule token = parse
 | "break"  { BREAK }
 | "&&"	   { AND }
 | "||"	   { OR }
-| "int"    { INT }
 | '.'	   { DOT }
 | ".+" 	   { DOTPLUS }
 | "Number' { NUMBER }
