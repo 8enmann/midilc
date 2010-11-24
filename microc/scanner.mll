@@ -7,12 +7,12 @@ rule token = parse
 | ')'      { RPAREN }
 | '{'      { LBRACE }
 | '}'      { RBRACE }
+| '['      { LBRACKET }
+| ']'	   { RBRACKET }
 | ';'      { SEMI }
 | ','      { COMMA }
 | '+'      { PLUS }
 | '-'      { MINUS }
-| '*'      { TIMES }
-| '/'      { DIVIDE }
 | '='      { ASSIGN }
 | "=="     { EQ }
 | "!="     { NEQ }
@@ -25,7 +25,16 @@ rule token = parse
 | "for"    { FOR }
 | "while"  { WHILE }
 | "return" { RETURN }
+| "break"  { BREAK }
+| "&&"	   { AND }
+| "||"	   { OR }
 | "int"    { INT }
+| '.'	   { DOT }
+| ".+" 	   { DOTPLUS }
+| "Number' { NUMBER }
+| "Chord'  { CHORD }
+| "Sequence" { SEQUENCE }
+| "Void"	 { VOID }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
