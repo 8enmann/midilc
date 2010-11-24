@@ -30,8 +30,8 @@ rule token = parse
 | "||"	   { OR }
 | '.'	   { DOT }
 | ".+" 	   { DOTPLUS }
-| "Number' { NUMBER }
-| "Chord'  { CHORD }
+| "Number" { NUMBER }
+| "Chord"  { CHORD }
 | "Sequence" { SEQUENCE }
 | "Void"	 { VOID }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
