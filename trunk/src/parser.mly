@@ -1,22 +1,24 @@
 %{ open Ast %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
-%token PLUS MINUS TIMES DIVIDE ASSIGN DOTPLUS
+%token PLUS MINUS ASSIGN DOTPLUS DOTMINUS
 %token EQ NEQ LT LEQ GT GEQ
 %token AND OR DOT
-%token NUMBER CHORD SEQUENCE VOID
 %token RETURN IF ELSE FOR WHILE BREAK CONTINUE
 %token <int> LITERAL
 %token <string> ID
+%token <string> NOTELITERAL
+%token <string> TYPE
 %token EOF
 
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
+%left OR
+%left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ
-%left PLUS MINUS
-%left TIMES DIVIDE
+%left PLUS MINUS DOTPLUS DOTMINUS
 
 %start program
 %type <Ast.program> program
@@ -29,30 +31,33 @@ program:
  | program fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
-   ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { fname = $1;
-	 formals = $3;
-	 locals = List.rev $6;
-	 body = List.rev $7 } }
+   TYPE ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+     { { ftype = $1;
+	 fname = $2;
+	 formals = $4;
+	 locals = List.rev $7;
+	 body = List.rev $8 } }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
 formal_list:
-    ID                   { [$1] }
-  | formal_list COMMA ID { $3 :: $1 }
+  TYPE ID                  { [$1 $2] }  /* List pair */
+  | formal_list COMMA TYPE ID { $3 :: $4 :: $1 } /* List pair */
 
 vdecl_list:
     /* nothing */    { [] }
   | vdecl_list vdecl { $2 :: $1 }
+ 
 
 vdecl:
    /* INT ID SEMI { $2 } */
-   SEQUENCE ID SEMI { $2 }
- | CHORD ID SEMI { $2 }
+   TYPE ID SEMI { Create($1, $2) }
    
 
+ /* | CHORD ID ASSIGN LBRACE note_list RBRACE SEMI { Assign_Chord($2, List.rev $5) } */
+   
 stmt_list:
     /* nothing */  { [] }
   | stmt_list stmt { $2 :: $1 }
@@ -74,13 +79,13 @@ expr_opt:
   | expr          { $1 }
 
 expr:
-    LITERAL          { Literal($1) }
+	NOTELITERAL      { NoteLiteral($1) }
+  | LITERAL          { Literal($1) }
   | ID               { Id($1) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr DOTPLUS expr { Binop($1, DotAdd, $3) }
+  | expr DOTMINUS expr { Binop($1, DotMinus, $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
-  | expr TIMES  expr { Binop($1, Mult,  $3) }
-  | expr DIVIDE expr { Binop($1, Div,   $3) }
   | expr EQ     expr { Binop($1, Equal, $3) }
   | expr NEQ    expr { Binop($1, Neq,   $3) }
   | expr LT     expr { Binop($1, Less,  $3) }
