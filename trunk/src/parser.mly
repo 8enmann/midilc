@@ -1,13 +1,13 @@
 %{ open Ast %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET
 %token PLUS MINUS ASSIGN DOTPLUS DOTMINUS
 %token EQ NEQ LT LEQ GT GEQ
 %token AND OR DOT
 %token RETURN IF ELSE FOR WHILE BREAK CONTINUE
 %token <int> LITERAL
 %token <string> ID
-%token <string> NOTELITERAL
+%token <string> NOTE
 %token <string> TYPE
 %token EOF
 
@@ -79,7 +79,7 @@ expr_opt:
   | expr          { $1 }
 
 expr:
-	NOTELITERAL      { NoteLiteral($1) }
+	NOTE      { NoteLiteral($1) }
   | LITERAL          { Literal($1) }
   | ID               { Id($1) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
@@ -94,6 +94,8 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3) }
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
+  | expr LBRACKET LITERAL RBRACKET expr { ElementOp($1, $3, $5) }
+  | expr DOT ID expr { MemberOp($1, $3, $4) }
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
