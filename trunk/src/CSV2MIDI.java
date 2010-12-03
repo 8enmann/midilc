@@ -27,7 +27,7 @@ public class CSV2MIDI{
 		csvFile.fillVector();
 
 		//instrument and timingRes are default.
-		int currentCSVPos=0, timingRes=960, instrument = 0;
+		int timingRes=16, instrument = 1;
 
 		//***** Initialize Sequencer *****
 		try{
@@ -43,11 +43,10 @@ public class CSV2MIDI{
 		   obtain the Track there. This links the Track to the Sequence
 		   automatically.
 		*/
-		Track track = new Track;
-		track =sequence.createTrack();                    //create track
+		Track track = sequence.createTrack();                    //create track
 	
 		ShortMessage sm = new ShortMessage( );
-        sm.setMessage(ShortMessage.PROGRAM_CHANGE, i, instrument, 0);  //put in instrument in this track
+        sm.setMessage(ShortMessage.PROGRAM_CHANGE, instrument, 0);  //put in instrument in this track
 	    track.add(new MidiEvent(sm, 0));
 
 	    // channel/velocity set to default; note/tick/duration will depend on input.
@@ -55,7 +54,7 @@ public class CSV2MIDI{
 		int note=0,tick=0,duration=0;
 
 		//go through each of the following lines and add notes
-		for(;currentCSVPos<csvFile.data.size();){							//loop through rest of CSV file
+		for(int currentCSVPos=0;currentCSVPos<csvFile.data.size();){							//loop through rest of CSV file
 			try{																																			  //check that the current CSV position is an integer
 				tick=Integer.parseInt(csvFile.data.elementAt(currentCSVPos).toString());  //first number is tick
 				currentCSVPos+=2;
@@ -66,11 +65,11 @@ public class CSV2MIDI{
 				track.add(createNoteOnEvent(note,tick,channel,velocity));				//add note to the track
 				track.add(createNoteOffEvent(note,tick+duration,channel));				//add a noteOffEvent to terminate this note
 			}catch(NumberFormatException e){																						//current CSV position not an integer
-				if(csvFile.data.elementAt(currentCSVPos).toString().compareTo("\n")==0){  //if it's a new line
+				/*if(csvFile.data.elementAt(currentCSVPos).toString().compareTo("\n")==0){  //if it's a new line
 					column=0;																																//go back to 1st column
 				}else if(csvFile.data.elementAt(currentCSVPos).toString().compareTo(",")==0){ //if it's just a comma
 					column++;
-				}
+				}*/
 				currentCSVPos++;
 			}
 		}
