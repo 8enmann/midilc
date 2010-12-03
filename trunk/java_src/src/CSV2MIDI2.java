@@ -26,18 +26,8 @@ public class CSV2MIDI{
 		CSV csvFile=new CSV(args[0]);
 		csvFile.fillVector();
 
-		//***** Read in timing resolution. Default instrument (Piano, 0) is used on the single channel. *****
-		int currentCSVPos=0, timingRes=1, instrument = 0;
-
-		//read in timing resolution
-		for(;currentCSVPos<csvFile.data.size();currentCSVPos++)
-			try{																																//check if this is an integer
-				timingRes=Integer.parseInt(csvFile.data.elementAt(currentCSVPos).toString()); //this is the first number, therefore, it's the timing resolution
-				System.out.println("\nTiming Resolution set to "+timingRes+" PPQ\n");  
-				currentCSVPos++;
-				break;
-			}catch(NumberFormatException e){
-			}
+		//instrument and timingRes are default.
+		int currentCSVPos=0, timingRes=960, instrument = 0;
 
 		//***** Initialize Sequencer *****
 		try{
