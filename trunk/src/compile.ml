@@ -10,7 +10,6 @@ type env = {
     local_index    : int StringMap.t; (* FP offset for args, locals *)
   }
 
-
 (* val enum : int -> 'a list -> (int * 'a) list *)
 let rec enum stride n = function
     [] -> []
@@ -28,8 +27,9 @@ let translate (globals, functions) =
   (* Allocate "addresses" for each global variable *)
   let global_indexes = string_map_pairs StringMap.empty (enum 1 0 globals) in
 
-  (* Assign indexes to function names; built-in "print" is special *)
-  let built_in_functions = StringMap.add "print" (-1) StringMap.empty in
+  (* Assign indexes to function names; built-in "play" is special *)
+  let built_in_functions_temp = StringMap.add "play" (-1) StringMap.empty in
+  let built_in_functions = StringMap.add "setTempo" (-2) built_in_functions_temp in
   let function_indexes = string_map_pairs built_in_functions
       (enum 1 1 (List.map (fun f -> f.fname) functions)) in
 
