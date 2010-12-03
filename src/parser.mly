@@ -64,6 +64,8 @@ stmt_list:
 
 stmt:
     expr SEMI { Expr($1) }
+  |	expr LBRACKET LITERAL RBRACKET expr SEMI { ElementOp($1, $3, $5) }
+  | expr DOT ID expr SEMI { MemberOp($1, $3, $4) }
   | RETURN expr SEMI { Return($2) }
   | BREAK SEMI { Break() }
   | CONTINUE SEMI { Continue() }
@@ -94,8 +96,8 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3) }
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
-  | expr LBRACKET LITERAL RBRACKET expr { ElementOp($1, $3, $5) }
-  | expr DOT ID expr { MemberOp($1, $3, $4) }
+  /* | expr LBRACKET LITERAL RBRACKET expr { ElementOp($1, $3, $5) } */
+  /* | expr DOT ID expr { MemberOp($1, $3, $4) } */
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
