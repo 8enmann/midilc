@@ -9,24 +9,7 @@ type env = {
     global_index   : int StringMap.t; (* "Address" for global variables *)
     local_index    : int StringMap.t; (* FP offset for args, locals *)
   }
-  
-type note = {
-    duration : int;
-    pitch : int;
-    }
 
-type chord = {
-    notes : Array;
-    length : int;
-    pitch : int;
-    duration : int;
-    }
-
-type sequence = {
-    chords : Array;
-    length : int;
-    
-    
 
 (* val enum : int -> 'a list -> (int * 'a) list *)
 let rec enum stride n = function
