@@ -1,0 +1,24 @@
+Tests to make:
+play:
+  single note
+  single chord
+  single sequence
+type checking
+adding to sequence
+function call
+recursion
+add
+subtract
+equality (LRM section 5.4.3)
+for
+local scope
+global scope
+if
+if else
+subscripting
+direct selection
+casting up
+equality
+continue
+break
+return
