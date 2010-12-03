@@ -1,5 +1,8 @@
 type bstmt =
-    Lit of int    (* Push a literal *)
+    Num of int    (* Push a literal *)
+  | Cho of int list
+  | Seq of int list list
+  | Not of int * int
   | Drp           (* Discard a value *)
   | Bin of Ast.op (* Perform arithmetic on top of stack *)
   | Lod of int    (* Fetch global variable *)
