@@ -24,16 +24,15 @@ rule token = parse
 | "else"   { ELSE }
 | "for"    { FOR }
 | "while"  { WHILE }
+| "continue" { CONTINUE }
 | "return" { RETURN }
 | "break"  { BREAK }
 | "&&"	   { AND }
 | "||"	   { OR }
 | '.'	   { DOT }
 | ".+" 	   { DOTPLUS }
-| "Number" { NUMBER }
-| "Chord"  { CHORD }
-| "Sequence" { SEQUENCE }
-| "Void"	 { VOID }
+| ["Number" "Note" "Chord" "Sequence" "Void"] as typ { TYPE(typ) }
+| ['A'-'G' 'R']['b' '#']?['0'-'9']?['w' 'h' 'q' 'e' 's']? as note { NOTE(note) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
