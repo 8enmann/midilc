@@ -1,4 +1,4 @@
-type op = Add | Sub |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | DurPlus | DurMinus
+type op = Add | Sub |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | DotPlus | DotMinus
 
 type expr =
     Literal of int
@@ -13,7 +13,8 @@ type stmt =
     Block of stmt list
   | Expr of expr
   | Return of expr
-  | Continue of expr
+  | Break
+  | Continue
   | If of expr * stmt * stmt
   | For of expr * expr * expr * stmt
   | While of expr * stmt
@@ -35,7 +36,7 @@ let rec string_of_expr = function
       string_of_expr e1 ^ " " ^
       (match o with
 	Add -> "+" | Sub -> "-"
-      | DurPlus -> ".+" | DurMinus -> ".-" 
+      | DotPlus -> ".+" | DotMinus -> ".-" 
       | Equal -> "==" | Neq -> "!="
       | Less -> "<" | Leq -> "<=" | Greater -> ">" | Geq -> ">="
       | And -> "&&" | Or -> "||") ^ " " ^
