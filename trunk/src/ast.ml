@@ -1,7 +1,8 @@
-type op = Add | Sub |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | DotPlus | DotMinus
+type op = Add | Sub |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | DotAdd | DotSub
 
 type expr =
     Literal of int
+  | NoteLiteral of string
   | Type of string
   | Id of string
   | Binop of expr * op * expr
@@ -11,15 +12,18 @@ type expr =
 
 type stmt =
     Block of stmt list
+  | MemberOp of expr * string * stmt
+  | ElementOp of expr * int  * stmt
   | Expr of expr
   | Return of expr
-  | Break
   | Continue
+  | Break
   | If of expr * stmt * stmt
   | For of expr * expr * expr * stmt
   | While of expr * stmt
 
 type func_decl = {
+    ftype : string;
     fname : string;
     formals : string list;
     locals : string list;
@@ -36,7 +40,7 @@ let rec string_of_expr = function
       string_of_expr e1 ^ " " ^
       (match o with
 	Add -> "+" | Sub -> "-"
-      | DotPlus -> ".+" | DotMinus -> ".-" 
+      | DotAdd -> ".+" | DotSub -> ".-" 
       | Equal -> "==" | Neq -> "!="
       | Less -> "<" | Leq -> "<=" | Greater -> ">" | Geq -> ">="
       | And -> "&&" | Or -> "||") ^ " " ^
