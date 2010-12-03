@@ -5,6 +5,25 @@ module NameMap = Map.Make(struct
   let compare x y = Pervasives.compare x y
 end)
 
+type note = {
+    duration : int;
+    pitch : int;
+    }
+
+type chord = {
+    notes : Array;
+    length : int;
+    pitch : int;
+    duration : int;
+    }
+
+type sequence = {
+    chords : Array;
+    length : int;
+    current : int;
+    beginning : int;
+    }
+    
 exception ReturnException of int * int NameMap.t
 
 (* Main entry point: run a program *)
