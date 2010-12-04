@@ -1,20 +1,20 @@
 type bstmt =
-    Num of int    (* Push a literal *)
-  | Cho of int list
+    Num of int list list    (* Push a literal *)
+  | Cho of int list list    (* Push a Chord *)
   | Seq of int list list
-  | Not of int * int
-  | Drp           (* Discard a value *)
-  | Bin of Ast.op (* Perform arithmetic on top of stack *)
-  | Lod of int    (* Fetch global variable *)
-  | Str of int    (* Store global variable *)
-  | Lfp of int    (* Load frame pointer relative *)
-  | Sfp of int    (* Store frame pointer relative *)
-  | Jsr of int    (* Call function by absolute address *)
-  | Ent of int    (* Push FP, FP -> SP, SP += i *)
-  | Rts of int    (* Restore FP, SP, consume formals, push result *)
-  | Beq of int    (* Branch relative if top-of-stack is zero *)
-  | Bne of int    (* Branch relative if top-of-stack is non-zero *)
-  | Bra of int    (* Branch relative *)
+  | Not of int list list
+  | Drp of int list list    (* Discard a value *)
+  | Bin of Ast.op           (* Perform arithmetic on top of stack *)
+  | Lod of int list list    (* Fetch global variable *)
+  | Str of int list list    (* Store global variable *)
+  | Lfp of int list list    (* Load frame pointer relative *)
+  | Sfp of int list list    (* Store frame pointer relative *)
+  | Jsr of int list list    (* Call function by absolute address *)
+  | Ent of int list list    (* Push FP, FP -> SP, SP += i *)
+  | Rts of int list list    (* Restore FP, SP, consume formals, push result *)
+  | Beq of int list list    (* Branch relative if top-of-stack is zero *)
+  | Bne of int list list    (* Branch relative if top-of-stack is non-zero *)
+  | Bra of int list list    (* Branch relative *)
   | Hlt           (* Terminate *)
 
 type prog = {
