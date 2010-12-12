@@ -29,33 +29,33 @@
 
 program:
    /* nothing */ { [], [] }
- | program vdecl { ($2 @ fst $1), snd $1 }
+ | program vdecl { ($2 :: fst $1), snd $1 }
  | program fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
-   TYPE ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
-     { { ftype = $1;
-	 fname = $2;
-	 formals = $4;
-	 locals = List.rev $7;
-	 body = List.rev $8 } }
+    ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+     { {
+	 fname = $1;
+	 formals = $3;
+	 locals = List.rev $6;
+	 body = List.rev $7 } }
 
 formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
 formal_list:
-  TYPE ID                  { [$1;$2]  }  /* List pair */
-  | formal_list COMMA TYPE ID { [$3; $4] @ $1 } /* List pair */
+  ID                  { [$1]  }  /* List pair */
+  | formal_list COMMA ID { $3 :: $1 } /* List pair */
 
 vdecl_list:
     /* nothing */    { [] }
-  | vdecl_list vdecl { $2 @ $1 }
+  | vdecl_list vdecl { $2 :: $1 }
  
 
 vdecl:
    /* INT ID SEMI { $2 } */
-   TYPE ID SEMI { [$1; $2] }
+   TYPE ID SEMI { $2 }
     
 stmt_list:
     /* nothing */  { [] }

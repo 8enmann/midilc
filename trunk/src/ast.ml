@@ -24,7 +24,6 @@ type stmt =
   | While of expr * stmt
 
 type func_decl = {
-    ftype : string;
     fname : string;
     formals : string list;
     locals : string list;
