@@ -1,7 +1,7 @@
 type bstmt =
     Num of int              (* Push a literal *)
-  | Cho of int list         (* Push a Chord *)
-  | Seq of int list list    (* Push a sequence *)
+  | Cho of int list         (* Push a Chord [len; dur; start; p; p; p...] *)
+  | Seq of int list list    (* Push a sequence [[cur;len];[cho];[cho]...] *)
   | Not of (int * int)      (* Push a Note (pitch, duration) *)
   | Ele                     (* access an element of a sequence *)
   | Cst of string
