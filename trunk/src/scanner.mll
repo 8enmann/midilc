@@ -32,6 +32,7 @@ rule token = parse
 | '.'	   { DOT }
 | ".+" 	   { DOTPLUS }
 | ".-"     { DOTMINUS }
+| "duration" | "pitch" | "length" | "current" | "beginning" as s { SELECT(s) }
 | "Number" | "Note" | "Chord" | "Sequence" | "Void" as typ  { TYPE(typ) }
 | ['A'-'G' 'R']['b' '#']?['0'-'9']?['w' 'h' 'q' 'e' 's']? as note { NOTE(note) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
