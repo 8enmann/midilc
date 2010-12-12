@@ -1,4 +1,4 @@
-type action = Ast | Interpret | Bytecode | Compile
+type action = Ast | Bytecode | Compile
 
 (** find out how to call java from inside ml? *)
 
