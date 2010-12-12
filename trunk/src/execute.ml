@@ -18,17 +18,13 @@ let execute_prog prog =
   and globals = Array.make prog.num_globals 0 in
 
   let rec exec fp sp pc = match prog.text.(pc) with
-    Lit i  -> stack.(sp) <- i ; exec fp (sp+1) (pc+1)
+    Num i  -> stack.(sp) <- i ; exec fp (sp+1) (pc+1)
   | Drp    -> exec fp (sp-1) (pc+1)
   | Bin op -> let op1 = stack.(sp-2) and op2 = stack.(sp-1) in     
       stack.(sp-2) <- (let boolean i = if i then 1 else 0 in
       match op with
-	(*Add     -> op1 + op2 *)
-	Add		  -> [op1.(1).(1) + op2.(1).(1)] :: [op1.(1).(2)] (* For a note *)
-      (*| Sub     -> op1 - op2*)
-	Sub		  -> [op1.(1).(1) - op2.(1).(1)] :: [op1.(1).(2)] (* For a note *)  
-      | Mult    -> op1 * op2
-      | Div     -> op1 / op2
+	      Add		  -> op1 + op2
+      | Sub     -> op1 - op2
       | Equal   -> boolean (op1 =  op2)
       | Neq     -> boolean (op1 != op2)
       | Less    -> boolean (op1 <  op2)
