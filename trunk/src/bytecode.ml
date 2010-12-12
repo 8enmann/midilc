@@ -2,8 +2,9 @@ type bstmt =
     Num of int              (* Push a literal *)
   | Cho of int list         (* Push a Chord *)
   | Seq of int list list    (* Push a sequence *)
-  | Not of (int * int)      (* Push a Note *)
+  | Not of (int * int)      (* Push a Note (pitch, duration) *)
   | Ele                     (* access an element of a sequence *)
+  | Cst of string
   | Mem of string   (* access a member of a data type using the field name *)
   | Drp                     (* Discard a value *)
   | Bin of Ast.op           (* Perform arithmetic on top of stack *)
@@ -24,19 +25,20 @@ type prog = {
     text : bstmt array; (* Code for all the functions *)
   }
   
-let rec print_list l s = match l
+let rec string_of_list l s = match l
   with [] -> s ^ "]"
-  | head :: tail -> print_list tail (s ^ (string_of_int head) ^ ";")
+  | head :: tail -> string_of_list tail (s ^ (string_of_int head) ^ ";")
   
-let rec print_list_list l s = match l
+let rec string_of_list_list l s = match l
   with [] -> s ^ "]"
-  | head :: tail -> print_list_list tail (s ^ (print_list head "[") ^ ";")
+  | head :: tail -> string_of_list_list tail (s ^ (string_of_list head "[") ^ ";")
 
 let string_of_stmt = function
     Num(i) -> "Num " ^ string_of_int i
   | Not(i,j) -> "Not " ^ "(" ^ string_of_int i ^ "," ^ string_of_int j ^ ")"
-  | Cho(l) -> "Cho " ^ (print_list l "[")
-  | Seq(s) -> "Seq " ^ (print_list_list s "[")
+  | Cho(l) -> "Cho " ^ (string_of_list l "[")
+  | Seq(s) -> "Seq " ^ (string_of_list_list s "[")
+  | Cst(t) -> "Cst " ^ t
   | Drp -> "Drp"
   | Bin(Ast.Add) -> "Add"
   | Bin(Ast.Sub) -> "Sub"
