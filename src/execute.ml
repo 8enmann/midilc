@@ -19,6 +19,12 @@ let execute_prog prog =
 
   let rec exec fp sp pc = match prog.text.(pc) with
     Num i  -> stack.(sp) <- (Num(i)) ; exec fp (sp+1) (pc+1)
+  | Mem s  -> raise (Failure ("not implemented yet"))
+  | Cst s  -> raise (Failure ("not implemented yet"))
+  | Not (p, d) -> stack.(sp) <- (Not(p,d)) ; exec fp (sp+1) (pc+1)
+  | Cho (l) -> raise (Failure ("not implemented yet"))
+  | Seq (ll) -> raise (Failure ("not implemented yet"))
+  | Ele    -> raise (Failure ("not implemented yet"))
   | Drp    -> exec fp (sp-1) (pc+1)
   | Bin op -> let opA = stack.(sp-2) and opB = stack.(sp-1) in     
       stack.(sp-2) <- (let boolean i = if i then Num(1) else Num(0) in
