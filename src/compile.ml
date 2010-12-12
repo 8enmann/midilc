@@ -67,7 +67,7 @@ let translate (globals, functions) =
 
   (* Assign indexes to function names; built-in "play" is special *)
   let built_in_functions_temp = StringMap.add "play" (-1) StringMap.empty in
-  let built_in_functions = StringMap.add "setTempo" (-2) built_in_functions_temp in
+  let built_in_functions = StringMap.add "set_tempo" (-2) built_in_functions_temp in
   let function_indexes = string_map_pairs built_in_functions
       (enum 1 1 (List.map (fun f -> f.fname) functions)) in
 
@@ -88,7 +88,7 @@ let translate (globals, functions) =
 	  (try [Lfp (StringMap.find s env.local_index)]
           with Not_found -> try [Lod (StringMap.find s env.global_index)]
           with Not_found -> raise (Failure ("undeclared variable " ^ s)))
-      | Type t -> raise (Failure ("why is type an expression?"))
+      | Cast (t, s) -> expr (Id(s)) @ [Cst t]
       (* probably need to do type checking here *)
       | Binop (e1, op, e2) -> expr e1 @ expr e2 @ [Bin op]
       (* check that expr is of type Number *)

@@ -1,9 +1,9 @@
 %{ open Ast %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET CAST
 %token PLUS MINUS ASSIGN DOTPLUS DOTMINUS
 %token EQ NEQ LT LEQ GT GEQ
-%token AND OR DOT
+%token AND OR DOT AS
 %token RETURN IF ELSE FOR WHILE BREAK CONTINUE
 %token <int> LITERAL
 %token <string> ID
@@ -15,6 +15,7 @@
 %nonassoc NOELSE
 %nonassoc ELSE
 %right ASSIGN
+%left AS
 %left OR
 %left AND
 %left EQ NEQ
@@ -82,6 +83,7 @@ expr:
   | ID               { Id($1) }
   | ID LBRACKET expr RBRACKET { ElementOp($1, $3) }
   | ID DOT SELECT { MemberOp($1, $3) }
+  | ID AS TYPE { Cast($3, $1) }
   | expr DOTPLUS expr { Binop($1, DotAdd, $3) }
   | expr DOTMINUS expr { Binop($1, DotSub, $3) }
   | expr PLUS   expr { Binop($1, Add,   $3) }

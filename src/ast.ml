@@ -4,7 +4,7 @@ type expr =
     Literal of int
   | NoteLiteral of string
   (** add chord literal here *)
-  | Type of string
+  | Cast of string * string
   | Id of string
   | MemberOp of string * string
   | ElementOp of string * expr
@@ -37,7 +37,7 @@ let rec string_of_expr = function
     Literal(l) -> string_of_int l
   | NoteLiteral(n) -> n
   | Id(s) -> s
-  | Type(t) -> t
+  | Cast(t, id) ->  id ^ " as " ^ t
   | ElementOp(s, e1) -> s ^ "[" ^ string_of_expr e1 ^ "]";
   | MemberOp(e1, id) -> e1 ^ "." ^ id
   | Binop(e1, o, e2) ->
