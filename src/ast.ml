@@ -3,8 +3,11 @@ type op = Add | Sub |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | Dot
 type expr =
     Literal of int
   | NoteLiteral of string
+  (** add chord literal here *)
   | Type of string
   | Id of string
+  | MemberOp of string * string
+  | ElementOp of string * expr
   | Binop of expr * op * expr
   | Assign of string * expr
   | Call of string * expr list
@@ -12,8 +15,6 @@ type expr =
 
 type stmt =
     Block of stmt list
-  | MemberOp of expr * string * stmt
-  | ElementOp of expr * int  * stmt
   | Expr of expr
   | Return of expr
   | Continue
@@ -34,8 +35,11 @@ type program = string list * func_decl list
 
 let rec string_of_expr = function
     Literal(l) -> string_of_int l
+  | NoteLiteral(n) -> n
   | Id(s) -> s
   | Type(t) -> t
+  | ElementOp(s, e1) -> s ^ "[" ^ string_of_expr e1 ^ "]";
+  | MemberOp(e1, id) -> e1 ^ "." ^ id
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^
       (match o with
@@ -55,6 +59,8 @@ let rec string_of_stmt = function
       "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
   | Expr(expr) -> string_of_expr expr ^ ";\n";
   | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
+  | Break -> "break;\n";
+  | Continue -> "continue;\n";
   | If(e, s, Block([])) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
   | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
       string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2

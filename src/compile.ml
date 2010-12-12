@@ -82,12 +82,18 @@ let translate (globals, functions) =
 		  StringMap.empty (local_offsets @ formal_offsets) } in
 
     let rec expr = function
-	Literal i -> [Lit i]
+	Literal i -> [Num i]
+	    | NoteLiteral n -> [Not (int_of_note n)]
       | Id s ->
 	  (try [Lfp (StringMap.find s env.local_index)]
           with Not_found -> try [Lod (StringMap.find s env.global_index)]
           with Not_found -> raise (Failure ("undeclared variable " ^ s)))
+      | Type t -> raise (Failure ("why is type an expression?"))
+      (* probably need to do type checking here *)
       | Binop (e1, op, e2) -> expr e1 @ expr e2 @ [Bin op]
+      (* check that expr is of type Number *)
+      | ElementOp (s, e) -> expr e @ expr (Id(s)) @ [Ele]
+      | MemberOp (s, field) -> expr (Id(s)) @ [Mem field]
       | Assign (s, e) -> expr e @
 	  (try [Sfp (StringMap.find s env.local_index)]
   	  with Not_found -> try [Str (StringMap.find s env.global_index)]
@@ -102,6 +108,9 @@ let translate (globals, functions) =
 	Block sl     ->  List.concat (List.map stmt sl)
       | Expr e       -> expr e @ [Drp]
       | Return e     -> expr e @ [Rts num_formals]
+      (** fix break and continue *)
+      | Break -> [Rts num_formals]
+      | Continue -> raise (Failure ("continue not implemented"))
       | If (p, t, f) -> let t' = stmt t and f' = stmt f in
 	expr p @ [Beq(2 + List.length t')] @
 	t' @ [Bra(1 + List.length f')] @ f'
@@ -114,7 +123,7 @@ let translate (globals, functions) =
 
     in [Ent num_locals] @      (* Entry: allocate space for locals *)
     stmt (Block fdecl.body) @  (* Body *)
-    [Lit 0; Rts num_formals]   (* Default = return 0 *)
+    [Num 0; Rts num_formals]   (* Default = return 0 *)
 
   in let env = { function_index = function_indexes;
 		 global_index = global_indexes;

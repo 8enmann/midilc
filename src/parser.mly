@@ -7,6 +7,7 @@
 %token RETURN IF ELSE FOR WHILE BREAK CONTINUE
 %token <int> LITERAL
 %token <string> ID
+%token <string> SELECT
 %token <string> NOTE
 %token <string> TYPE
 %token EOF
@@ -61,8 +62,6 @@ stmt_list:
 
 stmt:
     expr SEMI { Expr($1) }
-  | expr LBRACKET LITERAL RBRACKET stmt { ElementOp($1, $3, $5) }
-  | expr DOT ID stmt { MemberOp($1, $3, $4) }
   | RETURN expr SEMI { Return($2) }
   | BREAK SEMI { Break }
   | CONTINUE SEMI { Continue }
@@ -81,6 +80,8 @@ expr:
     NOTE      { NoteLiteral($1) }
   | LITERAL          { Literal($1) }
   | ID               { Id($1) }
+  | ID LBRACKET expr RBRACKET { ElementOp($1, $3) }
+  | ID DOT SELECT { MemberOp($1, $3) }
   | expr DOTPLUS expr { Binop($1, DotAdd, $3) }
   | expr DOTMINUS expr { Binop($1, DotSub, $3) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
@@ -93,8 +94,8 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3) }
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
-  /* | expr LBRACKET LITERAL RBRACKET expr { ElementOp($1, $3, $5) }
-  | expr DOT ID expr { MemberOp($1, $3, $4) } */
+  /* | expr LBRACKET LITERAL RBRACKET { ElementOp($1, $3) }
+  | expr DOT ID { MemberOp($1, $3) } */
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
