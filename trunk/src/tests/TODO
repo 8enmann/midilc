@@ -16,6 +16,7 @@ global scope
 if
 if else
 subscripting
+subscripting for assignment, e.g., seq[3] = {A,C,E}
 direct selection
 casting up
 equality
