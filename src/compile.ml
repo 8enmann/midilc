@@ -65,7 +65,7 @@ let translate (globals, functions) =
   (* Allocate "addresses" for each global variable *)
   let global_indexes = string_map_pairs StringMap.empty (enum 1 0 globals) in
 
-  (* Assign indexes to function names; built-in "play" is special *)
+  (* Assign indexes to function names; built-in "play" and "set_tempo" are special *)
   let built_in_functions_temp = StringMap.add "play" (-1) StringMap.empty in
   let built_in_functions = StringMap.add "set_tempo" (-2) built_in_functions_temp in
   let function_indexes = string_map_pairs built_in_functions
