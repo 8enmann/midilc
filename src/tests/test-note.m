@@ -3,7 +3,7 @@ main() {
   Sequence b;
   Chord c;
   a = A3q;
-  a = a + 1;
+  b = (b as Sequence) + a;
   play(b);
 }
 
