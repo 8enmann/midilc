@@ -100,7 +100,7 @@ let translate (globals, functions) =
 	  with Not_found -> raise (Failure ("undeclared variable " ^ s)))
       | Call (fname, actuals) -> (try
 	  (List.concat (List.map expr (List.rev actuals))) @
-	  [Jsr (StringMap.find fname env.function_index) ]   
+	  [Jsr (StringMap.find fname env.function_index) ]
         with Not_found -> raise (Failure ("undefined function " ^ fname)))
       | Noexpr -> []
 
