@@ -31,6 +31,7 @@ let execute_prog prog =
       ("Number", (Num i))-> (Num(i))
     | ("Note", (Num i)) ->  (Not(i,4))
     | ("Chord", (Not(p,d))) -> (Cho([1;d;0;p]))
+    | ("Sequence", (Num 0)) -> (Seq([[0;0]]))
     | ("Sequence", (Cho(l))) -> (Seq([[(List.nth l 1); 1]; l]))
     | _ -> raise (Failure ("illegal type cast"))) ; exec fp sp (pc+1)
   | Not (p, d) -> stack.(sp) <- (Not(p,d)) ; exec fp (sp+1) (pc+1)
@@ -46,6 +47,7 @@ let execute_prog prog =
       match op with
         Add -> (match (opA, opB) with 
             (Num op1, Num op2) -> Num(op1 + op2)
+          | (Not(p,d), Num i) -> Not(p,d+i)
           | (Cho(l), Not(p,d)) -> Cho(l @ [p])
           | ((Seq ([c; l] :: cs )), (Not(p, d))) -> Seq([c+d; l+1] :: cs @ [[1;d;c;p]])
           | _ -> raise (Failure ("unexpected types for +")))
@@ -94,11 +96,12 @@ let execute_prog prog =
             | _ -> raise (Failure ("unexpected type for play")))
   | Jsr i -> stack.(sp)   <- (Num(pc + 1))       ; exec fp (sp+1) i
   | Ent i -> stack.(sp)   <- (Num(fp))           ; exec sp (sp+i+1) (pc+1)
-  | Rts i -> stack.(fp-i-1) <- stack.(sp-1) ; exec 
-                 (match stack.(fp) with Num nfp -> nfp  
+  | Rts i -> let new_fp = stack.(fp) and new_pc = stack.(fp-1) in
+    stack.(fp-i-1) <- stack.(sp-1) ; exec 
+                 (match new_fp with Num nfp -> nfp  
                    | _ -> raise (Failure ("unexpected types for return"))) 
                  (fp-i) 
-                 (match stack.(fp-1) with Num npc -> npc  
+                 (match new_pc with Num npc -> npc  
                    | _ -> raise (Failure ("unexpected types for return")))
   | Beq i -> exec fp (sp-1) (pc + if 
     (match stack.(sp-1) with Num temp -> temp =  0 
