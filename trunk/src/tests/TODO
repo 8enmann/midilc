@@ -3,8 +3,13 @@ play:
   single note
   single chord
   single sequence
+Note constructor
+Chord constructor
+Sequence constructor
 type checking
 adding to sequence
+adding to chord
+set_tempo
 function call
 recursion
 add
@@ -15,7 +20,7 @@ local scope
 global scope
 if
 if else
-subscripting
+subscripting for access, e.g., a = myChord[1]
 subscripting for assignment, e.g., seq[3] = {A,C,E}
 direct selection
 casting up
