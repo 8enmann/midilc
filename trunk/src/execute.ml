@@ -12,6 +12,12 @@ open Bytecode
    Arg 0
    ...
    Arg n *)
+ 
+(* Increase the start time of each chord in the sequence by shift *)   
+let shift_chords chord_list shift =
+  let shift_chord chord =
+    [(List.hd chord); (List.nth chord 1); (List.nth chord 2) + shift] @ (List.tl (List.tl (List.tl chord)))
+  in List.map shift_chord chord_list
 
 let execute_prog prog =
   let stack = Array.make 1024 (Num(0))
@@ -31,12 +37,12 @@ let execute_prog prog =
       ("Number", (Num i))-> (Num(i))
     | ("Note", (Num i)) ->  (Not(i,4))
     | ("Chord", (Not(p,d))) -> (Cho([1;d;0;p]))
-    | ("Sequence", (Num 0)) -> (Seq([[0;0]]))
+(*    | ("Sequence", (Num 0)) -> (Seq([[0;0]]))*)
     | ("Sequence", (Cho(l))) -> (Seq([[(List.nth l 1); 1]; l]))
     | _ -> raise (Failure ("illegal type cast"))) ; exec fp sp (pc+1)
   | Not (p, d) -> stack.(sp) <- (Not(p,d)) ; exec fp (sp+1) (pc+1)
   | Cho (l) -> stack.(sp) <- (Cho(l)) ; exec fp (sp+1) (pc+1)
-  | Seq (ll) -> raise (Failure ("unexpected sequence literal"))
+  | Seq (ll) -> stack.(sp) <- (Seq(ll)) ; exec fp (sp+1) (pc+1)
   | Ele -> stack.(sp-2) <- (match (stack.(sp-1), stack.(sp-2)) with 
       (Cho(l), Num(i)) -> (Not((List.nth l (i + 3)), List.nth l 1))
     | (Seq(ll), Num(i)) -> (Cho(List.nth ll (i+1)))
@@ -50,8 +56,7 @@ let execute_prog prog =
           | (Not(p,d), Num i) -> Not(p,d+i)
           | (Cho(l), Not(p,d)) -> Cho(l @ [p])
           | ((Seq ([c; l] :: cs )), (Not(p, d))) -> Seq([c+d; l+1] :: cs @ [[1;d;c;p]])
-          (** TODO When adding sequences, the start time of the chords has to be increased *)
-          | ((Seq ([c1; l1] :: cs1 )), (Seq ([c2; l2] :: cs2 ))) -> Seq([c1+c2; l1+l2] :: cs1 @ cs2)
+          | ((Seq ([c1; l1] :: cs1 )), (Seq ([c2; l2] :: cs2 ))) -> Seq([c1+c2; l1+l2] :: cs1 @ (shift_chords cs2 c1))
           | _ -> raise (Failure ("unexpected types for +")))
       | Sub -> (match (opA, opB) with 
           (Num op1, Num op2) -> Num(op1 - op2)
@@ -95,6 +100,7 @@ let execute_prog prog =
   | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline (string_of_int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for set_tempo")))
   | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline (string_of_list_list s "["); exec fp sp (pc+1)
+  | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
             | _ -> raise (Failure ("unexpected type for play")))
   | Jsr i -> stack.(sp)   <- (Num(pc + 1))       ; exec fp (sp+1) i
   | Ent i -> stack.(sp)   <- (Num(fp))           ; exec sp (sp+i+1) (pc+1)
