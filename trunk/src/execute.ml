@@ -50,6 +50,7 @@ let execute_prog prog =
           | (Not(p,d), Num i) -> Not(p,d+i)
           | (Cho(l), Not(p,d)) -> Cho(l @ [p])
           | ((Seq ([c; l] :: cs )), (Not(p, d))) -> Seq([c+d; l+1] :: cs @ [[1;d;c;p]])
+          | ((Seq ([c1; l1] :: cs1 )), (Seq ([c2; l2] :: cs2 ))) -> Seq([c1+c2; l1+l2] :: cs1 @ cs2)
           | _ -> raise (Failure ("unexpected types for +")))
       | Sub -> (match (opA, opB) with 
           (Num op1, Num op2) -> Num(op1 - op2)
