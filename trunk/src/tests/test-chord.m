@@ -4,6 +4,7 @@ main() {
   Chord c;
   b = new_sequence();
   a = A3q;
-  b = b + (a as Chord);
+  a = (a as Chord) + C3q + Eb3q;
+  b = b + a + a + a;
   play(b);
 }
