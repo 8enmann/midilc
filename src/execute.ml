@@ -100,7 +100,7 @@ let execute_prog prog =
   (** this is the print command. change it to set tempo and play *)
   | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline (string_of_int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for set_tempo")))
-  | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline (string_of_list_list s "["); exec fp sp (pc+1)
+  | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline (print_sequence s); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for play")))
   | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
   | Jsr i -> stack.(sp)   <- (Num(pc + 1))       ; exec fp (sp+1) i
