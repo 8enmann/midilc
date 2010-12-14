@@ -33,6 +33,26 @@ let rec string_of_list_list l s = match l
   with [] -> s ^ "]"
   | head :: tail -> string_of_list_list tail (s ^ (string_of_list head "[") ^ ";")
 
+let print_sequence m = 
+  let rec help_print_sequence l s = match l 
+  with [] -> s 
+  | head :: tail -> help_print_sequence tail 
+	s^(let b = 
+	  (List.fold_left (fun t e->t^"\n"^e) "" 
+	     (let i = List.tl head in 
+	     let duration = List.hd i in 
+	     let k = List.tl i in 
+	     let start = List.hd k in 
+	     (List.map 
+		(fun pitch -> 
+		  (string_of_int start) ^ "," ^ 
+		  (string_of_int duration) ^ "," ^ 
+		  (string_of_int pitch)))
+	       (List.tl k))) in 
+	(String.sub b 1 (String.length b - 1)))
+      ^"\n" in 
+  help_print_sequence (List.rev (List.tl m)) "";;      
+
 let string_of_stmt = function
     Num(i) -> "Num " ^ string_of_int i
   | Not(i,j) -> "Not " ^ "(" ^ string_of_int i ^ "," ^ string_of_int j ^ ")"
