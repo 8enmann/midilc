@@ -62,6 +62,9 @@ let execute_prog prog =
       | Sub -> (match (opA, opB) with 
           (Num op1, Num op2) -> Num(op1 - op2)
         | _ -> raise (Failure ("unexpected types for -")))
+      | Mod -> (match (opA, opB) with 
+          (Num op1, Num op2) -> Num(op1 mod op2)
+        | _ -> raise (Failure ("unexpected types for %")))
       | DotAdd -> (match (opA, opB) with 
           (Not (p, d), Num op2) -> Not(p + op2, d) (* add pitch of Note to Number *)
         | _ -> raise (Failure ("unexpected types for .+")))
