@@ -7,7 +7,9 @@ type expr =
   | Cast of string * string
   | Id of string
   | MemberOp of string * string
+  | LMemberOp of string * string * expr
   | ElementOp of string * expr
+  | LElementOp of string * expr * expr
   | Binop of expr * op * expr
   | Assign of string * expr
   | Call of string * expr list
@@ -38,7 +40,9 @@ let rec string_of_expr = function
   | Id(s) -> s
   | Cast(t, id) ->  id ^ " as " ^ t
   | ElementOp(s, e1) -> s ^ "[" ^ string_of_expr e1 ^ "]";
-  | MemberOp(e1, id) -> e1 ^ "." ^ id
+  | LElementOp(s, e1, e2) -> s ^ "[" ^ string_of_expr e1 ^ "] = " ^ string_of_expr e2
+  | MemberOp(id, field) -> id ^ "." ^ field
+  | LMemberOp(id, field, e) -> id ^ "." ^ field ^ " = " ^ string_of_expr e
   | Binop(e1, o, e2) ->
       string_of_expr e1 ^ " " ^
       (match o with

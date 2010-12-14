@@ -97,6 +97,8 @@ expr:
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
   | expr MOD     expr { Binop($1, Mod,    $3) }
+  | ID DOT SELECT ASSIGN expr { LMemberOp($1, $3, $5) }
+  | ID LBRACKET expr RBRACKET ASSIGN expr { LElementOp($1, $3, $6) }
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
