@@ -1,7 +1,7 @@
 %{ open Ast %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET CAST
-%token PLUS MINUS ASSIGN DOTPLUS DOTMINUS
+%token PLUS MINUS ASSIGN DOTPLUS DOTMINUS MOD
 %token EQ NEQ LT LEQ GT GEQ
 %token AND OR DOT AS
 %token RETURN IF ELSE FOR WHILE BREAK CONTINUE
@@ -96,6 +96,7 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3) }
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
+  | expr MOD     expr { Binop($1, Mod,    $3) }
   | ID ASSIGN expr   { Assign($1, $3) }
   | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
   | LPAREN expr RPAREN { $2 }
