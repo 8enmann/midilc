@@ -25,14 +25,17 @@ type prog = {
     text : bstmt array; (* Code for all the functions *)
   }
   
-let rec string_of_list l s = match l
+let string_of_list l = 
+  let rec help_string_of_list l s = match l
   with [] -> s ^ "]"
-  | head :: tail -> string_of_list tail (s ^ (string_of_int head) ^ ";")
-  
-let rec string_of_list_list l s = match l
+  | head :: tail -> help_string_of_list tail (s ^ (string_of_int head) ^ ";") in
+  help_string_of_list l "["
+    
+let string_of_list_list l =
+  let rec help_string_of_list_list l s = match l
   with [] -> s ^ "]"
-  | head :: tail -> string_of_list_list tail (s ^ (string_of_list head "[") ^ ";")
-
+  | head :: tail -> help_string_of_list_list tail (s ^ (string_of_list head) ^ ";") in help_string_of_list_list l "["
+    
 let print_sequence m = 
   let rec help_print_sequence l s = match l 
   with [] -> s 
@@ -51,13 +54,13 @@ let print_sequence m =
 	       (List.tl k))) in 
 	(String.sub b 1 (String.length b - 1)))
       ^"\n" in 
-  help_print_sequence (List.rev (List.tl m)) "";;      
-
+  help_print_sequence (List.rev (List.tl m)) ""
+    
 let string_of_stmt = function
     Num(i) -> "Num " ^ string_of_int i
   | Not(i,j) -> "Not " ^ "(" ^ string_of_int i ^ "," ^ string_of_int j ^ ")"
-  | Cho(l) -> "Cho " ^ (string_of_list l "[")
-  | Seq(s) -> "Seq " ^ (string_of_list_list s "[")
+  | Cho(l) -> "Cho " ^ (string_of_list l)
+  | Seq(s) -> "Seq " ^ (print_sequence s)
   | Cst(t) -> "Cst " ^ t
   | Drp -> "Drp"
   | Bin(Ast.Add) -> "Add"
