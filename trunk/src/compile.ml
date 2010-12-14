@@ -94,7 +94,15 @@ let translate (globals, functions) =
       | Binop (e1, op, e2) -> expr e1 @ expr e2 @ [Bin op]
       (* check that expr is of type Number *)
       | ElementOp (s, e) -> expr e @ expr (Id(s)) @ [Ele]
+      | LElementOp (s, e1, e2) -> expr e2 @ expr e1 @ expr (Id(s)) @ [Leo] @
+	  (try [Sfp (StringMap.find s env.local_index)]
+  	  with Not_found -> try [Str (StringMap.find s env.global_index)]
+	  with Not_found -> raise (Failure ("undeclared variable " ^ s)))
       | MemberOp (s, field) -> expr (Id(s)) @ [Mem field]
+      | LMemberOp (s, field, e) -> expr e @ expr (Id(s)) @ [Lmo field] @
+	  (try [Sfp (StringMap.find s env.local_index)]
+  	  with Not_found -> try [Str (StringMap.find s env.global_index)]
+	  with Not_found -> raise (Failure ("undeclared variable " ^ s)))
       | Assign (s, e) -> expr e @
 	  (try [Sfp (StringMap.find s env.local_index)]
   	  with Not_found -> try [Str (StringMap.find s env.global_index)]

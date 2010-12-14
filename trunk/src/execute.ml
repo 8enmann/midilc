@@ -27,6 +27,7 @@ let execute_prog prog =
     Num i -> stack.(sp) <- (Num(i)) ; exec fp (sp+1) (pc+1)
   | Mem s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
       ("length", (Cho(len :: _))) -> (Num(len))
+    | ("start", (Cho(l)) -> (Num(List.nth l 2))
     | ("duration", (Cho(l))) -> (Num(List.nth l 1))
     | ("pitch" , (Not(p,d))) -> (Num(p))
     | ("duration", (Not(p,d))) -> (Num(d))
@@ -47,6 +48,8 @@ let execute_prog prog =
       (Cho(l), Num(i)) -> (Not((List.nth l (i + 3)), List.nth l 1))
     | (Seq(ll), Num(i)) -> (Cho(List.nth ll (i+1)))
     | _ -> raise (Failure ("unexpected types for []"))) ; exec fp (sp-1) (pc+1)
+  | Leo -> raise (Failure ("assignment to element failed"))
+  | Lmo (s) -> raise (Failure ("assignment to attribute failed"))
   | Drp -> exec fp (sp-1) (pc+1)
   | Bin op -> let opA = stack.(sp-2) and opB = stack.(sp-1) in     
       stack.(sp-2) <- (let boolean i = if i then Num(1) else Num(0) in

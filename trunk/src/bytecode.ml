@@ -4,8 +4,10 @@ type bstmt =
   | Seq of int list list    (* Push a sequence [[cur;len];[cho];[cho]...] *)
   | Not of (int * int)      (* Push a Note (pitch, duration) *)
   | Ele                     (* access an element of a sequence *)
-  | Cst of string
-  | Mem of string   (* access a member of a data type using the field name *)
+  | Leo                     (* Assign to an element of a sequence *)
+  | Cst of string           (* Cast to a different type *)
+  | Mem of string           (* access a member of a data type using the field name *)
+  | Lmo of string           (* Assign to a member of a data type *)
   | Drp                     (* Discard a value *)
   | Bin of Ast.op           (* Perform arithmetic on top of stack *)
   | Lod of int    (* Fetch global variable *)
@@ -77,7 +79,9 @@ let string_of_stmt = function
   | Bin(Ast.Greater) -> "Gt"
   | Bin(Ast.Geq) -> "Geq"
   | Ele -> "Ele"
+  | Leo -> "Leo"
   | Mem(s) -> "Mem " ^ s
+  | Lmo(s) -> "Lmo " ^ s
   | Lod(i) -> "Lod " ^ string_of_int i
   | Str(i) -> "Str " ^ string_of_int i
   | Lfp(i) -> "Lfp " ^ string_of_int i
