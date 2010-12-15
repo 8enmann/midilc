@@ -1,28 +1,21 @@
 OBJS = ast.cmo parser.cmo scanner.cmo bytecode.cmo compile.cmo execute.cmo midilc.cmo
 
 TESTS = \
-arith1 \
-arith2 \
-fib \
+attribute \
+chord \
 for1 \
-func1 \
-func2 \
-func3 \
-gcd \
-global1 \
-hello \
-if1 \
-if2 \
-if3 \
-if4 \
-ops1 \
-var1 \
-while1
+for2 \
+for3 \
+for4 \
+note \
+selection \
+sequence
+
 
 TARFILES = Makefile testall.sh scanner.mll parser.mly \
 	ast.ml bytecode.ml compile.ml execute.ml midilc.ml \
-	$(TESTS:%=tests/test-%.mc) \
-	$(TESTS:%=tests/test-%.out)
+	$(TESTS:%=tests/%.mc) \
+	$(TESTS:%=tests/%.out)
 
 midilc : $(OBJS)
 	ocamlc -o midilc $(OBJS)
