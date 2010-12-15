@@ -70,6 +70,7 @@ let translate (globals, functions) =
   let built_in_functions = StringMap.add "set_tempo" (-2) built_in_functions     in
   let built_in_functions = StringMap.add "new_sequence" (-3) built_in_functions in
   let built_in_functions = StringMap.add "new_chord" (-4) built_in_functions in
+  let built_in_functions = StringMap.add "rand" (-5) built_in_functions in
   let function_indexes = string_map_pairs built_in_functions
       (enum 1 1 (List.map (fun f -> f.fname) functions)) in
 

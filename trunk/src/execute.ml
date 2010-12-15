@@ -124,6 +124,8 @@ let execute_prog prog =
                 ignore(List.map print_endline (List.map (fun b -> string_of_int c^","^string_of_int a^","^string_of_int b) (List.tl (List.tl (List.tl d))))); exec fp sp (pc+1)
             |_ -> raise (Failure ("unexpected type for play")))
   | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
+  | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) <- Num(Random.int i); exec fp sp (pc+1)
+            | _ -> raise (Failure ("unexpected type for rand")))
   | Jsr(-4) -> (match stack.(sp-1) with Num i ->
                 let rec chord l n m = if n>m then l else (match stack.(sp-n-1) with Not (pitch,duration) ->
                                 if n=1 then chord [m; duration; 0; pitch] (n+1) m else chord (l @ [pitch]) (n+1) m
