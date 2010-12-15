@@ -117,7 +117,7 @@ let execute_prog prog =
   | Lfp i -> stack.(sp)   <- stack.(fp+i) ; exec fp (sp+1) (pc+1)
   | Sfp i -> stack.(fp+i) <- stack.(sp-1) ; exec fp sp     (pc+1)
   (** this is the print command. change it to set tempo and play *)
-  | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline (string_of_int i); exec fp sp (pc+1)
+  | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline ("Tempo,"^string_of_int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for set_tempo")))
   | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline (print_sequence s); exec fp sp (pc+1)
             | Cho d -> let a = List.hd (List.tl d) in let c = List.hd (List.tl (List.tl d)) in
@@ -126,6 +126,8 @@ let execute_prog prog =
   | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
   | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for rand")))
+  | Jsr(-6) -> (match stack.(sp-1) with Num i -> print_endline ("Instrument,"^string_of_int i); exec fp sp (pc+1)
+			| _ -> raise (Failure ("unexpected type for set_instrument")))
   | Jsr(-4) -> (match stack.(sp-1) with Num i ->
                 let rec chord l n m = if n>m then l else (match stack.(sp-n-1) with Not (pitch,duration) ->
                                 if n=1 then chord [m; duration; 0; pitch] (n+1) m else chord (l @ [pitch]) (n+1) m
