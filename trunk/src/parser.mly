@@ -20,6 +20,7 @@
 %left AND
 %left EQ NEQ
 %left LT GT LEQ GEQ
+%left MOD
 %left PLUS MINUS DOTPLUS DOTMINUS
 
 %start program
@@ -78,16 +79,17 @@ expr_opt:
   | expr          { $1 }
 
 expr:
-    NOTE      { NoteLiteral($1) }
-  | LITERAL          { Literal($1) }
-  | ID               { Id($1) }
+    NOTE               { NoteLiteral($1) }
+  | LITERAL            { Literal($1) }
+  | ID                 { Id($1) }
   | ID LBRACKET expr RBRACKET { ElementOp($1, $3) }
-  | ID DOT SELECT { MemberOp($1, $3) }
-  | ID AS TYPE { Cast($3, $1) }
-  | expr DOTPLUS expr { Binop($1, DotAdd, $3) }
+  | ID DOT SELECT      { MemberOp($1, $3) }
+  | ID AS TYPE         { Cast($3, $1) }
+  | expr DOTPLUS expr  { Binop($1, DotAdd, $3) }
   | expr DOTMINUS expr { Binop($1, DotSub, $3) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
+  | expr MOD    expr { Binop($1, Mod,   $3) }
   | expr EQ     expr { Binop($1, Equal, $3) }
   | expr NEQ    expr { Binop($1, Neq,   $3) }
   | expr LT     expr { Binop($1, Less,  $3) }
@@ -96,7 +98,6 @@ expr:
   | expr GEQ    expr { Binop($1, Geq,   $3) }
   | expr AND    expr { Binop($1, And,   $3) }
   | expr OR     expr { Binop($1, Or,    $3) }
-  | expr MOD     expr { Binop($1, Mod,    $3) }
   | ID DOT SELECT ASSIGN expr { LMemberOp($1, $3, $5) }
   | ID LBRACKET expr RBRACKET ASSIGN expr { LElementOp($1, $3, $6) }
   | ID ASSIGN expr   { Assign($1, $3) }
