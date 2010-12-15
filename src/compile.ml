@@ -66,9 +66,10 @@ let translate (globals, functions) =
   let global_indexes = string_map_pairs StringMap.empty (enum 1 0 globals) in
 
   (* Assign indexes to function names; built-in "play" and "set_tempo" are special *)
-  let built_in_functions = StringMap.add "play" (-1) StringMap.empty in
-  let built_in_functions = StringMap.add "set_tempo" (-2) built_in_functions in
-  let built_in_functions = StringMap.add "new_sequence" (-3) built_in_functions in
+  let built_in_functions_1 = StringMap.add "play" (-1) StringMap.empty in
+  let built_in_functions_2 = StringMap.add "set_tempo" (-2) built_in_functions_1 in
+  let built_in_functions_3 = StringMap.add "new_sequence" (-3) built_in_functions_2 in
+  let built_in_functions = StringMap.add "new_chord" (-4) built_in_functions_3 in
   let function_indexes = string_map_pairs built_in_functions
       (enum 1 1 (List.map (fun f -> f.fname) functions)) in
 
@@ -108,7 +109,7 @@ let translate (globals, functions) =
   	  with Not_found -> try [Str (StringMap.find s env.global_index)]
 	  with Not_found -> raise (Failure ("undeclared variable " ^ s)))
       | Call (fname, actuals) -> (try
-	  (List.concat (List.map expr (List.rev actuals))) @
+	  (List.concat (List.map expr (List.rev (if fname="new_chord" then [Literal (List.length actuals)] @ actuals else actuals)))) @
 	  [Jsr (StringMap.find fname env.function_index) ]
         with Not_found -> raise (Failure ("undefined function " ^ fname)))
       | Noexpr -> []
