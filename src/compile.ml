@@ -66,10 +66,10 @@ let translate (globals, functions) =
   let global_indexes = string_map_pairs StringMap.empty (enum 1 0 globals) in
 
   (* Assign indexes to function names; built-in "play" and "set_tempo" are special *)
-  let built_in_functions_1 = StringMap.add "play" (-1) StringMap.empty in
-  let built_in_functions_2 = StringMap.add "set_tempo" (-2) built_in_functions_1 in
-  let built_in_functions_3 = StringMap.add "new_sequence" (-3) built_in_functions_2 in
-  let built_in_functions = StringMap.add "new_chord" (-4) built_in_functions_3 in
+  let built_in_functions = StringMap.add "play" (-1) StringMap.empty in
+  let built_in_functions = StringMap.add "set_tempo" (-2) built_in_functions     in
+  let built_in_functions = StringMap.add "new_sequence" (-3) built_in_functions in
+  let built_in_functions = StringMap.add "new_chord" (-4) built_in_functions in
   let function_indexes = string_map_pairs built_in_functions
       (enum 1 1 (List.map (fun f -> f.fname) functions)) in
 
