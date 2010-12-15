@@ -18,6 +18,10 @@ let shift_chords chord_list shift =
   let shift_chord chord =
     [(List.hd chord); (List.nth chord 1); (List.nth chord 2) + shift] @ (List.tl (List.tl (List.tl chord)))
   in List.map shift_chord chord_list
+  
+let replace_element l i n skip = 
+  let a = Array.of_list l in
+  a.(i+skip) <- n; Array.to_list a
 
 let execute_prog prog =
   let stack = Array.make 1024 (Num(0))
@@ -48,7 +52,10 @@ let execute_prog prog =
       (Cho(l), Num(i)) -> (Not((List.nth l (i + 3)), List.nth l 1))
     | (Seq(ll), Num(i)) -> (Cho(List.nth ll (i+1)))
     | _ -> raise (Failure ("unexpected types for []"))) ; exec fp (sp-1) (pc+1)
-  | Leo -> raise (Failure ("assignment to element failed"))
+  | Leo -> stack.(sp-3) <- (match (stack.(sp-1), stack.(sp-2), stack.(sp-3)) with 
+      (Cho(l), Num(i), Not(p,d)) -> (Cho(replace_element l i p 3))
+    | (Seq(ll), Num(i), Cho(l)) -> Seq(replace_element ll i l 1)
+    | _ -> raise (Failure ("assignment to [] failed"))) ; exec fp (sp-2) (pc+1)
   | Lmo (s) -> stack.(sp-2) <- (match (s, stack.(sp-1), stack.(sp-2)) with 
       ("start", (Cho(l)), (Num i)) -> (Cho([(List.hd l); (List.nth l 1); i] @ (List.tl (List.tl (List.tl l)))))
     | ("duration", (Cho(l)), (Num i)) -> (Cho([(List.hd l); i; (List.nth l 2)] @ (List.tl (List.tl (List.tl l)))))
