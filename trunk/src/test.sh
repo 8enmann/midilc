@@ -9,8 +9,6 @@ echo "=================================="
 
 java -jar CSV2MIDI.jar test.csv test.midi
 
-#rm test.csv
-
 echo "========Converting MIDI==========="
 timidity test.midi --volume=250 -Ow1S -s 44100 -o test.wav
 echo "===========Playing MIDI==========="
