@@ -113,8 +113,16 @@ let execute_prog prog =
   | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline (string_of_int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for set_tempo")))
   | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline (print_sequence s); exec fp sp (pc+1)
-            | _ -> raise (Failure ("unexpected type for play")))
+            | Cho d -> let a = List.hd (List.tl d) in let c = List.hd (List.tl (List.tl d)) in
+                List.map print_endline (List.map (fun b -> string_of_int c^","^string_of_int a^","^string_of_int b) d); exec fp sp (pc+1)
+            |_ -> raise (Failure ("unexpected type for play")))
   | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
+  | Jsr(-4) -> (match stack.(sp-1) with Num i ->
+                let rec chord l n m = if n=m then l else (match stack.(sp-n-1) with Not (pitch,duration) ->
+                                if n=1 then chord [m; duration; 0; pitch] (n+1) m else chord (l @ [pitch]) (n+1) m)
+                    in let my_chord = (chord [] 1 i) in
+                    stack.(sp-i-1) <- (Cho(my_chord)) ; exec fp (sp-i) (pc+1)
+                | _ -> raise (Failure ("unexpected type for chord")))
   | Jsr i -> stack.(sp)   <- (Num(pc + 1))       ; exec fp (sp+1) i
   | Ent i -> stack.(sp)   <- (Num(fp))           ; exec sp (sp+i+1) (pc+1)
   | Rts i -> let new_fp = stack.(fp) and new_pc = stack.(fp-1) in
