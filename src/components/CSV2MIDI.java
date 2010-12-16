@@ -12,6 +12,16 @@ import java.lang.*;
 
 
 public class CSV2MIDI{
+	public static final byte[] getIntBytes(int input)
+	{
+		byte[] retval = new byte[3];
+		
+		retval[0] = (byte)(input >> 16 & 0xff);
+		retval[1] = (byte)(input >> 8 & 0xff);
+		retval[2] = (byte)(input & 0xff);
+		
+		return retval;
+	}
 
 	public static void main(String[] args)	throws InvalidMidiDataException {
 
@@ -44,17 +54,60 @@ public class CSV2MIDI{
 		   automatically.
 		*/
 		Track track = sequence.createTrack();                    //create track
-	
-		ShortMessage sm = new ShortMessage( );
-        sm.setMessage(ShortMessage.PROGRAM_CHANGE, instrument, 0);  //put in instrument in this track
-	    track.add(new MidiEvent(sm, 0));
 
 	    // channel/velocity set to default; note/tick/duration will depend on input.
 		int channel=0,velocity=90;
 		int note=0,tick=0,duration=0;
+		
+		int currentCSVPos = 0;
+		
+		// instrument
+		
+		String str = csvFile.data.elementAt(currentCSVPos).toString();
+		if(str.compareToIgnoreCase("Instrument") == 0)
+		{
+			currentCSVPos += 2;
+			//String instrumentName = csvFile.data.elementAt(currentCSVPos).toString();
+			instrument = Integer.parseInt(csvFile.data.elementAt(currentCSVPos).toString());
+			currentCSVPos += 2;
 
+			// do some kind of lookup
+			//instrument = 1;
+					
+		}
+		else
+		{
+			currentCSVPos = 0;
+		}
+		
+		ShortMessage sm = new ShortMessage( );
+        sm.setMessage(ShortMessage.PROGRAM_CHANGE, instrument, 0);  //put in instrument in this track
+	    track.add(new MidiEvent(sm, 0));
+	    
+		int oldPos = currentCSVPos;	
+		// tempo
+		str = csvFile.data.elementAt(currentCSVPos).toString();
+		if(str.compareToIgnoreCase("Tempo") == 0)
+		{
+			currentCSVPos += 2;
+			int tempo = Integer.parseInt(csvFile.data.elementAt(currentCSVPos).toString().trim());
+			int MPQN = 60000000 / tempo;
+			// Microseconds per quarter-note = Microseconds per minute / Beats Per Minute
+			MetaMessage mm = new MetaMessage();
+			// MetaEvent: Type = 81, Length = 3
+			mm.setMessage(81, getIntBytes(MPQN), 3);
+			track.add(new MidiEvent(mm, 0));
+			currentCSVPos += 2;
+		}
+		else
+		{
+			currentCSVPos = oldPos;
+		}
+		
+
+			
 		//go through each of the following lines and add notes
-		for(int currentCSVPos=0;currentCSVPos<csvFile.data.size();){							//loop through rest of CSV file
+		for(;currentCSVPos<csvFile.data.size();){							//loop through rest of CSV file
 			try{																																			  //check that the current CSV position is an integer
 				tick=Integer.parseInt(csvFile.data.elementAt(currentCSVPos).toString());  //first number is tick
 				currentCSVPos+=2;
