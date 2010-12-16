@@ -1,0 +1,24 @@
+#!/bin/bash
+
+INPUT=`echo $1 | perl -ne 's/\..*$//; print $_'`
+
+if [ "$2" != "" ]; then
+    INPUT=$2
+fi
+CSV=$INPUT.csv
+OUT=$INPUT.midi
+WAV=$INPUT.wav
+
+./midilc -c < $1 > $CSV
+
+echo "=============CSV=================="
+cat $CSV
+echo "=================================="
+
+java -jar CSV2MIDI.jar $CSV $OUT
+
+echo "========Converting MIDI==========="
+timidity $OUT --volume=250 -Ow1S -s 44100 -o $WAV
+echo "===========Playing MIDI==========="
+timidity $OUT
+
