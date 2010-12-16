@@ -5,6 +5,7 @@ type bstmt =
   | Not of (int * int)      (* Push a Note (pitch, duration) *)
   | Ele                     (* access an element of a sequence *)
   | Leo                     (* Assign to an element of a sequence *)
+  | Jmp of (int * int * int)(* Assign jump points *)
   | Cst of string           (* Cast to a different type *)
   | Mem of string           (* access a member of a data type using the field name *)
   | Lmo of string           (* Assign to a member of a data type *)
@@ -80,6 +81,7 @@ let string_of_stmt = function
   | Bin(Ast.Geq) -> "Geq"
   | Ele -> "Ele"
   | Leo -> "Leo"
+  | Jmp(i,j,k) -> "Jmp (" ^ string_of_int i ^ "," ^ string_of_int j ^ "," ^ string_of_int k ^ ")"
   | Mem(s) -> "Mem " ^ s
   | Lmo(s) -> "Lmo " ^ s
   | Lod(i) -> "Lod " ^ string_of_int i
