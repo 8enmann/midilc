@@ -25,6 +25,8 @@ let replace_element l i n skip =
 
 let execute_prog prog =
   let stack = Array.make 1024 (Num(0))
+  and jumps = Array.make 20 0 
+  and jp = Array.make 1 0
   and globals = Array.make prog.num_globals (Num(0)) in
 
   let rec exec fp sp pc = match prog.text.(pc) with
@@ -116,6 +118,10 @@ let execute_prog prog =
   | Str i -> globals.(i)  <- stack.(sp-1) ; exec fp sp     (pc+1)
   | Lfp i -> stack.(sp)   <- stack.(fp+i) ; exec fp (sp+1) (pc+1)
   | Sfp i -> stack.(fp+i) <- stack.(sp-1) ; exec fp sp     (pc+1)
+  | Jmp(i,j,k) -> if k=0 then (jumps.(jp.(0)) <- pc+i+2; jumps.(jp.(0)+1) <- pc+3+j; jp.(0)<-jp.(0)+2; exec fp sp (pc+1))
+                  else (if k<=2  then exec fp sp jumps.(jp.(0)-k)
+                  else (jp.(0)<-jp.(0)-2; exec fp sp (pc+1)) ); 
+
   (** this is the print command. change it to set tempo and play *)
   | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline ("Tempo,"^string_of_int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for set_tempo")))
@@ -124,10 +130,6 @@ let execute_prog prog =
                 ignore(List.map print_endline (List.map (fun b -> string_of_int c^","^string_of_int a^","^string_of_int b) (List.tl (List.tl (List.tl d))))); exec fp sp (pc+1)
             |_ -> raise (Failure ("unexpected type for play")))
   | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
-  | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
-            | _ -> raise (Failure ("unexpected type for rand")))
-  | Jsr(-6) -> (match stack.(sp-1) with Num i -> print_endline ("Instrument,"^string_of_int i); exec fp sp (pc+1)
-			| _ -> raise (Failure ("unexpected type for set_instrument")))
   | Jsr(-4) -> (match stack.(sp-1) with Num i ->
                 let rec chord l n m = if n>m then l else (match stack.(sp-n-1) with Not (pitch,duration) ->
                                 if n=1 then chord [m; duration; 0; pitch] (n+1) m else chord (l @ [pitch]) (n+1) m
@@ -135,6 +137,11 @@ let execute_prog prog =
                     in let my_chord = (chord [] 1 i) in
                     stack.(sp-i-1) <- (Cho(my_chord)) ; exec fp (sp-i) (pc+1)
                 | _ -> raise (Failure ("unexpected type for chord")))
+
+  | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
+            | _ -> raise (Failure ("unexpected type for rand")))
+  | Jsr(-6) -> (match stack.(sp-1) with Num i -> print_endline ("Instrument,"^string_of_int i); exec fp sp (pc+1)
+			| _ -> raise (Failure ("unexpected type for set_instrument")))
   | Jsr i -> stack.(sp)   <- (Num(pc + 1))       ; exec fp (sp+1) i
   | Ent i -> stack.(sp)   <- (Num(fp))           ; exec sp (sp+i+1) (pc+1)
   | Rts i -> let new_fp = stack.(fp) and new_pc = stack.(fp-1) in
@@ -149,7 +156,7 @@ let execute_prog prog =
       | _ -> raise (Failure ("unexpected types for return"))) then i else 1)
   | Bne i -> exec fp (sp-1) (pc + if 
     (match stack.(sp-1) with Num temp -> temp !=  0 
-      | _ -> raise (Failure ("unexpected types for return"))) then i else 1)
+      | _ -> raise  (Failure ("unexpected types for return"))) then i else 1)
   | Bra i -> exec fp sp (pc+i)
   | Hlt   -> ()
 

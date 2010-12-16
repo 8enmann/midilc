@@ -121,17 +121,17 @@ let translate (globals, functions) =
       | Expr e       -> expr e @ [Drp]
       | Return e     -> expr e @ [Rts num_formals]
       (** fix break and continue *)
-      | Break -> [Rts num_formals]
-      | Continue -> raise (Failure ("continue not implemented"))
+      | Break -> [Jmp(0,0,1)]
+      | Continue -> [Jmp(0,0,2)];
       | If (p, t, f) -> let t' = stmt t and f' = stmt f in
 	expr p @ [Beq(2 + List.length t')] @
 	t' @ [Bra(1 + List.length f')] @ f'
       | For (e1, e2, e3, b) ->
-	  stmt (Block([Expr(e1); While(e2, Block([b; Expr(e3)]))]))
-      | While (e, b) ->
+	  stmt (Block([Expr(e1); While(e2, Block([b; Expr(e3)]), List.length (stmt b))]))
+      | While (e, b,l) -> 
 	  let b' = stmt b and e' = expr e in
-	  [Bra (1+ List.length b')] @ b' @ e' @
-	  [Bne (-(List.length b' + List.length e'))]
+	  [Jmp((if l<0 then List.length b' else l), List.length b' + List.length e', 0)] @ [Bra (1+ List.length b')] @ b' @ e' @
+	  [Bne (-(List.length b' + List.length e'))] @ [Jmp(0,0,3)]
 
     in [Ent num_locals] @      (* Entry: allocate space for locals *)
     stmt (Block fdecl.body) @  (* Body *)
