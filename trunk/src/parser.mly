@@ -34,7 +34,7 @@ program:
  | program fdecl { fst $1, ($2 :: snd $1) }
 
 fdecl:
-    ID LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+    id LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
      { {
 	 fname = $1;
 	 formals = $3;
@@ -45,9 +45,13 @@ formals_opt:
     /* nothing */ { [] }
   | formal_list   { List.rev $1 }
 
+id:
+    TYPE ID { $2 }
+    | ID { $1}
+
 formal_list:
-  ID                  { [$1]  }  /* List pair */
-  | formal_list COMMA ID { $3 :: $1 } /* List pair */
+  id                  { [$1]  }  /* List pair */
+  | formal_list COMMA id { $3 :: $1 } /* List pair */
 
 vdecl_list:
     /* nothing */    { [] }
