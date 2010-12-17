@@ -1,0 +1,10 @@
+Things to add/fix:
+
+- Implement full equality testing (as in LRM 5.4.3)
+- Implement set_instrument using strings
+- Change PPQ to 4 from 16
+- Write full sample programs/songs
+- Improve break/continue mechanism?
+- Fix filename bug in testall.sh (very low priority)
+
+Add things as soon as you think of them

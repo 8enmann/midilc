@@ -1,37 +1,41 @@
 Tests to make:
 play:
-  single note
-  single chord
-  single sequence
-Note constructor
-Chord constructor
-Sequence constructor
+X single note
+X single chord
+  single sequence (everything?)
+X Note constructor 
+X Chord constructor
+X Sequence constructor
 type checking
-adding to sequence
-adding to chord
-set_tempo
-function call
-recursion
-add
-subtract
-equality (LRM section 5.4.3)
-for
-local scope
-global scope
-if
-if else
-subscripting for access, e.g., a = myChord[1]
-subscripting for assignment, e.g., seq[3] = {A,C,E}
-direct selection
-casting up
-equality
-continue
-break
-return
-major chord construction
-minor chord construction
-arpeggiating
-chromatic scale
-selecting from the chromatic scale
-creating melodies
-creating harmonies from given melodies
+X adding to sequence
+X adding to chord
+X set_tempo
+X function call
+X recursion
+X add
+X subtract
+equality (LRM section 5.4.3) -- currently not implemented
+X for
+local scope (everything?)
+X global scope
+X if
+X if else
+X subscripting for access, e.g., a = myChord[1]
+X subscripting for assignment, e.g., seq[3] = {A,C,E}
+X direct selection
+X casting up
+X equality
+X continue
+X break
+X return
+X major chord construction
+X minor chord construction
+X arpeggiating
+X chromatic scale
+major scale
+harmonic minor scale
+natural minor scale
+melodic minor scale
+X selecting from the chromatic scale
+X creating melodies
+X creating harmonies from given melodies
