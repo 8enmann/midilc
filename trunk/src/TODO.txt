@@ -1,6 +1,5 @@
 Things to add/fix:
 
-- Implement set_instrument using strings
 - Write full sample programs/songs
 - Improve break/continue mechanism?
 
