@@ -2,7 +2,10 @@
  * CSV2MIDI.java
  * 
  * @author: Ye
- * Modified from Stephen Steffes: http://www.penguinpeepshow.com/CSV2MIDI.php
+ * Modified from Stephen Steffes: http://www.penguinpeepshow.com/CSV2MIDI.php to support language-specific constructs
+ * 
+ * @author: Fredric
+ * Modified to change initial instrument, and send tempo meta-event
  * 
  * Converts .csv files to MIDI files using the javax.sound.midi package
  */
@@ -23,6 +26,10 @@ public class CSV2MIDI{
 		
 		return retval;
 	}
+	
+	public static final String INSTRUMENTFILE = "sorted_instruments.csv";
+	public static final int MININST = 0;
+	public static final int MAXINST = 127;
 
 	public static void main(String[] args)	throws InvalidMidiDataException {
 
@@ -63,18 +70,41 @@ public class CSV2MIDI{
 		int currentCSVPos = 0;
 		
 		// instrument
-		
 		String str = csvFile.data.elementAt(currentCSVPos).toString();
 		if(str.compareToIgnoreCase("Instrument") == 0)
 		{
 			currentCSVPos += 2;
-			//String instrumentName = csvFile.data.elementAt(currentCSVPos).toString();
-			instrument = Integer.parseInt(csvFile.data.elementAt(currentCSVPos).toString());
-			currentCSVPos += 2;
-
-			// do some kind of lookup
-			//instrument = 1;
-					
+			String instrumentName = csvFile.data.elementAt(currentCSVPos).toString();
+			instrumentName = instrumentName.trim();
+			try
+			{
+				instrument = Integer.parseInt(instrumentName);
+				// if the instrument is a number, check its range
+				if(instrument < MININST || instrument > MAXINST)
+				{
+					System.out.println("Instrument # " + instrument + " is not a valid instrument.\nReverting to Piano");
+					instrument = 1;
+				}
+			}
+			catch(NumberFormatException e)
+			{		
+				// look up the instrument's number from the file if it isn't a number
+				instrument = InstrumentCheck.checkInstrument(INSTRUMENTFILE, instrumentName, MININST, MAXINST);
+				if(instrument == -1)
+				{
+					System.out.println("Instrument: " + instrumentName + " is not a valid instrument.\nReverting to Piano");
+					instrument = 1;
+				}
+				
+				// handle a blank instrument name
+				if(instrumentName.length() < 1)
+					currentCSVPos -= 1;
+			
+			}
+			finally
+			{
+				currentCSVPos += 2;
+			}
 		}
 		else
 		{
