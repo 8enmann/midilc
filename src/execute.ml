@@ -120,9 +120,15 @@ let execute_prog prog =
         | _ -> raise (Failure ("unexpected types for ||")))
       | Equal -> (match (opA, opB) with 
           (Num op1, Num op2) -> boolean (op1 =  op2)
+		| (Not op1, Not op2) -> boolean (op1 =  op2)
+		| (Cho op1, Cho op2) -> boolean (op1 =  op2)
+		| (Seq op1, Seq op2) -> boolean (op1 =  op2)
         | _ -> raise (Failure ("unexpected types for =")))
       | Neq -> (match (opA, opB) with 
           (Num op1, Num op2) -> boolean (op1 != op2)
+		| (Not op1, Not op2) -> boolean (op1 <> op2) (* structural inequality *)
+		| (Cho op1, Cho op2) -> boolean (op1 <> op2)
+		| (Seq op1, Seq op2) -> boolean (op1 <> op2)
         | _ -> raise (Failure ("unexpected types for !=")))
       | Less -> (match (opA, opB) with 
           (Num op1, Num op2) -> boolean (op1 <  op2)

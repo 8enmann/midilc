@@ -14,7 +14,8 @@ X function call
 X recursion
 X add
 X subtract
-equality (LRM section 5.4.3) -- currently not implemented
+X equality (LRM section 5.4.3)
+inequality
 X for
 local scope (everything?)
 X global scope
