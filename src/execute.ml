@@ -19,11 +19,13 @@ let shift_chords chord_list shift =
     [(List.hd chord); (List.nth chord 1); (List.nth chord 2) + shift] @ (List.tl (List.tl (List.tl chord)))
   in List.map shift_chord chord_list
   
+(** Replace element of list*)
 let replace_element l i n skip = 
   let a = Array.of_list l in
   a.(i+skip) <- n; Array.to_list a
 
 let execute_prog prog =
+  (** Stack, Globals, and Jump variables *)
   let stack = Array.make 1024 (Num(0))
   and jumps = Array.make 20 0 
   and jp = Array.make 1 0
@@ -31,6 +33,7 @@ let execute_prog prog =
 
   let rec exec fp sp pc = match prog.text.(pc) with
     Num i -> stack.(sp) <- (Num(i)) ; exec fp (sp+1) (pc+1)
+    (** Member selection*)
   | Mem s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
       ("length", (Cho(len :: _))) -> (Num(len))
     | ("start", (Cho(l))) -> (Num(List.nth l 2))
@@ -40,6 +43,7 @@ let execute_prog prog =
     | ("current", (Seq ([c; l] :: _ ))) -> (Num(c))
     | ("length", (Seq ([c; l] :: _ ))) -> (Num(l))
     | _ -> raise (Failure ("illegal selection attribute"))) ; exec fp sp (pc+1)
+    (** Casting (Num -> Number, Num -> Not, Not -> Chord, 0->Seq, Cho->Seq)*)
   | Cst s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
       ("Number", (Num i))-> (Num(i))
     | ("Note", (Num i)) ->  (Not(i,4))
@@ -47,17 +51,21 @@ let execute_prog prog =
     | ("Sequence", (Num 0)) -> (Seq([[0;0]]))
     | ("Sequence", (Cho(l))) -> (Seq([[(List.nth l 1); 1]; l]))
     | _ -> raise (Failure ("illegal type cast"))) ; exec fp sp (pc+1)
+    (** Creating types (Not, Cho, Seq)*)
   | Not (p, d) -> stack.(sp) <- (Not(p,d)) ; exec fp (sp+1) (pc+1)
   | Cho (l) -> stack.(sp) <- (Cho(l)) ; exec fp (sp+1) (pc+1)
   | Seq (ll) -> stack.(sp) <- (Seq(ll)) ; exec fp (sp+1) (pc+1)
+    (** Element Of*)
   | Ele -> stack.(sp-2) <- (match (stack.(sp-1), stack.(sp-2)) with 
       (Cho(l), Num(i)) -> (Not((List.nth l (i + 3)), List.nth l 1))
     | (Seq(ll), Num(i)) -> (Cho(List.nth ll (i+1)))
     | _ -> raise (Failure ("unexpected types for []"))) ; exec fp (sp-1) (pc+1)
+    (** Left Element Of *)
   | Leo -> stack.(sp-3) <- (match (stack.(sp-1), stack.(sp-2), stack.(sp-3)) with 
       (Cho(l), Num(i), Not(p,d)) -> (Cho(replace_element l i p 3))
     | (Seq(ll), Num(i), Cho(l)) -> Seq(replace_element ll i l 1)
     | _ -> raise (Failure ("assignment to [] failed"))) ; exec fp (sp-2) (pc+1)
+    (** Left Member Of *)
   | Lmo (s) -> stack.(sp-2) <- (match (s, stack.(sp-1), stack.(sp-2)) with 
       ("start", (Cho(l)), (Num i)) -> (Cho([(List.hd l); (List.nth l 1); i] @ (List.tl (List.tl (List.tl l)))))
     | ("duration", (Cho(l)), (Num i)) -> (Cho([(List.hd l); i; (List.nth l 2)] @ (List.tl (List.tl (List.tl l)))))
@@ -66,13 +74,27 @@ let execute_prog prog =
     | ("current", (Seq ([c; l] :: cs )), (Num i)) -> (Seq([i;l] :: cs))
     | _ -> raise (Failure ("illegal selection attribute"))) ; exec fp (sp-1) (pc+1)
   | Drp -> exec fp (sp-1) (pc+1)
+    (** Binary operations
+        Add
+        Sub (Num - Num)
+        Mod (Num % Num)
+        DotAdd (Not .+ Num)
+        DotSub (Num .- Num)
+        And (Num && Num)
+        Or (Num || Num)
+        Equal (Num == Num)
+        Not Equal (Num != Num)
+        Less (Num < Num)
+        Leq (Num <= Num)
+        Greater (Num > Num)
+        Geq (Num >= Num) *)
   | Bin op -> let opA = stack.(sp-2) and opB = stack.(sp-1) in     
       stack.(sp-2) <- (let boolean i = if i then Num(1) else Num(0) in
       match op with
         Add -> (match (opA, opB) with 
             (Num op1, Num op2) -> Num(op1 + op2)
           | (Not(p,d), Num i) -> Not(p,d+i)
-          | (Cho(l), Not(p,d)) -> Cho(l @ [p])
+          | (Cho(l), Not(p,d)) ->Cho(l @ [p])
           | ((Seq ([c; l] :: cs )), (Not(p, d))) -> Seq([c+d; l+1] :: cs @ [[1;d;c;p]])
           | ((Seq ([c; l] :: cs )), (Cho(chord))) -> Seq([c+(List.nth chord 1); l+1] :: cs @  [[(List.hd chord); (List.nth chord 1); c] @ (List.tl (List.tl (List.tl chord)))])
           | ((Seq ([c1; l1] :: cs1 )), (Seq ([c2; l2] :: cs2 ))) -> Seq([c1+c2; l1+l2] :: cs1 @ (shift_chords cs2 c1))
@@ -118,18 +140,22 @@ let execute_prog prog =
   | Str i -> globals.(i)  <- stack.(sp-1) ; exec fp sp     (pc+1)
   | Lfp i -> stack.(sp)   <- stack.(fp+i) ; exec fp (sp+1) (pc+1)
   | Sfp i -> stack.(fp+i) <- stack.(sp-1) ; exec fp sp     (pc+1)
-  | Jmp(i,j,k) -> if k=0 then (jumps.(jp.(0)) <- pc+i+2; jumps.(jp.(0)+1) <- pc+3+j; jp.(0)<-jp.(0)+2; exec fp sp (pc+1))
+    (** Sjp, to set jump points for use by break and continue*)
+  | Sjp(i,j,k) -> if k=0 then (jumps.(jp.(0)) <- pc+i+2; jumps.(jp.(0)+1) <- pc+3+j; jp.(0)<-jp.(0)+2; exec fp sp (pc+1))
                   else (if k<=2  then exec fp sp jumps.(jp.(0)-k)
                   else (jp.(0)<-jp.(0)-2; exec fp sp (pc+1)) ); 
 
   (** this is the print command. change it to set tempo and play *)
   | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline ("Tempo,"^string_of_int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for set_tempo")))
+    (** Play command*)
   | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline (print_sequence s); exec fp sp (pc+1)
             | Cho d -> let a = List.hd (List.tl d) in let c = List.hd (List.tl (List.tl d)) in
-                ignore(List.map print_endline (List.map (fun b -> string_of_int c^","^string_of_int a^","^string_of_int b) (List.tl (List.tl (List.tl d))))); exec fp sp (pc+1)
+                ignore(List.map print_endline (List.map (fun b -> if b > 0 then string_of_int c^","^string_of_int a^","^string_of_int b else "") (List.tl (List.tl (List.tl d))))); exec fp sp (pc+1)
             |_ -> raise (Failure ("unexpected type for play")))
+    (** Sequence constructor *)
   | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
+    (** Chord constructor *)
   | Jsr(-4) -> (match stack.(sp-1) with Num i ->
                 let rec chord l n m = if n>m then l else (match stack.(sp-n-1) with Not (pitch,duration) ->
                                 if n=1 then chord [m; duration; 0; pitch] (n+1) m else chord (l @ [pitch]) (n+1) m
@@ -138,8 +164,10 @@ let execute_prog prog =
                     stack.(sp-i-1) <- (Cho(my_chord)) ; exec fp (sp-i) (pc+1)
                 | _ -> raise (Failure ("unexpected type for chord")))
 
+    (** Random note *)
   | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for rand")))
+    (** Set instrument (needs to be changed) *)
   | Jsr(-6) -> (match stack.(sp-1) with Num i -> print_endline ("Instrument,"^string_of_int i); exec fp sp (pc+1)
 			| _ -> raise (Failure ("unexpected type for set_instrument")))
   | Jsr i -> stack.(sp)   <- (Num(pc + 1))       ; exec fp (sp+1) i
