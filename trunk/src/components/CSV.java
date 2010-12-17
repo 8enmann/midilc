@@ -1,8 +1,9 @@
 /**
  * CSV.java
- * June 11, 2003
- * @author: Stephen Steffes
- * Purpose: fill and extract data from a CSV file
+ * 
+ * @author: Stephen Steffes 
+ * 
+ * provides i/o for CSV files. Taken from http://www.penguinpeepshow.com/CSV2MIDI.php
  */
 
 import java.util.*;
