@@ -94,6 +94,7 @@ let execute_prog prog =
         Add -> (match (opA, opB) with 
             (Num op1, Num op2) -> Num(op1 + op2)
           | (Not(p,d), Num i) -> Not(p,d+i)
+          | (Not(p,d), Not(p2,d2)) -> Not(p, d+d2)
           | (Cho(l), Not(p,d)) ->Cho(l @ [p])
           | ((Seq ([c; l] :: cs )), (Not(p, d))) -> Seq([c+d; l+1] :: cs @ [[1;d;c;p]])
           | ((Seq ([c; l] :: cs )), (Cho(chord))) -> Seq([c+(List.nth chord 1); l+1] :: cs @  [[(List.hd chord); (List.nth chord 1); c] @ (List.tl (List.tl (List.tl chord)))])
@@ -164,7 +165,7 @@ let execute_prog prog =
                     stack.(sp-i-1) <- (Cho(my_chord)) ; exec fp (sp-i) (pc+1)
                 | _ -> raise (Failure ("unexpected type for chord")))
 
-    (** Random note *)
+    (** Random number *)
   | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for rand")))
     (** Set instrument (needs to be changed) *)
