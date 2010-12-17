@@ -51,8 +51,8 @@ Run() {
 Check() {
     error=0
     basename=`echo $1 | sed 's/.*\\///
-                             s/.m//'`
-    reffile=`echo $1 | sed 's/.m$//'`
+                             s/\.m$//'`
+    reffile=`echo $1 | sed 's/\.m$//'`
     basedir="`echo $1 | sed 's/\/[^\/]*$//'`/."
 
     echo -n "$basename..."
