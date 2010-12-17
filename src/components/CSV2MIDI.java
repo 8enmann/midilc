@@ -1,10 +1,11 @@
 /**
  * CSV2MIDI.java
- * June 11, 2003
- * @author: Stephen Steffes
- * Purpose:  Converts a .csv file to a MIDI file according to ExampleMIDI.csv
+ * 
+ * @author: Ye
+ * Modified from Stephen Steffes: http://www.penguinpeepshow.com/CSV2MIDI.php
+ * 
+ * Converts .csv files to MIDI files using the javax.sound.midi package
  */
-
 
 import java.io.*;
 import javax.sound.midi.*;
