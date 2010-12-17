@@ -21,6 +21,7 @@ main() {
     final = final + s;
     c = s[0];
   }
+  set_instrument("58");
   set_tempo(160);
   play(final);
 }
