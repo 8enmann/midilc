@@ -41,10 +41,317 @@ MIDILC also attempted to redress other issues of regular music composition. Song
 MIDILC is tailored for crafting melody sequences. For a sequence containing a series of whole notes, one could easily manipulate the notes in the melody to create sequences of counterpoints to the melody. Using MIDILC, a Major() and Minor() function are easy to craft and chords simple to arpeggiate to make counterpoint. MIDILC allows for the simple concatenation of sequences, and so complicated sequences could be easily made from simple starting blocks.
 
 \chapter{Language Tutorial}
-MIDILC was designed with the programmer in mind, but uses all the musical notation familiar to the musician. The lanuage is robust enough to fully support the idiomatic construction of Notes and Chords, as well as set tempo and note duration using literals.
+MIDILC was designed with the programmer in mind, but uses all the musical notation familiar to the musician. The lanuage is robust enough to fully support the idiomatic construction of Notes and Chords, as well as set tempo and note duration using Note and Number literals.
 \section{A Simple Melody}
 \section{Twinkle Twinkle Little Star}
 \chapter{Language Reference Manual}
+MIDILC is a C-like language that makes it simpler to algorithmically generate music.  It simplifies MIDI music creation by allowing programmers to specify song information in musical terms and write functions that process existing musical information.  By building off of simpler musical functions, such as arpeggios and chords, complex musical compositions can easily be programmed.
+
+To eliminate the programming complexities from the MIDILC language, it has limited scope and data management capabilities.  MIDILC can be used following an imperative or functional paradigm and reduces hassle for the programmer by forcing static scope.
+
+It compiles into MIDI files that can then be played in any standard media player.
+
+\section{Lexical Conventions}
+\subsection{Tokens}
+Tokens consist of identifiers, keywords, constants, operators, and separators.  As with C, MIDILC is a free-form language and all white space characters are ignored (with the exception of separating tokens), as braces are used to identify the start and end of code blocks and semicolons are used to end statements.
+2.2 Comments
+/* and */ are used to indicate a block of comments (C-style comments).  There are no C++-style comments in MIDILC.
+2.3 Identifiers
+These are sequences of letters, digits, and underscores, starting with a letter or underscore.  Identifiers cannot be of the format [A-G R][0-9], as these are reserved for Note literals.
+2.4 Keywords
+MIDILC has very few keywords; these include the following:
+Types	Control
+Number	return
+Note	continue
+Chord	break
+Sequence	if
+	else
+Void	while
+	for
+
+
+2.5 Constants/Literals
+MIDILC has no facilities for specifying user-defined constants, but it does include a set of Note literals, specified by the note letter, accidental (if any), MIDI octave, and a letter that indicates the note’s duration (optional, and defaulting to a quarter note).  Durations include w (for whole note), h (for half note), q (for quarter note), e (for eigth note), and s (for sixteenth note).  Rests are indicated by using R instead of a note. Chord literals don’t exist, though Chords can easily be expressed using built-in chord generation function calls on Note literals.  In addition, Number literals also exist (integral numbers limited to signed 32-bit range).  MIDILC does not have floating-point literals.
+Note that literals look like the following:
+Ab7
+C4s
+G5h
+
+Pitches and Number literals have the following correspondence:
+
+3. Meaning of Identifiers
+Identifiers in MIDILC have the following attributes: scope, name space, linkage, and storage duration, as detailed in Section 4.1. Since static scope is handled automatically, there are no storage class specifiers in MIDILC.
+3.1 Disambiguating Names
+3.1.1 Scope
+The scope of of an identifier is defined as the region of a program within which it is visible, and begins when it is declared. In MIDILC, all identifiers are globally scoped, and are therefore visible to all blocks within a program unless hidden in another scope. This is due to the fact that the language automatically handles static identifiers.
+3.1.2 Name Space
+All the identifiers in MIDILC are categorized as ordinary identifiers. These include user-defined type names, object names, and function names.
+3.1.3 Linkage of Identifiers
+Identifiers in MIDILC may be linked across different files of the same program, but the identifier name must be unique in all files. Furthermore, the compiler will generate a compile time error about the identifier if there is a conflict.
+3.1.4 Storage Duration
+Storage duration denotes the lifetime of an object. All objects in MIDILC are static, and have static storage duration. The initialization of these objects occurs only once, prior to any reference.
+3.2 Object Types
+The MIDILC language supports two types of objects: numbers and musical notations.  Objects are dynamically typed.  Typing of an identifier is determined on assignment.
+3.2.1 Number type
+The only supported numerical type is Number, which has a size of 32 bits and ranges from -231 to 231 - 1.  This is also the underlying type for all fields within the musical types.
+3.2.2 Musical types
+Note, Chord, and Sequence are all of the musical types supported by MIDILC. Note literals are  made up of strings consisting of integers and characters in sequences that match the following regular expression:
+[A-G R][b, #]?[0-9]?[w, h, q, e, s]?
+As these types are not stored directly internally, their sizes are not exact. As a general rule, for non-empty objects,
+Number < Note < Chord < Sequence in terms of their relative sizes.
+3.2.2.1 Note type
+Note type has the following attributes: pitch, and duration. Pitch refers to the frequency of the note, and duration is specified as a type of note: whole, half, quarter, eighth, or sixteenth.  Note literals with the pitch indicated as R instead of A-G are rests (numerically represented as -1).
+3.2.2.2 Chord type
+Chord type has the following attributes: duration and length. Duration is a Number type that specifies a type of note: whole, half, quarter, eighth, or sixteenth. All Note literals within the same Chord must have the same duration.  This property can be specified as number of sixteenths. Length of the Chord refers to the number of Note literals in the Chord.
+Chord literals can be constructed with the following syntax:
+{ Note,  Note , Note... }
+3.2.2.3 Sequence type
+Sequence type has the following attributes: current, beginning, and length. Each is of type Number. Beginning denotes the starting point of the Sequence, while current denotes the current time (from beginning) where a new note may be inserted. The length of the Sequence refers to the number of Note literals or Chord objects in the Sequence.
+3.2.3 Derived types
+Chord and Sequence objects can be derived; a Chord can be derived from a collection of Note objects, and a Sequence can be derived from a collection of Note or Chord objects.
+3.2.4 Void type
+The Void type specifies an empty set of values. It never refers to an object.
+3.3 Objects and lvalues
+An object is a manipulable region of storage. An lvalue is an expression referring to an object, for example, an identifier. Assignments such as note1 = note2, where note1 and note2 are Note objects, will result in a change of reference for the Note objects, but not a change in the objects themselves.
+4. Operator Conversions
+Due to the nature of the primitive types, very few conversions are supported in MIDILC. It is possible to cast from Note to Chord, Note to Sequence, and Chord to Sequence, but not in the opposite direction.
+4.1 Conversions of Number and Note
+Number objects can be converted into Note objects as a note with the pitch represented as an integer in MIDI notation. Note objects cannot be converted to Number objects.
+4.2 Conversions of Note and Chord
+Note objects can be converted into Chord objects as one-note chords. Chord objects cannot be converted into Note objects, as this is a narrowing conversion.
+4.3 Conversions of Note and Sequence
+Note objects can be converted into Sequence objects as a sequence that contains a single note. Sequence objects cannot be converted into Note objects, as this is a narrowing conversion, even if the Sequence contains only a single Note.
+4.4 Conversions of Chord and Sequence
+Chord objects can be converted into Sequence objects as a sequence that contains a single chord. Sequence objects cannot be converted into Chord objects, as this is a narrowing conversion, even if the Sequence contains only a single Chord.
+5. Expressions and Operators
+
+In MIDILC, expressions include one or more operators and a number of operands that follow certain associativity rules. Operators may change the value of an operand or leave it alone.
+
+Examples of some expressions are as follows:
+assignment-expression:    note = Ab7
+operation-expression:        Ab7 .+ 4
+Associativity is overridden by use of parentheses. Some examples at play are below:
+Expression	Result	Explanation
+C7 .+ 4 	E7	Note with E7 pitch
+3 + 2 * 4	11	Regular assignment order (multiplication has tightest binding, then addition)
+(3 + 2) * 4	20	Parentheses change order of operations
+note = C7;
+(note, note .+ 4, note .+ 7) 	(C7, E7, G7)	Addition operator has tightest binding, followed by the assignment operator
+
+
+The associativity of the built in functions are listed below:
+Tokens (From High to Low Priority)	Operators	Class	Associativity
+Identifiers, constants,
+parenthesized expression	Primary expression 	Primary	
+() [] .	Function calls, subscripting, direct selection	Postfix	L-R
+identifier as type	Cast	Binary	L-R
++ -	Add/Minus	Binary	L-R
+== !=	Equality comparisons	Binary	L-R
+< <= >= >	Relational Comparisons	Binary	L-R
+&&	Logical and	Binary	L-R
+||	Logical or	Binary	L-R
+=	Assignment 	Binary	R-L
+,	Comma	Binary	L-R
+
+
+5.1 Primary Expressions
+5.1.1 Identifiers
+An lvalue or function designator, discussed in part 2.
+5.1.2 Constants
+An object of constant value, discussed in part 2.
+5.1.3 Parenthesized Expressions
+Parenthesized expressions allow a user to change the order of operations. They are executed before the operations and can be used as part of a larger expression. For example:
+without parentheses: 0 == note1.pitch > note2.pitch
+with parentheses:      0 == (note1.pitch > note2.pitch)
+This will change the order of operations, evaluating whether the pitch of note1 is greater than that of note2 before evaluating if that return value is equal to 0.
+5.2 Postfix
+Postfix calls are made as follows:
+Function call:        (Ab6, Ab7, C4)
+Subscripting:        (Ab6, Ab7, C4)[1]
+Direct selection:    (Ab6, Ab7, C4).length
+5.2.1 Function calls
+The syntax of a function call is as follows:
+postfix-expression (argument-expression-listopt)
+argument-expression-list: argument-expression
+argument-expression-list, argument-expression
+An argument expression list may either be a single argument or a list of arguments. All functions are allowed to be recursive.
+Each function must be declared before it is called. With that in mind, certain casts are made by the runtime compiler to match arguments. A Number may be cast to a Note, Chord, or Sequence, for example.
+A function may only take the a parameter of type Void. For functions like this, a function call may include no parameters.
+5.2.2 Subscripting
+Certain objects may be acted upon by the subscripting operation. For example, a Chord object may be acted upon by a subscript to select a particular note in the chord. Similarly, a Sequence object may be acted upon to select a Chord at any particular moment in time. For a Chord object, the index of the subscript reflects the order that a Note was added. For a Sequence object, the index subscript indicates the order that Chords were inserted in.
+The subscripting operator allows both retrieval and mutation of elements in those objects that support it. There is no implicit casting for subscription.
+5.2.3 Direct Selection
+Used to change pitch and duration in objects of type Note, Chord, or Sequence. Pitch and duration are treated as objects of type  Number with the pitch affected (either positively or negatively) by the successor operand. For example, C7.pitch = C7.pitch + 1 will result in C#7.
+Similarly for duration: C7.duration = C7.duration + 1 will result in C7 with a duration 1/16th greater.
+Direct selection can be done for the following parameters on the following objects:
+Note: pitch, duration
+Chord: duration, length
+Sequence: current, beginning, length
+
+5.3 Unary Operations
+5.3.1 Casting
+Syntax of casting is as follows:
+cast-expression: unary-expression
+(type-name) cast-expression
+Casting allows a user to explicitly change the Type of an object, according to the order established in 4.2.2 (Musical Types). Implicitly casting will take place during a function call or in the use of a binary operator between two objects of different type. If, however, we wanted to craft two notes, and then append one to another in sequence, we would need to do the following:
+Sequence s = ((Sequence) note1 + (Sequence) note2)
+This would allow us to use the + operator of Sequences instead of the + operator of Notes.
+5.4 Binary Operations
+5.4.1 Add/Subtract
+Used to add or subtract two Number objects. When applied to objects of type Note, Chord, or Sequence, results in a Sequence object with given elements concatenated. If two or more objects of different type are concatenated, the element of highest cast determines the cast. That is, a Note added to a Sequence would return a new Sequence with the given note appended as a degenerate Chord to the end.
+Syntax is as follows:
+add-expression: cast-expression
+              add-expression + cast-expression
+
+add-expression - cast-expression
+5.4.2 Relational comparisons
+Yields a Number result (1 if true, 0 if false). Allows for comparison between objects (casting is done in one direction).
+relational-expression:    add-expression
+
+relational-expression < add-expression
+
+relational-expression > add-expression
+
+relational-expression <= add-expression
+
+relational-expression >= add-expression
+5.4.3 Equality comparisons
+Compares two values for equality. MIDILC uses the number 0 to denote false and all values other than 0 to denote truth. Equality follows the following rules:
+Two Number objects are equal if they evaluate to the same value
+Two Note objects are equal if they have the same pitch and duration
+Two Chord objects are equal if they have the same notes and the same duration
+Two Sequence objects are equal if they have the same chords in the same order
+equality-expression:    relational-expression
+
+equality-expression == relational-expression
+
+equality-expression != relational-expression
+5.4.4 Logical and
+Performs a logical “and” on two expressions. Returns 0 if the left expression evaluates to 0. Otherwise, evaluates right expression. If true, returns 1; if false, 0.
+Syntax:
+logical-AND-expression: logical-OR-expression
+               logical-AND-expression && logical-OR-expression
+This is lazy evaluation.
+5.4.5 Logical or
+Performs a logical “or” on two expressions. Returns 1 if ever the left expression evaluates to 1. Otherwise, evaluates right expression. If true, 1; if false, 0.
+Syntax:
+logical-OR-expression: logical-AND-expression
+               logical-OR-expression || logical-AND-expression
+This is again an example of MIDILC’s power to perform lazy evaluation.
+5.4.6 Assignment
+Right associative. The expression on the right is evaluated and then used to set the lvalue. The rvalue must have the same type as the lvalue; no casting is implicitly done.
+5.4.7 Comma
+Separates elements in a list (such as parameters in a function or Note literals in a Chord). Example of Chord constructor:
+Chord myChord = {C4, E4};
+6. Declarations
+Declarations specify the interpretation given to a set of identifiers.
+direct-declarator:    type-specifier declarator
+init-declarator:    type-specifier declarator = initializer
+Only a single declarator can be declared at once.  Declarators must be preceded by the type of the identifier.  At most one declaration of the identifier can appear in the same scope and name space.  
+6.1 Storage class specifiers
+Static scope is handled automatically because functions have access to any identifiers not declared in their scope. No storage class specifiers are available.
+6.2 Type specifiers
+Type specifiers listed below.  Syntax as follows:
+type-specifier:    Void
+
+    Number
+
+    Note
+
+    Chord
+
+    Sequence
+6.3 Custom types
+Custom types are not available in MIDILC.  The provided datatypes should be able to completely specify a piece of music. As such, enumerations are also unsupported.
+6.4 Type qualifiers
+Types cannot be declared mutable or immutable by the programmer.  All types are mutable
+6.5 Function Declarators
+There are no function prototypes (all function declarations are definitions).  The syntax for function declarators is shown below:
+direct-declarator (identifier-listopt) { body }
+identifier-list:
+identifier-list, direct-declarator
+For example,
+T D(identifier-listopt)
+creates a function with identifier D and return type T with the specified parameters. An identifier list declares the types of and identifiers for the formal parameters of a function.
+Function declarators do not support variable additional arguments.  
+If the type of any parameter declared in the identifier list is other than that which would be derived using the default argument promotions, an error is posted.  Otherwise, a warning is posted and the function prototype remains in scope.
+When a function is invoked for which a function is defined, no attempt is made to convert each actual parameter to the type of the corresponding formal parameter specified in the function prototype. Instead an error is thrown.  
+The following is an example of a function definition:
+Chord transposeChord( Chord oldChord, Note newKey ) { ... }
+This declares a function transposeChord() which returns a Chord and has two parameters: a Chord and a Note.  
+6.6 Initialization
+A declaration of a type can specify an initial value for the identifier after being declared.  The initializer is preceded by = and consists of an expression.
+initializer:    assignment-expression
+Variables that are not explicitly initialized may cause a null pointer exception during compilation. When an initializer applies to a literal, it consists of a single expression, perhaps in parentheses.  The initial value of the object is taken from the expression.  Type conversion is only attempted with an explicit cast.
+6.6.1 Examples of initialization
+Note root;
+root = C3q;
+Initializes root with a note literal.
+Chord notes;
+notes = ( root, root .+ 4, root .+ 7 );
+Initializes notes with a chord literal
+Sequence gProgression;
+gProgression = oneFourFiveProg( G7q );
+Initializes gProgression with the result of the function call.
+7. Statements
+A statment is a complete instruction to the midi compiler. Except as indicated, statements are executed in sequence.  Statements have the following form:
+statement:        expression-statement
+
+        selection-statement
+
+        iteration-statement
+
+        jump-statement
+7.1 Expression statement
+Most statements are expression statements, which have the following form:
+expression-statement:        expression;
+Usually expression statements are expressions evaluated for their side effects such as assignments or function calls.
+7.2 Compound statement or block
+A compound statement (or block) groups a set of statements into a syntactic unit.  The set can have its own declarations and initializers, and as the following form:
+compound-statement:        {declaration-list statement-listopt}
+declaration-list:        declaration
+                    declaration-list declaration
+statement-list    :        statement
+                    statement-list statement
+Declarations within compound statements have block scope.  If any of the identifiers in the declaration list were previously declared, the outer declaration is hidden for the duration of the block, after which it resumes its force.  Function declarations can only be defined at the outermost scope.
+7.3 Selection statements
+Selection statements include the if and else statements and have the following form:
+selection-statement:        if (expression) statement
+                    if (expression) statement else statement
+Selection statements choose one of a set of statements to execute, based on the evaluation of the expression.  The expression is referred to as the controlling expression.
+7.3.1 if statement
+The controlling expression of an if  statement must have Number type. For both forms of the if statement, the first statement is executed if the controlling expression evaluates to nonzero.  For the second form, the second statement is executed if the controlling expression evaluates to zero.  An else clause that follows multiple sequential else-less if statements is associated with the most recent if statement in the same block (that is, not in an enclosed block).
+7.4 Iteration statements
+Iteration statements execute the attached statement (called the body) repeatedly until the controlling expression evaluates to zero.  In the for statement, the second expression is the controlling expression.  The format is as follows:
+iteration-statement:        while(expression) statement
+            for (expression; expression ; expression) statement
+The controlling expression must have Number type.
+7.4.1 while statement
+The controlling expression of a while statement is evaluated before each execution of the body.
+7.4.2 for statement
+The for statement has the form specified above.  The first expression specifies the initialization for the loop.  The second expression is the controlling expression, which is evaluated before each iteration.  The third expression often specifies incrementation.  It is evaluated after each iteration. It is equivalent to the following:
+expression-1:    while (expression-2) {statement expression-3}
+One exception exists, however.  If a continue statement is encountered, expression-3 of the for statement is executed prior to the next iteration.
+7.5 Jump statements:
+jump-statement:        continue;
+                break;
+                return expressionopt;
+7.5.1 continue statement
+The continue statement can appear only in the body of an iteration statement.  It causes control to pass to the loop-continuation portion of the smallest enclosing while, do, or for statement; that is, to the end of the loop.
+7.5.2 break statement
+The break statement can appear only in the body of an iteration statement or code attached to a switch statement. It transfers control to the statement immediately following the smallest enclosing iteration, terminating its execution.
+7.5.4 return statement
+A function returns to its caller by means of the return statement. The value of the expression is returned to the caller as the value of the function call expression. The return statement cannot have an expression if the type of the current function is Void.
+If the end of a function is reached before the execution of an explicit return, an implicit return (with no expression) is executed. If the value of the function call expression is used when none is returned, the behavior is undefined.
+
+Appendix A. Built-In Functions
+
+void play(Sequence s)
+    Instructs compiler to write sequence s to the MIDI file.
+void set_tempo(Number n)
+    Sets the tempo of the file to number n.
+Sequence new_sequence()
+    Initializes an empty Sequence.
 \chapter{Project Plan}
 \chapter{Architecture \& Design}
 \chapter{Test Plan}
