@@ -1,3 +1,9 @@
+/**
+ * Tests setting the instrument used.
+ *
+ * @author Fred
+ */
+
 main() {
   Note a;
   Sequence b;

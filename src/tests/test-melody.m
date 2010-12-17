@@ -1,5 +1,7 @@
 /* Test creating a melody
-   Tests by creating a simple melody */
+   Tests by creating a simple melody 
+   @author Fred
+   */
 
 main() {
   Note e;

@@ -1,5 +1,7 @@
 /* Test creating a melody and harmony
-   Tests by creating a simple melody and then a harmony for it*/
+   Tests by creating a simple melody and then a harmony for it
+   @author Fred
+   */
 
 main() {
   Note e;

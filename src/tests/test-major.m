@@ -1,5 +1,7 @@
 /* Test major
-   Tests creating a major chord from its root.  Library function. */
+   Tests creating a major chord from its root.  Library function. 
+   @author Fred
+   */
 
 main(){
   Sequence s;

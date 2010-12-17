@@ -1,5 +1,7 @@
 /* Test numerical equality
-   Tests that checking equality of numbers works */
+   Tests that checking equality of numbers works 
+   @author Fred
+   */
 
 main() {
   Note a;

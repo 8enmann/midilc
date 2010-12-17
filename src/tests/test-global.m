@@ -1,5 +1,7 @@
 /* Test global
-   Uses global variables to test them */
+   Uses global variables to test them 
+   @author Fred
+   */
 
 Note a;
 Sequence b;

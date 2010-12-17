@@ -1,3 +1,10 @@
+/** Test for loop
+  * 
+  * Test the for loop by adding notes to a sequence.
+  *
+  * @author Ben
+  */
+
 main() {
   Note a; 
   Sequence b;

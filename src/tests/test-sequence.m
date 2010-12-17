@@ -1,3 +1,8 @@
+/**
+ * Test sequences
+ * @author Fred
+ */
+
 main() {
   Note a;
   Sequence b;

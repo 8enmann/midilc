@@ -1,5 +1,7 @@
 /* Test selecting from a chromatic scale
-   Tests that selecting from the chromatic scale using a function works */
+   Tests that selecting from the chromatic scale using a function works 
+   @author Fred
+   */
 
 main() {
   Note a;

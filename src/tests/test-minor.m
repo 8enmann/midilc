@@ -1,5 +1,7 @@
 /* Test minor
-   Tests creating a minor chord from its root.  Library function. */
+   Tests creating a minor chord from its root.  Library function. 
+   @author Fred
+   */
 
 main(){
   Sequence s;

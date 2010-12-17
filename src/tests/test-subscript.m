@@ -1,3 +1,8 @@
+/** Tests subscripting.
+  *
+  * @author Ben
+  */
+
 main() {
   Note a;
   Sequence b;

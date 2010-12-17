@@ -1,3 +1,8 @@
+/**
+ * Tests a for loop without doing any particular operations in the loop.
+ * @author Akiva
+ */
+
 main()
 {
   Note a;
