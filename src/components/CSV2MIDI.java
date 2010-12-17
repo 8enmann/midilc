@@ -37,7 +37,7 @@ public class CSV2MIDI{
 		csvFile.fillVector();
 
 		//instrument and timingRes are default.
-		int timingRes=16, instrument = 1;
+		int timingRes=4, instrument = 1;
 
 		//***** Initialize Sequencer *****
 		try{
