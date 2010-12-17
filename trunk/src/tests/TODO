@@ -13,6 +13,8 @@ X set_tempo
 X function call
 X recursion
 X add
+X divide
+  multiply 
 X subtract
 X equality (LRM section 5.4.3)
 inequality

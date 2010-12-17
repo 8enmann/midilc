@@ -1,7 +1,7 @@
 %{ open Ast %}
 
 %token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET CAST
-%token PLUS MINUS ASSIGN DOTPLUS DOTMINUS MOD
+%token PLUS MINUS TIMES DIVIDE ASSIGN DOTPLUS DOTMINUS MOD
 %token EQ NEQ LT LEQ GT GEQ
 %token AND OR DOT AS
 %token RETURN IF ELSE FOR WHILE BREAK CONTINUE
@@ -22,6 +22,7 @@
 %left EQ NEQ
 %left LT GT LEQ GEQ
 %left MOD
+%left TIMES DIVIDE
 %left PLUS MINUS DOTPLUS DOTMINUS
 
 %start program
@@ -95,6 +96,8 @@ expr:
   | expr DOTMINUS expr { Binop($1, DotSub, $3) }
   | expr PLUS   expr { Binop($1, Add,   $3) }
   | expr MINUS  expr { Binop($1, Sub,   $3) }
+  | expr TIMES   expr { Binop($1, Mult,   $3) }
+  | expr DIVIDE  expr { Binop($1, Div,   $3) }
   | expr MOD    expr { Binop($1, Mod,   $3) }
   | expr EQ     expr { Binop($1, Equal, $3) }
   | expr NEQ    expr { Binop($1, Neq,   $3) }

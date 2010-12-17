@@ -78,6 +78,8 @@ let execute_prog prog =
     (** Binary operations
         Add
         Sub (Num - Num)
+        Mult (Num * Num)
+        Div (Num / Num)
         Mod (Num % Num)
         DotAdd (Not .+ Num)
         DotSub (Num .- Num)
@@ -103,6 +105,12 @@ let execute_prog prog =
           | _ -> raise (Failure ("unexpected types for +")))
       | Sub -> (match (opA, opB) with 
           (Num op1, Num op2) -> Num(op1 - op2)
+        | _ -> raise (Failure ("unexpected types for -")))
+      | Mult -> (match (opA, opB) with 
+          (Num op1, Num op2) -> Num(op1 * op2)
+        | _ -> raise (Failure ("unexpected types for -")))
+      | Div -> (match (opA, opB) with 
+          (Num op1, Num op2) -> Num(op1 / op2)
         | _ -> raise (Failure ("unexpected types for -")))
       | Mod -> (match (opA, opB) with 
           (Num op1, Num op2) -> Num(op1 mod op2)
