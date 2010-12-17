@@ -1,5 +1,7 @@
 /* Test creating a chromatic scale
-   Tests that creating a chromatic scale using a function works.  Library function */
+   Tests that creating a chromatic scale using a function works.  Library function 
+   @author Fred
+   */
 
 main() {
   Note a;

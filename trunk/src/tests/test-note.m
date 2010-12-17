@@ -1,12 +1,18 @@
+/** Test note literal
+  * 
+  * Construct a note literal and play it
+  *
+  * @author Ben
+  */
+
 main() {
   Note a;
   Sequence b;
-  Chord c;
   a = A3q;
   b = new_sequence() + a;
   play(b);
 }
 
-function2() {
+Note myA() {
   return Ab7;
 }

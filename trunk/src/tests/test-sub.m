@@ -1,5 +1,7 @@
 /* Test subtraction
-   Tests subtracting a duration from a note */
+   Tests subtracting a duration from a note 
+   @author Fred
+   */
 
 main() {
   Note a;

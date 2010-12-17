@@ -1,3 +1,8 @@
+/**
+ * Tests more complicated stuff in for loops.
+ * @author Akiva
+ */
+
 main() {
   Sequence b;
   Sequence c;

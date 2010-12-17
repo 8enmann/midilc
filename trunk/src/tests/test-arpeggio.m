@@ -1,5 +1,7 @@
 /* Test arpeggio
-   Tests creating an arpeggio (sequence) from a chord.  Library function. */
+   Tests creating an arpeggio (sequence) from a chord.  Library function.
+   @author Fred
+    */
 
 main(){
   Note a;

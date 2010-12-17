@@ -1,5 +1,8 @@
-/* Test add
-   Tests adding a duration to a note */
+/**
+   Test add
+   Tests adding a duration to a note 
+   @author Fred
+   */
 
 main() {
   Note a;

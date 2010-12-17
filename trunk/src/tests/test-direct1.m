@@ -1,3 +1,8 @@
+/**
+ * Tests direct selection as lvalue.
+ * @author Ben
+ */
+
 main() {
   Note a;
   Note f;

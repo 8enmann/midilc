@@ -1,3 +1,8 @@
+/**
+ * Tests setting the tempo
+ * @author Fred
+ */
+
 main() {
   Note a;
   Sequence b;

@@ -1,5 +1,7 @@
 /* Test upper casts
-   Tests casting note to chord, chord to sequence, and node to sequence */
+   Tests casting note to chord, chord to sequence, and node to sequence 
+   @author Fred
+   */
 
 main() {
   Note n;

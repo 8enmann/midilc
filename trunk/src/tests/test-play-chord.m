@@ -1,5 +1,6 @@
 /* Test play chord
-   Tests playing a single chord */
+   Tests playing a single chord 
+   @author Fred */
 
 main() {
   Chord c;

@@ -1,5 +1,7 @@
 /*  Test direct selection
-    Transposes a chord from one key to another through direct selection */
+    Transposes a chord from one key to another through direct selection 
+    @author Fred
+    */
 
 main(){
   Note a;

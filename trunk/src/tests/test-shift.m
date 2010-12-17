@@ -1,5 +1,7 @@
 /* Test selection
-   Tests selection by shifting notes' pitch */
+   Tests selection by shifting notes' pitch 
+   @author Fred 
+   */
 
 main(){
   Note a;

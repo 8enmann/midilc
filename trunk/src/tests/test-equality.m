@@ -1,6 +1,8 @@
 /* Test structural equality
    Tests that checking equality of sequences, chords, and notes works
-   (Otherwise, there will be no output) */
+   (Otherwise, there will be no output) 
+   @author Fred
+   */
 
 main() {
   Note a;

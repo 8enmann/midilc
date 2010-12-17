@@ -1,5 +1,7 @@
 /* Test play note
-   Tests playing a single note */
+   Tests playing a single note 
+   @author Fred
+   */
 
 main() {
   Note a;
