@@ -70,6 +70,8 @@ let string_of_stmt = function
   | Drp -> "Drp"
   | Bin(Ast.Add) -> "Add"
   | Bin(Ast.Sub) -> "Sub"
+  | Bin(Ast.Mult) -> "Mul"
+  | Bin(Ast.Div) -> "Div"
   | Bin(Ast.Mod) -> "Mod"
   | Bin(Ast.DotAdd) -> "Dad"
   | Bin(Ast.DotSub) -> "Dsu"

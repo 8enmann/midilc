@@ -1,4 +1,4 @@
-type op = Add | Sub |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | DotAdd | DotSub| Mod
+type op = Add | Sub | Mult | Div |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | DotAdd | DotSub| Mod
 
 type expr =
     Literal of int
@@ -51,8 +51,8 @@ let rec string_of_expr = function
       | DotAdd -> ".+" | DotSub -> ".-" 
       | Equal -> "==" | Neq -> "!="
       | Less -> "<" | Leq -> "<=" | Greater -> ">" | Geq -> ">="
-      | And -> "&&" | Or -> "||" | Mod -> "%") ^ " " ^
-      string_of_expr e2
+      | And -> "&&" | Or -> "||" | Mod -> "%" | Mult -> "*" | Div -> "/") ^ 
+      " " ^ string_of_expr e2
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Call(f, el) ->
       f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"

@@ -13,6 +13,8 @@ rule token = parse
 | ','      { COMMA }
 | '+'      { PLUS }
 | '-'      { MINUS }
+| '*'      { TIMES }
+| '/'      { DIVIDE }
 | '='      { ASSIGN }
 | "=="     { EQ }
 | "!="     { NEQ }
