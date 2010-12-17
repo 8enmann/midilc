@@ -18,9 +18,11 @@ let rec enum stride n = function
 (* val string_map_pairs StringMap 'a -> (int * 'a) list -> StringMap 'a *)
 let string_map_pairs map pairs =
   List.fold_left (fun m (i, n) -> StringMap.add n i m) map pairs
-  
+
+(** Note map, used to map from note literals to pitch integers *)
 let note_map = StringMap.add "C" 0 StringMap.empty
-let note_map = StringMap.add "R" (-1) note_map
+(* Rest is given value of -500; pitches less than 0 are not printed in the end. *)
+let note_map = StringMap.add "R" (-500) note_map
 let note_map = StringMap.add "D" 2 note_map
 let note_map = StringMap.add "E" 4 note_map
 let note_map = StringMap.add "F" 5 note_map
@@ -33,6 +35,7 @@ let note_map = StringMap.add "q" 4 note_map
 let note_map = StringMap.add "e" 2 note_map
 let note_map = StringMap.add "s" 1 note_map
 
+(** Returns the pitch, duration of a note *)
 let int_of_note n =
   let a = Array.make 4 0 in
   a.(0) <- StringMap.find (String.sub n 0 1) note_map;
@@ -66,6 +69,8 @@ let translate (globals, functions) =
   let global_indexes = string_map_pairs StringMap.empty (enum 1 0 globals) in
 
   (* Assign indexes to function names; built-in "play" and "set_tempo" are special *)
+    (** Built in functions play (to play a sequence), set tempo, constructors for Sequence and Chord
+        rand, and set_instrument *)
   let built_in_functions = StringMap.add "play" (-1) StringMap.empty in
   let built_in_functions = StringMap.add "set_tempo" (-2) built_in_functions     in
   let built_in_functions = StringMap.add "new_sequence" (-3) built_in_functions in
@@ -120,9 +125,9 @@ let translate (globals, functions) =
 	Block sl     ->  List.concat (List.map stmt sl)
       | Expr e       -> expr e @ [Drp]
       | Return e     -> expr e @ [Rts num_formals]
-      (** fix break and continue *)
-      | Break -> [Jmp(0,0,1)]
-      | Continue -> [Jmp(0,0,2)];
+      (** Break and Continue use Sjp command. 1 for break, 2 for continue*)
+      | Break -> [Sjp(0,0,1)]
+      | Continue -> [Sjp(0,0,2)];
       | If (p, t, f) -> let t' = stmt t and f' = stmt f in
 	expr p @ [Beq(2 + List.length t')] @
 	t' @ [Bra(1 + List.length f')] @ f'
@@ -130,8 +135,8 @@ let translate (globals, functions) =
 	  stmt (Block([Expr(e1); While(e2, Block([b; Expr(e3)]), List.length (stmt b))]))
       | While (e, b,l) -> 
 	  let b' = stmt b and e' = expr e in
-	  [Jmp((if l<0 then List.length b' else l), List.length b' + List.length e', 0)] @ [Bra (1+ List.length b')] @ b' @ e' @
-	  [Bne (-(List.length b' + List.length e'))] @ [Jmp(0,0,3)]
+	  [Sjp((if l<0 then List.length b' else l), List.length b' + List.length e', 0)] @ [Bra (1+ List.length b')] @ b' @ e' @
+	  [Bne (-(List.length b' + List.length e'))] @ [Sjp(0,0,3)]
 
     in [Ent num_locals] @      (* Entry: allocate space for locals *)
     stmt (Block fdecl.body) @  (* Body *)

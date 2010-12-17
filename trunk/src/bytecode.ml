@@ -5,7 +5,7 @@ type bstmt =
   | Not of (int * int)      (* Push a Note (pitch, duration) *)
   | Ele                     (* access an element of a sequence *)
   | Leo                     (* Assign to an element of a sequence *)
-  | Jmp of (int * int * int)(* Assign jump points *)
+  | Sjp of (int * int * int)(* Set/get jump points *)
   | Cst of string           (* Cast to a different type *)
   | Mem of string           (* access a member of a data type using the field name *)
   | Lmo of string           (* Assign to a member of a data type *)
@@ -50,10 +50,10 @@ let print_sequence m =
 	     let k = List.tl i in 
 	     let start = List.hd k in 
 	     (List.map 
-		(fun pitch -> 
+		(fun pitch -> if pitch > 0 then
 		  (string_of_int start) ^ "," ^ 
 		  (string_of_int duration) ^ "," ^ 
-		  (string_of_int pitch)))
+		  (string_of_int pitch) else ""))
 	       (List.tl k))) in 
 	(String.sub b 1 (String.length b - 1)))
       ^"\n" in 
@@ -81,7 +81,7 @@ let string_of_stmt = function
   | Bin(Ast.Geq) -> "Geq"
   | Ele -> "Ele"
   | Leo -> "Leo"
-  | Jmp(i,j,k) -> "Jmp (" ^ string_of_int i ^ "," ^ string_of_int j ^ "," ^ string_of_int k ^ ")"
+  | Sjp(i,j,k) -> "Sjp (" ^ string_of_int i ^ "," ^ string_of_int j ^ "," ^ string_of_int k ^ ")"
   | Mem(s) -> "Mem " ^ s
   | Lmo(s) -> "Lmo " ^ s
   | Lod(i) -> "Lod " ^ string_of_int i
