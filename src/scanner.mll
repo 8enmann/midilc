@@ -38,6 +38,7 @@ rule token = parse
 | "Number" | "Note" | "Chord" | "Sequence" | "Void" as typ  { TYPE(typ) }
 | ['A'-'G' 'R']['b' '#']?['0'-'9']?['w' 'h' 'q' 'e' 's']? as note { NOTE(note) }
 | ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
+| '\"'['0'-'9' 'A'-'Z' ' ' 'a'-'z']+'\"' as stng { STRLIT(String.sub stng 1 ((String.length stng) - 2)) }
 | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
 | eof { EOF }
 | _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }

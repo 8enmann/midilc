@@ -33,6 +33,7 @@ let execute_prog prog =
 
   let rec exec fp sp pc = match prog.text.(pc) with
     Num i -> stack.(sp) <- (Num(i)) ; exec fp (sp+1) (pc+1)
+  | Stn s -> stack.(sp) <- (Stn(s)) ; exec fp (sp+1) (pc+1)
     (** Member selection*)
   | Mem s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
       ("length", (Cho(len :: _))) -> (Num(len))
@@ -124,7 +125,7 @@ let execute_prog prog =
 		| (Cho op1, Cho op2) -> boolean (op1 =  op2)
 		| (Seq op1, Seq op2) -> boolean (op1 =  op2)
         | _ -> raise (Failure ("unexpected types for =")))
-      | Neq -> (match (opA, opB) with 
+      | Neq -> (match (opA, opB) with
           (Num op1, Num op2) -> boolean (op1 != op2)
 		| (Not op1, Not op2) -> boolean (op1 <> op2) (* structural inequality *)
 		| (Cho op1, Cho op2) -> boolean (op1 <> op2)
@@ -175,7 +176,7 @@ let execute_prog prog =
   | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for rand")))
     (** Set instrument (needs to be changed) *)
-  | Jsr(-6) -> (match stack.(sp-1) with Num i -> print_endline ("Instrument,"^string_of_int i); exec fp sp (pc+1)
+  | Jsr(-6) -> (match stack.(sp-1) with Stn s -> print_endline ("Instrument,"^s); exec fp sp (pc+1)
 			| _ -> raise (Failure ("unexpected type for set_instrument")))
   | Jsr i -> stack.(sp)   <- (Num(pc + 1))       ; exec fp (sp+1) i
   | Ent i -> stack.(sp)   <- (Num(fp))           ; exec sp (sp+i+1) (pc+1)

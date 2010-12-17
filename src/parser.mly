@@ -1,6 +1,6 @@
 %{ open Ast %}
 
-%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET CAST
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET CAST QUOTE
 %token PLUS MINUS ASSIGN DOTPLUS DOTMINUS MOD
 %token EQ NEQ LT LEQ GT GEQ
 %token AND OR DOT AS
@@ -10,6 +10,7 @@
 %token <string> SELECT
 %token <string> NOTE
 %token <string> TYPE
+%token <string> STRLIT
 %token EOF
 
 %nonassoc NOELSE
@@ -85,6 +86,7 @@ expr_opt:
 expr:
     NOTE               { NoteLiteral($1) }
   | LITERAL            { Literal($1) }
+  | STRLIT { StringLiteral($1) }
   | ID                 { Id($1) }
   | ID LBRACKET expr RBRACKET { ElementOp($1, $3) }
   | ID DOT SELECT      { MemberOp($1, $3) }

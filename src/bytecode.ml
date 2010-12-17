@@ -3,6 +3,7 @@ type bstmt =
   | Cho of int list         (* Push a Chord [len; dur; start; p; p; p...] *)
   | Seq of int list list    (* Push a sequence [[cur;len];[cho];[cho]...] *)
   | Not of (int * int)      (* Push a Note (pitch, duration) *)
+  | Stn of string           (* Push a string literal *)
   | Ele                     (* access an element of a sequence *)
   | Leo                     (* Assign to an element of a sequence *)
   | Sjp of (int * int * int)(* Set/get jump points *)
@@ -64,6 +65,7 @@ let string_of_stmt = function
   | Not(i,j) -> "Not " ^ "(" ^ string_of_int i ^ "," ^ string_of_int j ^ ")"
   | Cho(l) -> "Cho " ^ (string_of_list l)
   | Seq(s) -> "Seq " ^ (print_sequence s)
+  | Stn(s) -> "Stn " ^ s
   | Cst(t) -> "Cst " ^ t
   | Drp -> "Drp"
   | Bin(Ast.Add) -> "Add"
