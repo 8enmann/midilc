@@ -12,6 +12,6 @@ main() {
   a = A3q;
   a = (a as Chord) + C3q + Eb3q;
   b = b + a + a + a;
-  set_instrument(59);
+  set_instrument("Piano");
   play(b);
 }

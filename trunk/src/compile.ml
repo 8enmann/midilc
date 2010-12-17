@@ -93,6 +93,7 @@ let translate (globals, functions) =
     let rec expr = function
 	Literal i -> [Num i]
 	    | NoteLiteral n -> [Not (int_of_note n)]
+		| StringLiteral s -> [Stn s]
       | Id s ->
 	  (try [Lfp (StringMap.find s env.local_index)]
           with Not_found -> try [Lod (StringMap.find s env.global_index)]

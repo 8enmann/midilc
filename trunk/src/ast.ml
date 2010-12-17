@@ -4,6 +4,7 @@ type expr =
     Literal of int
   | NoteLiteral of string
   (** add chord literal here *)
+  | StringLiteral of string
   | Cast of string * string
   | Id of string
   | MemberOp of string * string
