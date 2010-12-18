@@ -30,21 +30,26 @@ operators (Fig \ref{fig:types_in_midilc}).
 \label{fig:types_in_midilc}
 \end{figure}
 
+% TODO has a dynamic typing system with preset types
+% TODO why are you talking about what specific operators do in the introduction?? This is all in the LRM.  Also, we should have a table of what operators do on what objects since it's not completely consistent, eg Chord + Note appends the note to the Chord
+% TODO also it's not called bracket notation, it's called subscripting
 The langauge is dynamic, but introduces types for the programmer most comfortable with the syntax of C or Java. Types must be used upon variable declaration, but are left optional for function declarations and arguments. Each of the above primitives supports the + operator, which increments the duration of each note and the .+ operator, which increases the pitch of each note. Each type can be safely cast up in the following order: \verb|Number| → \verb|Note| → \verb|Chord| → \verb|Sequence|. The standard library, written in the language itself, supports major and minor chords, arpeggios, repetition, and other such basic and often used concepts. Note durations are specified in terms of whole notes (w), halves (h), quarters (q), eigths (e), and sixteenths (s). Sequences can either be appended to, which advances the ``current time'' by however long the appended sequence is, or else something can be inserted into a sequence at a given offset using bracket notation. Functions are specified in the same way as in C.
 
+% TODO I'm pretty sure outputed is not a word
 Sequences and Chords can simply be outputed to the intermediate representation (IR) of CSV format using the play() function. In order to actually write the MIDI files, the CSV is fed to a Java program that interprets the CSV using the javax.sound.MIDI package.
 
-Composing music on a computer is often done using GUIs that allow the user to drag and drop notes or using instrument inputs. This lets the musician hear his compositions as he is creating them, and often gives the musician a simple MP3 or MIDI ouput. As computer scientists, the MIDILC team finds such methods tedious, extraneuous and requiring too much natural music talent. MIDILC follows the virtues of any great programmer: laziness, hubris, and impatience \footnote{Wall, Larry. \textit{Programming Perl}, O'Reilly 2000.} and propose a language for those wishing to turn their quantitative skills into beautiful music.
+Composing music on a computer is often done using GUIs that allow the user to drag and drop notes or using instrument inputs. This lets the musician hear his compositions as he is creating them, and often gives the musician a simple MP3 or MIDI ouput. As computer scientists, the MIDILC team finds such methods tedious, extraneuous and requiring too much natural music talent. MIDILC appeals to the virtues of any great programmer: laziness, hubris, and impatience \footnote{Wall, Larry. \textit{Programming Perl}, O'Reilly 2000.} and propose a language for those wishing to turn their quantitative skills into beautiful music.
 
-MIDILC also attempted to redress other issues of regular music composition. Songs often have frequent recurring themes. Manually reusing these themes requires precision and dedication. If pieces of a song could be manipulated automatically for reuse and slight modification, song production speed could increase dramatically. The MIDILC language allows programmers to algorithmically generate notes, chords, and sequences of notes and chords by writing functions. This allows for writing interesting compositions that minimize time spent rewriting basic MIDI manipulation routines and implementing primitive musical constructs. The language works optimally with compositions that make consistent use of simple motifs as it encourages reuse of simple mathematical operations on notes and chords. 
+MIDILC also attempts to redress other issues of regular music composition. Songs often have frequent recurring themes. Manually reusing these themes requires precision and dedication. If pieces of a song could be manipulated automatically for reuse and slight modification, song production speed could increase dramatically. The MIDILC language allows programmers to algorithmically generate notes, chords, and sequences of notes and chords by writing functions. This allows for writing interesting compositions that minimize time spent rewriting basic MIDI manipulation routines and implementing primitive musical constructs. The language works optimally with compositions that make consistent use of simple motifs as it encourages reuse of simple mathematical operations on notes and chords. 
 
-MIDILC is tailored for crafting melody sequences. For a sequence containing a series of whole notes, one could easily manipulate the notes in the melody to create sequences of counterpoints to the melody. Using MIDILC, a Major() and Minor() function are easy to craft and chords simple to arpeggiate to make counterpoint. MIDILC allows for the simple concatenation of sequences, and so complicated sequences could be easily made from simple starting blocks.
+MIDILC is tailored for crafting melody sequences. For a sequence containing a series of whole notes, one could easily manipulate the notes in the melody to create sequences of counterpoints to the melody. Using MIDILC, a \verb|major()| and \verb|minor()| function are easy to craft and chords simple to arpeggiate to make counterpoint. MIDILC allows for the simple concatenation and composition of sequences, and so complicated sequences could be easily made from simple starting blocks.
 
 \chapter{Language Tutorial}
 MIDILC was designed with the programmer in mind, but uses all the musical notation familiar to the musician. The lanuage is robust enough to fully support the idiomatic construction of Notes and Chords, as well as set tempo and note duration using \verb|Note| and \verb|Number| literals.
 \section{A Simple Melody}
 \section{Twinkle Twinkle Little Star}
 \chapter{Language Reference Manual}
+% TODO There are a bunch of things that never got transferred from the Google Doc.  Please go through this and fix it with the two side by side.
 MIDILC is a C-like language that makes it simpler to algorithmically generate music.  It simplifies MIDI music creation by allowing programmers to specify song information in musical terms and write functions that process existing musical information.  By building off of simpler musical functions, such as arpeggios and chords, complex musical compositions can easily be programmed.
 
 To eliminate the programming complexities from the MIDILC language, it has limited scope and data management capabilities.  MIDILC can be used following an imperative or functional paradigm and reduces hassle for the programmer by forcing static scope.
@@ -57,9 +62,10 @@ Tokens consist of identifiers, keywords, constants, operators, and separators.  
 \subsection{Comments}
 /* and */ are used to indicate a block of comments (C-style comments).  There are no C++-style comments in MIDILC.
 \subsection{Identifiers}
-These are sequences of letters, digits, and underscores, starting with a letter or underscore.  Identifiers cannot be of the format [A-G R][0-9], as these are reserved for \verb|Note| literals.
+These are sequences of letters, digits, and underscores, starting with a letter or underscore.  Identifiers cannot be of the format \verb|[A-G R][b #]?[0-9]?[w h q e s]?|, as these are reserved for \verb|Note| literals.
 \subsection{Keywords}
 MIDILC has very few keywords; these include the following:
+% TODO this used to be a table.  Why is it broken and terrible now??!
 Types	Control
 \verb|Number|	return
 \verb|Note|	continue
@@ -71,12 +77,14 @@ Void	while
 
 
 \subsection{Constants/Literals}
+% TODO the first few sentences of this paragraph need to be rewritten.  Users can specify constants!
+% TODO note that an error will be thrown if the user tries to construct a note with illegal properties, such as a pitch of 200
 MIDILC has no facilities for specifying user-defined constants, but it does include a set of \verb|Note| literals, specified by the note letter, accidental (if any), MIDI octave, and a letter that indicates the note’s duration (optional, and defaulting to a quarter note).  Durations include w (for whole note), h (for half note), q (for quarter note), e (for eigth note), and s (for sixteenth note).  Rests are indicated by using R instead of a note. \verb|Chord| literals don’t exist, though Chords can easily be expressed using built-in chord generation function calls on \verb|Note| literals.  In addition, \verb|Number| literals also exist (integral numbers limited to signed 32-bit range).  MIDILC does not have floating-point literals.
 Note that literals look like the following:
 \verb|Ab7|
 \verb|C4s|
 \verb|G5h|
-
+% TODO missing image here
 Pitches and \verb|Number| literals have the following correspondence:
 
 \section{Meaning of Identifiers}
@@ -96,29 +104,30 @@ The MIDILC language supports two types of objects: numbers and musical notations
 The only supported numerical type is \verb|Number|, which has a size of 32 bits and ranges from -231 to 231 - 1.  This is also the underlying type for all fields within the musical types.
 \subsubsection{Musical types}
 \verb|Note|, \verb|Chord|, and \verb|Sequence| are all of the musical types supported by MIDILC. \verb|Note| literals are  made up of strings consisting of integers and characters in sequences that match the following regular expression:
-[A-G R][b, #]?[0-9]?[w, h, q, e, s]?
+\verb|[A-G R][b #]?[0-9]?[w h q e s]?|
 As these types are not stored directly internally, their sizes are not exact. As a general rule, for non-empty objects,
 \verb|Number| < \verb|Note| < \verb|Chord| < \verb|Sequence| in terms of their relative sizes.
-\subsubsubsection{Note type}
+\subsubsubsection{\verb|Note| type}
 \verb|Note| type has the following attributes: pitch, and duration. Pitch refers to the frequency of the note, and duration is specified as a type of note: whole, half, quarter, eighth, or sixteenth.  \verb|Note| literals with the pitch indicated as R instead of A-G are rests (numerically represented as -1).
-\subsubsubsection{Chord type}
+\subsubsubsection{\verb|Chord| type}
 \verb|Chord| type has the following attributes: duration and length. Duration is a \verb|Number| type that specifies a type of note: whole, half, quarter, eighth, or sixteenth. All \verb|Note| literals within the same \verb|Chord| must have the same duration.  This property can be specified as number of sixteenths. Length of the \verb|Chord| refers to the number of \verb|Note| literals in the \verb|Chord|.
 \verb|Chord| literals can be constructed with the following syntax:
 { \verb|Note|,  \verb|Note| , \verb|Note|... }
-\subsubsubsection{Sequence type}
+\subsubsubsection{\verb|Sequence| type}
 \verb|Sequence| type has the following attributes: current, beginning, and length. Each is of type \verb|Number|. Beginning denotes the starting point of the \verb|Sequence|, while current denotes the current time (from beginning) where a new note may be inserted. The length of the \verb|Sequence| refers to the number of \verb|Note| literals or \verb|Chord| objects in the \verb|Sequence|.
 \subsubsection{Derived types}
+% TODO Notes can also be derived from Numbers
 \verb|Chord| and \verb|Sequence| objects can be derived; a \verb|Chord| can be derived from a collection of \verb|Note| objects, and a \verb|Sequence| can be derived from a collection of \verb|Note| or \verb|Chord| objects.
-\subsubsection{Void type}
-The Void type specifies an empty set of values. It never refers to an object.
+\subsubsection{\verb|Void| type}
+The Void type specifies an empty set of return values. It never refers to an object.
 \subsection{Objects and lvalues}
-An object is a manipulable region of storage. An lvalue is an expression referring to an object, for example, an identifier. Assignments such as note1 = note2, where note1 and note2 are \verb|Note| objects, will result in a change of reference for the \verb|Note| objects, but not a change in the objects themselves.
+An object is a manipulable region of storage. An lvalue is an expression referring to an object, for example, an identifier.  Assignment causes the region of memory specified by the lvalue to be replaced or modified according to the value on the right side of the assignment.  For instance, if \verb|a = b| and \verb|c = b|, if \verb|b| is changed, \verb|a| and \verb|b| will remain unchanged.
 \section{Operator Conversions}
 Due to the nature of the primitive types, very few conversions are supported in MIDILC. It is possible to cast from \verb|Note| to \verb|Chord|, \verb|Note| to \verb|Sequence|, and \verb|Chord| to \verb|Sequence|, but not in the opposite direction.
 \subsection{Conversions of Number and Note}
-\verb|Number| objects can be converted into \verb|Note| objects as a note with the pitch represented as an integer in MIDI notation. \verb|Note| objects cannot be converted to \verb|Number| objects.
+\verb|Number| objects can be converted into \verb|Note| objects as a note with the pitch represented as an integer in MIDI notation. \verb|Note| objects cannot be converted to \verb|Number| objects. The new object has a default duration of quarter note.
 \subsection{Conversions of Note and Chord}
-\verb|Note| objects can be converted into \verb|Chord| objects as one-note chords. \verb|Chord| objects cannot be converted into \verb|Note| objects, as this is a narrowing conversion.
+\verb|Note| objects can be converted into \verb|Chord| objects as one-note chords. \verb|Chord| objects cannot be converted into \verb|Note| objects, as this is a narrowing conversion. The resulting \verb|Chord| has the same duration as the \verb|Note| used to construct it.
 \subsection{Conversions of Note and Sequence}
 \verb|Note| objects can be converted into \verb|Sequence| objects as a sequence that contains a single note. \verb|Sequence| objects cannot be converted into \verb|Note| objects, as this is a narrowing conversion, even if the \verb|Sequence| contains only a single \verb|Note|.
 \subsection{Conversions of Chord and Sequence}
@@ -127,6 +136,7 @@ Due to the nature of the primitive types, very few conversions are supported in 
 
 In MIDILC, expressions include one or more operators and a number of operands that follow certain associativity rules. Operators may change the value of an operand or leave it alone.
 
+% TODO this session needs to be revamped extensively to specify what all the operators do.  Just go through every case in the executor and describe what they do.  Also, \verb needs to be used here MUCH more extensively.
 Examples of some expressions are as follows:
 assignment-expression:    note = Ab7
 operation-expression:        Ab7 .+ 4
@@ -165,6 +175,7 @@ without parentheses: 0 == note1.pitch > note2.pitch
 with parentheses:      0 == (note1.pitch > note2.pitch)
 This will change the order of operations, evaluating whether the pitch of note1 is greater than that of note2 before evaluating if that return value is equal to 0.
 \subsection{Postfix}
+% TODO These operations are not allowed. Only identifiers can be subscripted or directly accessed.
 Postfix calls are made as follows:
 Function call:        (Ab6, Ab7, C4)
 Subscripting:        (Ab6, Ab7, C4)[1]
