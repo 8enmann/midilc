@@ -7,7 +7,7 @@
 main() {
   
   set_instrument("Cello");
-  set_tempo(100);
+  set_tempo(112);
   
   play(transpose(transpose(soprano(), F, C), F, Ab));
   play(transpose(alto(), F, Ab));
@@ -26,7 +26,7 @@ Sequence soprano() {
     sop = sop + F5s + A5s;
   }
   sop = sop+arpeggiate(new_chord(F5s,C5,A,F,A,C5));
-  sop = sop + shift(melody(), 0);
+  sop = sop + shift(melody(), 12);
   return sop;
 }
 
