@@ -17,7 +17,7 @@ X divide
 X multiply 
 X subtract
 X equality (LRM section 5.4.3)
-inequality
+X inequality
 X for
 local scope (everything?)
 X global scope
