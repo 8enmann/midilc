@@ -1,5 +1,5 @@
 main(){
-  set_instrument("Cello");
+  set_instrument("Voice Oohs");
   set_tempo(80);
   play(stairway1() + stairway1());
 }
