@@ -91,7 +91,7 @@ Note that literals look like the following:
 Pitches and \verb|Number| literals have the correspondence shown in figure \ref{fig:pitches_and_notes}.
 
 \section{Meaning of Identifiers}
-Identifiers in MIDILC have the following attributes: scope, name space, linkage, and storage duration, as detailed in Section 4.1. Since static scope is handled automatically, there are no storage class specifiers in MIDILC.
+Identifiers in MIDILC have the following attributes: scope, name space, linkage, and storage duration. Since static scope is handled automatically, there are no storage class specifiers in MIDILC.
 \subsection{Disambiguating Names}
 \subsubsection{Scope}
 The scope of of an identifier is defined as the region of a program within which it is visible, and begins when it is declared. In MIDILC, all identifiers are globally scoped, and are therefore visible to all blocks within a program unless hidden in another scope. This is due to the fact that the language automatically handles static identifiers.
@@ -135,7 +135,7 @@ Due to the nature of the primitive types, very few conversions are supported in 
 \verb|Chord| objects can be converted into \verb|Sequence| objects as a sequence that contains a single chord. \verb|Sequence| objects cannot be converted into \verb|Chord| objects, as this is a narrowing conversion, even if the \verb|Sequence| contains only a single \verb|Chord|.
 \section{Expressions and Operators}
 
-In MIDILC, expressions include one or more operators and a number of operands that follow certain associativity rules. Operators may change the value of an operand or leave it alone. Expressions (Fig \ref{fig:expressions}) can be used for assignment or other operations. Associativity of these assignments can be overrridden by parentheses (Fig \ref{fig:associativity}). Associativity of operators followed the table shown in figure \ref{fig:order_of_operations}.
+In MIDILC, expressions include one or more operators and a number of operands that follow certain associativity rules. Operators may change the value of an operand or leave it alone. 
 
 \begin{figure}
 \center
@@ -147,6 +147,8 @@ $operation\mbox{-}expression$   & \verb|Ab7 .+ 4| \\ \hline
 \label{fig:expressions}
 \caption{Examples of expressions}
 \end{figure}
+
+Expressions (Fig \ref{fig:expressions}) can be used for assignment or other operations. Associativity of these assignments can be overrridden by parentheses (Fig \ref{fig:associativity}). Associativity of operators followed the table shown in figure \ref{fig:order_of_operations}.
 
 \begin{figure}
 \center
@@ -186,9 +188,9 @@ Identifiers, constants, parenthesized expression & Primary expression & Primary	
 
 \subsection{Primary Expressions}
 \subsubsection{Identifiers}
-An lvalue or function designator, discussed in part 2.
+An lvalue or function designator (discussed in Built-In Functions).
 \subsubsection{Constants}
-An object of constant value, discussed in part 2.
+An object of constant value (discussed in Built-In Functions).
 \subsubsection{Parenthesized Expressions}
 Parenthesized expressions allow a user to change the order of operations. They are executed before the operations and can be used as part of a larger expression (Fig \ref{fig:associativity}).
 \subsection{Postfix}
@@ -458,18 +460,856 @@ If the end of a function is reached before the execution of an explicit \verb|re
 \verb|Void set_instrument("instrument")| & Sets the instrument for the song\\
 \verb|Sequence new_sequence()| & Initializes an empty \verb|Sequence|.\\
 \verb|Chord new_chord(Note n1, Note n2, ...)| & Initializes a \verb|Chord| object.\\
+\verb|Number rand(Number n)| & Returns a random number between 0 and \verb|n|.\\
 \end{tabular}
 
 \chapter{Project Plan}
+\section{Development Process}
+The team met once a week on Sundays to set milestones and deadlines as well as discuss progress and set design goals. The language was first designed using a collaborative approach, using whiteboards to brainstorm and Google Docs to save notes.
 
+We used an SVN repository hosted on Google Code to store code. Development was done using open source text editors, including vim, Eclipse, and gedit. Code was written in OCaml for the compiler and in Java for the Assembler. The Intermediate Representation (IR) for the code was in CSV format. Team members updated the repository at the end of each development session. E-mail and Google Docs were used for realtime collaboration.
+
+Each module was accompanied with tests written by the module's author. Team members were expected to supply both a test and an expected output, which could be used to verify the success of a test by each team member. Scripts were written to quickly test the code and compare it to the standard.
+\section{Style Guide}
+A general style guide was used by the team during development.
+\subsection{O'Caml source}
+\begin{itemize}
+\item Variables named using lowercase letters, with spaces replaced by underscores.
+\item Types named using lowercase letters with spaces replaced by underscores (e.g. \verb|program|, \verb|expr|)
+\item Tokens named using uppercase letters without spaces (e.g. \verb|TYPE|, \verb|NOTE|)
+\item Constructors named using Camel Case (e.g. \verb|Binop|, \verb|Num|)
+\item Modules named using uppercase first letter, lowercase rest (e.g. \verb|Ast|, \verb|Bytecode|)
+\item 2 spaces for each tab
+\item Comments about specific implementation details using (* single asterisk comment *)
+\item Comments about general implementation details using (** double asterisk comment *)
+\item Meaningful variable names for all global variables (e.g. \verb|note_map|, \verb|jumps|)
+\item Fewer than 140 character per line (viewable without runoff with window maximized)
+\item Keep lines aligned
+\end{itemize}
+\subsection{Java source}
+\begin{itemize}
+\item Kept all tests in \verb|src/components/| folder
+\end{itemize}
+\subsection{MIDILC source}
+\begin{itemize}
+\item Named all variables and functions with lowercase first letters
+\item Added a multi-line C style comment (/** */) at the top of each class
+\item Named classes with `.m' extension (for MIDILC)
+\item Declared all variables at top of each method
+\end{itemize}
+\subsection{Testing}
+\begin{itemize}
+\item Kept all tests in \verb|src/tests/| folder
+\item Named all tests with gold standards with prefix ``test-''
+\item Named all output files for gold standard tests with .out
+\end{itemize}
+\section{Project Timeline}
+\begin{tabular}{l p{.5\textwidth}}
+11/20 & Finish project plan and arch design sections of final report\\
+      & Mostly complete scanner, top level, and AST\\
+11/27 & Each person should have finished at least one unit test that works for his component\\
+      & Make major headway on parser and compiler\\
+12/4 & Finish testing plan\\
+12/11 & Finish overall system (source should compile into MIDI files)\\
+12/18 & Finish up final sections of report\\
+\end{tabular}
+\section{Languages and Tools Used}
+The team used O'Caml, Java, and bash scripting to complete the langauge. The tools used included: gedit and Vim for editing O'Caml; Eclipse for editing Java; and gedit for editing bash scripts. The javax.swing.midi library proved most useful for transcribing midi from CSV. timidity, a .midi-to-.wav converter, was used to compile .wav files from the midi output by the assembler. A Google code hosted SVN repository was used for version control. E-mail and Google Docs were used to share documentation.
+
+\section{Project Log}
+\begin{verbatim}
+------------------------------------------------------------------------
+r117 | Akiva.Bamberger | 2010-12-18 16:51:20 -0500 (Sat, 18 Dec 2010) | 2 lines
+
+Incrementally better.
+
+------------------------------------------------------------------------
+r116 | Akiva.Bamberger | 2010-12-18 16:15:43 -0500 (Sat, 18 Dec 2010) | 2 lines
+
+Added stairway to heaven, first part.
+
+------------------------------------------------------------------------
+r115 | yeliu2428@gmail.com | 2010-12-18 01:52:25 -0500 (Sat, 18 Dec 2010) | 1 line
+
+Added test for inequality
+------------------------------------------------------------------------
+r114 | yeliu2428@gmail.com | 2010-12-18 01:21:35 -0500 (Sat, 18 Dec 2010) | 1 line
+
+Added test for multiply
+------------------------------------------------------------------------
+r113 | 8enmann@gmail.com | 2010-12-17 20:47:48 -0500 (Fri, 17 Dec 2010) | 2 lines
+
+Slightly modified dvorak test.
+
+------------------------------------------------------------------------
+r112 | yeliu2428@gmail.com | 2010-12-17 20:46:40 -0500 (Fri, 17 Dec 2010) | 1 line
+
+Added test for natural minor scale creation.
+------------------------------------------------------------------------
+r111 | 8enmann@gmail.com | 2010-12-17 19:36:41 -0500 (Fri, 17 Dec 2010) | 3 lines
+
+Added the most ballin' test ever.
+
+
+------------------------------------------------------------------------
+r110 | Fredmaster2 | 2010-12-17 17:47:14 -0500 (Fri, 17 Dec 2010) | 1 line
+
+Implemented setting instruments via name in the assembler.  For backwards compatibility, numbers are still supported (using quotation marks)
+------------------------------------------------------------------------
+r109 | Akiva.Bamberger | 2010-12-17 16:26:42 -0500 (Fri, 17 Dec 2010) | 2 lines
+
+A symphony of pi!
+
+------------------------------------------------------------------------
+r108 | 8enmann@gmail.com | 2010-12-17 15:03:23 -0500 (Fri, 17 Dec 2010) | 3 lines
+
+French horn ftw.
+
+
+------------------------------------------------------------------------
+r107 | 8enmann@gmail.com | 2010-12-17 14:54:57 -0500 (Fri, 17 Dec 2010) | 2 lines
+
+Updated test.
+
+------------------------------------------------------------------------
+r106 | 8enmann@gmail.com | 2010-12-17 14:47:51 -0500 (Fri, 17 Dec 2010) | 3 lines
+
+Added multiply and divide.
+
+
+------------------------------------------------------------------------
+r105 | yeliu2428@gmail.com | 2010-12-17 14:24:27 -0500 (Fri, 17 Dec 2010) | 3 lines
+
+Two things:
+1. Changed the author info for the .java files in /components
+2. Changed .csv files for the scale tests to .out files
+------------------------------------------------------------------------
+r104 | yeliu2428@gmail.com | 2010-12-17 13:41:56 -0500 (Fri, 17 Dec 2010) | 1 line
+
+Added test-melodicminor
+------------------------------------------------------------------------
+r103 | yeliu2428@gmail.com | 2010-12-17 13:37:17 -0500 (Fri, 17 Dec 2010) | 1 line
+
+Added test-harmonicminor
+------------------------------------------------------------------------
+r102 | yeliu2428@gmail.com | 2010-12-17 13:29:41 -0500 (Fri, 17 Dec 2010) | 1 line
+
+Added test-majorscale to tests.
+------------------------------------------------------------------------
+r101 | Fredmaster2 | 2010-12-17 03:01:15 -0500 (Fri, 17 Dec 2010) | 1 line
+
+Forgot to take QUOTE back out
+------------------------------------------------------------------------
+r100 | 8enmann@gmail.com | 2010-12-17 02:55:20 -0500 (Fri, 17 Dec 2010) | 2 lines
+
+Fixed warning and some formatting.
+
+------------------------------------------------------------------------
+r98 | Fredmaster2 | 2010-12-17 02:41:35 -0500 (Fri, 17 Dec 2010) | 3 lines
+
+Implemented string literals for specifying instruments, and modified test and set_instrument function accordingly.
+
+The assembler has not yet been updated, so the csv files produced with an instrument set will not currently work with the compiler
+------------------------------------------------------------------------
+r97 | 8enmann@gmail.com | 2010-12-17 00:12:36 -0500 (Fri, 17 Dec 2010) | 2 lines
+
+Renamed a bunch of tests, added comments, and added attribution.
+
+------------------------------------------------------------------------
+r95 | yeliu2428@gmail.com | 2010-12-16 23:19:39 -0500 (Thu, 16 Dec 2010) | 1 line
+
+added novice programs to final_report/novice. there's a program that generates a sequence (test-twinkle), one that generates a random sequence (test-randomseq), and one that generates a two-sequence file (test-doubleseq).
+------------------------------------------------------------------------
+r93 | Fredmaster2 | 2010-12-16 22:07:26 -0500 (Thu, 16 Dec 2010) | 1 line
+
+Added note, chord, and sequence equality and inequality operators, and accompanying test
+------------------------------------------------------------------------
+r92 | Fredmaster2 | 2010-12-16 21:05:42 -0500 (Thu, 16 Dec 2010) | 1 line
+
+Fixed PPQ issue - 16 to 4 (i.e. everything's 4x slower now)
+------------------------------------------------------------------------
+r91 | Akiva.Bamberger | 2010-12-16 20:56:50 -0500 (Thu, 16 Dec 2010) | 2 lines
+
+Changed code to allow addition of two notes-- this results in the duration of the second being added on to the duration of the first.
+
+------------------------------------------------------------------------
+r90 | Akiva.Bamberger | 2010-12-16 20:21:20 -0500 (Thu, 16 Dec 2010) | 2 lines
+
+Changed testall to fix problem with .m versus \.m (in regex)
+
+------------------------------------------------------------------------
+r89 | Fredmaster2 | 2010-12-16 20:16:29 -0500 (Thu, 16 Dec 2010) | 3 lines
+
+Added lots of tests, and several new test cases
+
+Added new TODO list in main src directory
+------------------------------------------------------------------------
+r88 | Akiva.Bamberger | 2010-12-16 20:10:01 -0500 (Thu, 16 Dec 2010) | 4 lines
+
+Added comments to the code, as well as an output file for
+test-recursion.
+
+
+------------------------------------------------------------------------
+r87 | Akiva.Bamberger | 2010-12-16 18:18:59 -0500 (Thu, 16 Dec 2010) | 18 lines
+
+Added a script to let people make midi files out of .m files, like gcc.
+
+The syntax is as follows:
+
+./midilcc tests/test.m /music/song
+
+This will create /music/song.midi and /music/song.wav.
+
+Alternatively, someone can type
+
+./midilcc tests/test.m
+
+and it will create tests/test.midi and tests/test.wav.
+
+
+-- Akiva
+
+
+------------------------------------------------------------------------
+r86 | Akiva.Bamberger | 2010-12-16 18:11:24 -0500 (Thu, 16 Dec 2010) | 5 lines
+
+Added tests for recursion and added comments for break/continue.
+
+Allowed using types in declarations.
+
+
+------------------------------------------------------------------------
+r85 | Fredmaster2 | 2010-12-16 12:17:36 -0500 (Thu, 16 Dec 2010) | 3 lines
+
+Added number-based instrument_set and tempo_set assembler implementations (instrument lookup check not yet added).
+
+Added set_instrument and set_tempo tests
+------------------------------------------------------------------------
+r84 | Akiva.Bamberger | 2010-12-16 03:16:22 -0500 (Thu, 16 Dec 2010) | 6 lines
+
+Added break and continue.
+
+Please look at these changes. Some things have been added to the code
+to allow for breaks and continues to work as intended.
+
+
+------------------------------------------------------------------------
+r83 | Fredmaster2 | 2010-12-15 17:35:50 -0500 (Wed, 15 Dec 2010) | 3 lines
+
+Changed set_tempo to add tempo_marker, and added set_instrument function (currently uses instrument number, need to add string to stack?)
+
+These functions work, and pass tests, but the version of the assembler that supports them hasn't been committed yet
+------------------------------------------------------------------------
+r82 | 8enmann@gmail.com | 2010-12-15 03:43:01 -0500 (Wed, 15 Dec 2010) | 4 lines
+
+Oops, realized I wasn't seeding the random generator.
+Now the test SHOULD fail every time.  Teehee.
+
+
+------------------------------------------------------------------------
+r81 | 8enmann@gmail.com | 2010-12-15 03:40:14 -0500 (Wed, 15 Dec 2010) | 5 lines
+
+Added rand(max) which returns an integer from 0 to max.
+For some reason the test file has random notes but they come out the same
+every time, even across compilation.  At least it's testable!
+
+
+------------------------------------------------------------------------
+r80 | 8enmann@gmail.com | 2010-12-15 03:13:27 -0500 (Wed, 15 Dec 2010) | 4 lines
+
+Modified makefile so you can just type "make test" to run all the tests.
+Also edited the test.sh script to make the gold standard of the correct filename format.
+Added a missing gold standard for for4.
+
+------------------------------------------------------------------------
+r79 | 8enmann@gmail.com | 2010-12-15 03:00:21 -0500 (Wed, 15 Dec 2010) | 2 lines
+
+added support for direct selection as lvalue and tests
+
+------------------------------------------------------------------------
+r78 | Akiva.Bamberger | 2010-12-15 02:34:28 -0500 (Wed, 15 Dec 2010) | 2 lines
+
+Made changes to fix earlier submission. Added a test.
+
+------------------------------------------------------------------------
+r76 | Akiva.Bamberger | 2010-12-15 01:39:23 -0500 (Wed, 15 Dec 2010) | 8 lines
+
+This one's a killa.
+1) Chords can now be created using the call new_chord 
+   and can take variable number of args
+2) You can now print a Chord directly
+3) I really refrained from making the log just a goofy header
+4) We can use what I did for new_chord on any future functions we want
+   that take variable length args!
+
+------------------------------------------------------------------------
+r75 | 8enmann@gmail.com | 2010-12-15 00:39:20 -0500 (Wed, 15 Dec 2010) | 3 lines
+
+Added fancy tests to TODO
+
+
+------------------------------------------------------------------------
+r74 | Fredmaster2 | 2010-12-14 22:07:17 -0500 (Tue, 14 Dec 2010) | 1 line
+
+Added test-attribute gold standard and changed test.sh to not remove csv file (to make it easier to produce gold standards).
+------------------------------------------------------------------------
+r73 | Fredmaster2 | 2010-12-14 21:56:47 -0500 (Tue, 14 Dec 2010) | 1 line
+
+Added gold standard output, removed interpret test from testall.sh, and wrote sequence test
+------------------------------------------------------------------------
+r72 | 8enmann@gmail.com | 2010-12-14 21:37:50 -0500 (Tue, 14 Dec 2010) | 2 lines
+
+Added tests for attribute assignment, updated parser to resolve shift reduce conflict.
+
+------------------------------------------------------------------------
+r71 | 8enmann@gmail.com | 2010-12-14 20:01:08 -0500 (Tue, 14 Dec 2010) | 2 lines
+
+Added support for attribute selection
+
+------------------------------------------------------------------------
+r70 | 8enmann@gmail.com | 2010-12-14 18:01:57 -0500 (Tue, 14 Dec 2010) | 2 lines
+
+Syntax for l-value selection implemented... committing before implementing executor code.
+
+------------------------------------------------------------------------
+r69 | 8enmann@gmail.com | 2010-12-14 16:25:55 -0500 (Tue, 14 Dec 2010) | 4 lines
+
+Implemented mod operator.
+Cleaned up built-in function declaration in compiler.
+
+
+------------------------------------------------------------------------
+r68 | 8enmann@gmail.com | 2010-12-14 15:41:00 -0500 (Tue, 14 Dec 2010) | 4 lines
+
+Deleted java files since they've been moved to /components.
+Added test script and executable jar file.
+
+
+------------------------------------------------------------------------
+r67 | 8enmann@gmail.com | 2010-12-14 15:22:19 -0500 (Tue, 14 Dec 2010) | 2 lines
+
+New tests added
+
+------------------------------------------------------------------------
+r66 | 8enmann@gmail.com | 2010-12-14 15:21:35 -0500 (Tue, 14 Dec 2010) | 2 lines
+
+Moved java files, compiled, and made a manifest file
+
+------------------------------------------------------------------------
+r65 | Akiva.Bamberger | 2010-12-14 02:11:41 -0500 (Tue, 14 Dec 2010) | 2 lines
+
+Sweet, all's well.
+Implemented print_sequence
+Changed the string_of_list and string_of_list_list to only take one arg
+
+------------------------------------------------------------------------
+r64 | Akiva.Bamberger | 2010-12-14 01:13:50 -0500 (Tue, 14 Dec 2010) | 2 lines
+
+Added print_sequence
+
+------------------------------------------------------------------------
+r63 | 8enmann@gmail.com | 2010-12-13 15:42:50 -0500 (Mon, 13 Dec 2010) | 5 lines
+
+Added support for adding chords to sequences.
+Fixed tests to use new_sequence constructor.
+Fixed new_sequence constructor.
+
+
+------------------------------------------------------------------------
+r62 | 8enmann@gmail.com | 2010-12-13 15:19:48 -0500 (Mon, 13 Dec 2010) | 3 lines
+
+updated TODO
+
+
+------------------------------------------------------------------------
+r61 | 8enmann@gmail.com | 2010-12-13 14:58:52 -0500 (Mon, 13 Dec 2010) | 4 lines
+
+Added sequence constructor function as a built-in.
+Fixed sequence addition.
+
+
+------------------------------------------------------------------------
+r60 | 8enmann@gmail.com | 2010-12-13 12:34:45 -0500 (Mon, 13 Dec 2010) | 2 lines
+
+Oops, forgot that chord start times have to be updated. Added a TODO.
+
+------------------------------------------------------------------------
+r59 | 8enmann@gmail.com | 2010-12-13 12:32:13 -0500 (Mon, 13 Dec 2010) | 3 lines
+
+Added support for adding sequences together.
+
+
+------------------------------------------------------------------------
+r58 | 8enmann@gmail.com | 2010-12-12 21:44:07 -0500 (Sun, 12 Dec 2010) | 3 lines
+
+GREAT SUCCESS. pipeline complete.
+had to fix an infinite loop I accidentally created in handling Rts
+
+------------------------------------------------------------------------
+r57 | Akiva.Bamberger | 2010-12-12 21:15:11 -0500 (Sun, 12 Dec 2010) | 2 lines
+
+Added some things!
+
+------------------------------------------------------------------------
+r56 | 8enmann@gmail.com | 2010-12-12 20:48:48 -0500 (Sun, 12 Dec 2010) | 2 lines
+
+cleaned up formatting, killed some pointless code
+
+------------------------------------------------------------------------
+r54 | 8enmann@gmail.com | 2010-12-12 18:37:46 -0500 (Sun, 12 Dec 2010) | 3 lines
+
+Added LRM for reference, modified a comment in compiler.
+
+
+------------------------------------------------------------------------
+r53 | 8enmann@gmail.com | 2010-12-12 18:34:44 -0500 (Sun, 12 Dec 2010) | 4 lines
+
+Implemented a lot of stuff in the executor and made the 
+comments in bytecode.ml better.
+
+
+------------------------------------------------------------------------
+r52 | Akiva.Bamberger | 2010-12-12 14:43:14 -0500 (Sun, 12 Dec 2010) | 3 lines
+
+To get simple tests to work again...
+
+
+------------------------------------------------------------------------
+r51 | 8enmann@gmail.com | 2010-12-12 13:53:52 -0500 (Sun, 12 Dec 2010) | 2 lines
+
+Everything compiles
+
+------------------------------------------------------------------------
+r50 | 8enmann@gmail.com | 2010-12-12 02:26:48 -0500 (Sun, 12 Dec 2010) | 3 lines
+
+Revamped everything.
+Still have to add some cases to the pattern match in execute to make it compile.
+
+------------------------------------------------------------------------
+r49 | 8enmann@gmail.com | 2010-12-11 20:45:34 -0500 (Sat, 11 Dec 2010) | 3 lines
+
+Everything compiles.  Do not commit if you can't run make!
+
+
+------------------------------------------------------------------------
+r48 | Fredmaster2 | 2010-12-11 20:07:47 -0500 (Sat, 11 Dec 2010) | 1 line
+
+
+------------------------------------------------------------------------
+r47 | 8enmann@gmail.com | 2010-12-11 20:06:28 -0500 (Sat, 11 Dec 2010) | 4 lines
+
+Everything compiles except the toplevel because it needs the executor.
+LOTS of things changed, mostly do to with how operators get passed around.
+Still a lot to do.  Added comments in some of the places.  Threw errors for some unimplemented stuff.
+
+------------------------------------------------------------------------
+r45 | 8enmann@gmail.com | 2010-12-04 16:33:12 -0500 (Sat, 04 Dec 2010) | 4 lines
+
+Modified bytecode spec to use uniform types.  Still need to add type-specific operators.
+
+Added a function to the compiler that converts note literals into tuples with pitch and duration as int * int tuples.
+
+------------------------------------------------------------------------
+r44 | 8enmann@gmail.com | 2010-12-03 16:44:01 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+Deleted interpreter.  Not making one. 
+
+------------------------------------------------------------------------
+r43 | 8enmann@gmail.com | 2010-12-03 16:43:15 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+Added toplevel for Ye to work on.
+
+------------------------------------------------------------------------
+r42 | Fredmaster2 | 2010-12-03 16:29:37 -0500 (Fri, 03 Dec 2010) | 1 line
+
+Added execute and modified bytecode to add bytecode types.
+------------------------------------------------------------------------
+r41 | yeliu2428@gmail.com | 2010-12-03 16:23:13 -0500 (Fri, 03 Dec 2010) | 1 line
+
+Moved assembler stuff.
+------------------------------------------------------------------------
+r40 | Akiva.Bamberger | 2010-12-03 16:01:20 -0500 (Fri, 03 Dec 2010) | 4 lines
+
+Updated the parser and ast files.
+
+Good job, friends!
+
+------------------------------------------------------------------------
+r39 | 8enmann@gmail.com | 2010-12-03 15:42:42 -0500 (Fri, 03 Dec 2010) | 3 lines
+
+edited wrong bytecode file before. fixed.
+
+
+------------------------------------------------------------------------
+r38 | 8enmann@gmail.com | 2010-12-03 15:41:18 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+small edits
+
+------------------------------------------------------------------------
+r35 | 8enmann@gmail.com | 2010-12-03 13:58:24 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+moved type defs
+
+------------------------------------------------------------------------
+r34 | Fredmaster2 | 2010-12-03 13:57:27 -0500 (Fri, 03 Dec 2010) | 1 line
+
+Fixed dot and bracket s/r error
+------------------------------------------------------------------------
+r33 | Akiva.Bamberger | 2010-12-03 13:45:51 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+Small changes made
+
+------------------------------------------------------------------------
+r32 | Fredmaster2 | 2010-12-03 13:45:06 -0500 (Fri, 03 Dec 2010) | 1 line
+
+Added brackets and dot to parser
+------------------------------------------------------------------------
+r31 | 8enmann@gmail.com | 2010-12-03 13:44:02 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+small modifications to compiler and added microc interpreter
+
+------------------------------------------------------------------------
+r30 | Akiva.Bamberger | 2010-12-03 13:43:45 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+Did it
+
+------------------------------------------------------------------------
+r28 | Akiva.Bamberger | 2010-12-03 13:22:16 -0500 (Fri, 03 Dec 2010) | 5 lines
+
+Adding, my BFFs!
+
+This Abstract Syntax Tree takes care of most things.
+
+
+------------------------------------------------------------------------
+r26 | Fredmaster2 | 2010-12-03 13:14:56 -0500 (Fri, 03 Dec 2010) | 1 line
+
+Updated parser with types
+------------------------------------------------------------------------
+r25 | 8enmann@gmail.com | 2010-12-03 12:59:42 -0500 (Fri, 03 Dec 2010) | 4 lines
+
+Added some necessary files, modified slightly from their MICROC originals.  Note the TODO file in tests, which contains a list of tests that need to be written as they are supported.
+Tests can't be written until the whole pipeline up to the interpreter is somewhat complete.
+
+
+------------------------------------------------------------------------
+r24 | Akiva.Bamberger | 2010-12-03 12:48:38 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+Changed the way types are dealt with
+
+------------------------------------------------------------------------
+r23 | Fredmaster2 | 2010-12-03 11:44:05 -0500 (Fri, 03 Dec 2010) | 1 line
+
+Added location change for parser.mly
+------------------------------------------------------------------------
+r22 | Akiva.Bamberger | 2010-12-03 11:30:58 -0500 (Fri, 03 Dec 2010) | 2 lines
+
+Adding for Fred
+
+------------------------------------------------------------------------
+r20 | Akiva.Bamberger | 2010-11-23 23:53:01 -0500 (Tue, 23 Nov 2010) | 2 lines
+
+Adding to src (sorry, edited first in microc file)
+
+------------------------------------------------------------------------
+r16 | yeliu2428@gmail.com | 2010-11-20 18:35:49 -0500 (Sat, 20 Nov 2010) | 1 line
+
+removed testing file from /src
+------------------------------------------------------------------------
+r7 | yeliu2428@gmail.com | 2010-10-03 14:58:30 -0400 (Sun, 03 Oct 2010) | 1 line
+
+testing
+------------------------------------------------------------------------
+r3 | Akiva.Bamberger | 2010-10-03 14:22:47 -0400 (Sun, 03 Oct 2010) | 2 lines
+
+Adding a file for source files...
+
+------------------------------------------------------------------------
+\end{verbatim}
 \chapter{Architecture \& Design}
-\begin{figure}
-\center
+\section{Block Diagram}
+
 \includegraphics[width=\textwidth]{blockdiagram.png}
-\label{fig:block_diagram}
-\caption{A simplified diagram displaying the conversion of source code to .midi music.}
-\end{figure}
+
+\section{Interface between components}
+The input is a .m file written according to the LRM and the diagram in figure \ref{fig:block_diagram}. The input file is converted into tokens by the scanner/lexer, parsed into an abstract syntax tree, compiled into bytecode, and is further compiled into a CSV by the bytecode interpreter. Finally, the CSV file is assembled into a MIDI file by the Java-based assembler, which can then be played on any standard media player.  The two outputs generated by each .m source file is a .csv file containing CSV information, and a .midi file to be played.  All components are written in OCAML except for the assembler, which is written in Java.  The parser is generated by OCAMLYACC.  The media player is not included here and can be written in any language.
+
+The MIDILC language logically consists of a lexer, parser, bytecode compiler, and assembler.  As the lexer reads in tokens, it invokes the parser.  At this point, syntax errors prevent the compiler from running and output an error.  When parsing is finished, the bytecode compiler is invoked, which generates a series of human-readable CSV bytecodes, which mimic the MIDI structure.  It is at this point that runtime errors (such as granularity issues or bounds check violation) are generated.  Finally, the assembler is run on the CSV to output a type Standard MIDI File.
+\section{Who Implemented What}
+Fred, Akiva, and Ben: Lexer, Parser, Bytecode, Exectuer, Compiler
+Fred and Ye: Assembler
 \chapter{Test Plan}
+\section{Representative Source}
+\subsection{For Loop}
+\subsubsection{Source Code}
+\begin{verbatim}
+main() {
+  Note a; 
+  Sequence b;
+  Number i;
+  b = new_sequence();
+  a = Aq;
+  for (i = 0 ; i < 12 ; i = i + 1) {
+    b = b + a;
+    b = b + ((a as Chord) + (a .+ i));
+  }
+  play(b);
+}
+\end{verbatim}
+\subsubsection{Bytecode}
+\begin{verbatim}
+0 global variables
+0 Jsr 2
+1 Hlt
+2 Ent 3
+3 Jsr -3
+4 Sfp 2
+5 Drp
+6 Not (69,4)
+7 Sfp 1
+8 Drp
+9 Num 0
+10 Sfp 3
+11 Drp
+12 Sjp (15,23,0)
+13 Bra 21
+14 Lfp 2
+15 Lfp 1
+16 Add
+17 Sfp 2
+18 Drp
+19 Lfp 2
+20 Lfp 1
+21 Cst Chord
+22 Lfp 1
+23 Lfp 3
+24 Dad
+25 Add
+26 Add
+27 Sfp 2
+28 Drp
+29 Lfp 3
+30 Num 1
+31 Add
+32 Sfp 3
+33 Drp
+34 Lfp 3
+35 Num 12
+36 Lt
+37 Bne -23
+38 Sjp (0,0,3)
+39 Lfp 2
+40 Jsr -1
+41 Drp
+42 Num 0
+43 Rts 0
+\end{verbatim}
+\subsubsection{CSV}
+\begin{verbatim}
+0,4,69
+4,4,69
+4,4,69
+8,4,69
+12,4,69
+12,4,70
+16,4,69
+20,4,69
+20,4,71
+24,4,69
+28,4,69
+28,4,72
+32,4,69
+36,4,69
+36,4,73
+40,4,69
+44,4,69
+44,4,74
+48,4,69
+52,4,69
+52,4,75
+56,4,69
+60,4,69
+60,4,76
+64,4,69
+68,4,69
+68,4,77
+72,4,69
+76,4,69
+76,4,78
+80,4,69
+84,4,69
+84,4,79
+88,4,69
+92,4,69
+92,4,80
+\end{verbatim}
+\subsection{Set Instrument}
+\subsubsection{Source code}
+\begin{verbatim}
+main() {
+  Note a;
+  Sequence b;
+  Chord c;
+  b = new_sequence();
+  a = A3q;
+  a = (a as Chord) + C3q + Eb3q;
+  b = b + a + a + a;
+  set_instrument("Piano");
+  play(b);
+}
+\end{verbatim}
+\subsubsection{Bytecode}
+\begin{verbatim}
+0 global variables
+0 Jsr 2
+1 Hlt
+2 Ent 3
+3 Jsr -3
+4 Sfp 2
+5 Drp
+6 Not (57,4)
+7 Sfp 1
+8 Drp
+9 Lfp 1
+10 Cst Chord
+11 Not (48,4)
+12 Add
+13 Not (51,4)
+14 Add
+15 Sfp 1
+16 Drp
+17 Lfp 2
+18 Lfp 1
+19 Add
+20 Lfp 1
+21 Add
+22 Lfp 1
+23 Add
+24 Sfp 2
+25 Drp
+26 Stn Piano
+27 Jsr -6
+28 Drp
+29 Lfp 2
+30 Jsr -1
+31 Drp
+32 Num 0
+33 Rts 0
+\end{verbatim}
+\subsubsection{CSV}
+\begin{verbatim}
+0,4,57
+0,4,48
+0,4,51
+4,4,57
+4,4,48
+4,4,51
+8,4,57
+8,4,48
+8,4,51
+\end{verbatim}
+\subsection{Arpeggiate}
+\subsubsection{Source Code}
+\begin{verbatim}
+main(){
+  Note a;
+  Chord c;
+  Sequence s;
+  Number i;
+  
+  c = new_chord(C,E,G);
+  s = arpeggiate(c);
+  play(s);
+}
+
+arpeggiate(c)
+{
+    Number n;
+	Number i;
+	Sequence s;
+	s = new_sequence();
+	n = c.length;
+	for(i = 0; i < n; i=i+1)
+	{
+		s = s + c[i];
+	}
+	return s;
+}
+\end{verbatim}
+\subsubsection{Bytecode}
+\begin{verbatim}
+0 global variables
+0 Jsr 36
+1 Hlt
+2 Ent 3
+3 Jsr -3
+4 Sfp 3
+5 Drp
+6 Lfp -2
+7 Mem length
+8 Sfp 1
+9 Drp
+10 Num 0
+11 Sfp 2
+12 Drp
+13 Sjp (7,15,0)
+14 Bra 13
+15 Lfp 3
+16 Lfp 2
+17 Lfp -2
+18 Ele
+19 Add
+20 Sfp 3
+21 Drp
+22 Lfp 2
+23 Num 1
+24 Add
+25 Sfp 2
+26 Drp
+27 Lfp 2
+28 Lfp 1
+29 Lt
+30 Bne -15
+31 Sjp (0,0,3)
+32 Lfp 3
+33 Rts 1
+34 Num 0
+35 Rts 1
+36 Ent 4
+37 Not (67,4)
+38 Not (64,4)
+39 Not (60,4)
+40 Num 3
+41 Jsr -4
+42 Sfp 2
+43 Drp
+44 Lfp 2
+45 Jsr 2
+46 Sfp 3
+47 Drp
+48 Lfp 3
+49 Jsr -1
+50 Drp
+51 Num 0
+52 Rts 0
+\end{verbatim}
+\subsubsection{CSV}
+\begin{verbatim}
+0,4,60
+4,4,64
+8,4,67
+\end{verbatim}
+
+\section{Testing automation}
+We chose our test cases starting from the most basic, and gradually increased the complexity of them to test and or v.  We initially chose test cases by selecting the basic features of our language (the different data types, basic control features, and built-in functions), and ensuring that they work as expected.  These tests are very simple scripts that include the different ways these language features can be used. For example, we tested the different ways of assigning and modifying Note, Chord, and Sequence types. Test cases that represent previous problem areas, such as the \verb|set_tempo()| function, were chosen next to ensure that these problems have been dealt with.  The next step was to add cases to test all the different ways of modifying data, including use of multiple functions, the dot operator, and the subscript operator.  Some other tests included simple library functions, such as scale generators and major/minor chord generators.  Finally, for completeness, we wrote more complex functions to represent different ways the language would actually be used, including tests that produce full songs and generate harmonies based on melodies.
+
 \chapter{Lessons Learned}
+\section{Most Important Learning}
+\subsection{Akiva Bamberger}
+\subsection{Ben Mann}
+\subsection{Fred Lowenthal}
+\subsection{Ye Liu}
+\section{Advice for Future Teams}
 \chapter{Appendix}
 \end{document}
