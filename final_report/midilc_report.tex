@@ -42,7 +42,85 @@ MIDILC is tailored for crafting melody sequences. For a sequence containing a se
 
 \chapter{Language Tutorial}
 MIDILC was designed with the programmer in mind, but uses all the musical notation familiar to the musician. The lanuage is robust enough to fully support the idiomatic construction of Notes and Chords, as well as set tempo and note duration using \verb|Note| and \verb|Number| literals.
-\section{A Simple Melody}
+\section{An Introduction}
+MIDILC is a C-like language used for generating midi music algorithmically. Each source file, with the extension .m, should contain a main() method. Like C, each line of code should be terminated with the semicolon.
+\begin{verbatim}
+main() {
+    some_function();
+\end{verbatim}
+
+MIDILC’s basic types are Number, Note, Chord, and Sequence, the last three of which can be written into .midi files and played. All variables must be declared, one at a time, before they are called.
+
+Numbers, the most basic type in MIDILC, supports integer values from 0 to 127. These numbers correspond to the 128 MIDI instruments and notes.
+
+\verb|Number num;| /*declares the variable num */
+
+\verb|num = 4;| /* sets num to 4 */
+
+\verb|num = num + 1;| /* increment num by 1, so that it is now the value 5 */
+
+The following snippet will provide you with a Note, the simplest of the playable musical types.
+
+\verb|Note n;| /* declares the variable n*/
+
+\verb|n = A;| /* sets n to the note A, which by default is in the 3rd octave and a quarter note */
+
+Notes can also be initiated with more options:
+
+\verb|n = A4w;| /* sets n to the note A, in the 4th octave, as a whole note */
+
+\verb|n = A4w + 4;| /* sets n to A in the 4th octave as a whole note, and add 4 beats (a quarter note’s worth) to its duration */
+
+\verb|n = A4w .+ 4;| /* sets n to A in the 4th octave as a whole note, then increase its pitch by 4 half steps (to C sharp) */
+
+The next type, \verb|Chord|, can be constructed from scratch, or based on notes that already exist. Unlike Note, Chord objects must be initiated with the \verb|new_chord()| function. Notice that since the \verb|+=| operator is not supported, adding to a \verb|Chord| requires one to set the Chord to itself plus the added object.
+
+\verb|Chord a;|
+
+\verb|Chord b;|
+
+\verb|Chord c;|
+
+\verb|Chord d;|
+
+\verb|a = new_chord();| /* initializes a Chord object that plays nothing */
+
+\verb|b = new_chord(C, E, G);| /* initializes b to be a C major chord in the (default) 3rd octave with (default) duration of a quarter note*/
+
+\verb|c = new_chord(n);| /* initializes c to be a chord containing Note n */
+
+\verb|a = a + n;| /* adds the note n to a, which previously contained nothing playable */
+
+Sequence objects can be thought of as a collection of Note, Chord, and other Sequence objects. Construction of new Sequence objects is similar to that of new Chord objects. Both Note and Chord objects can be added to a Sequence object, in any permutation.
+
+\verb|Sequence s1;| /* declares s1 */
+
+\verb|Sequence s2;| /* declares s2 */
+
+\verb|s1 = new_sequence();|  /* initializes s1; empty sequence */
+
+\verb|s2 = new_sequence();|  /* initializes s2; empty sequence */
+
+\verb|s1 = s1 + C4e;| /* adds a note to s1 (4th octave C, eighth note duration) */
+
+\verb|s1 = s1 + R;| /* adds a rest to s1 */
+
+\verb|s2 = s2 + a;| /* adds Chord object a to s2 */
+
+\verb|s2 = s2 + b;| /* adds Chord object b to s2 */
+
+Finally, to print Sequence objects to .midi, the \verb|play()|function is invoked. \verb|play()| takes as an argument a \verb|Sequence| to be written out, and each time \verb|play()| is called, a new track is created. Thus, multiple calls of \verb|play()| in the same file will result in a multi-track .midi being created.
+
+\verb|play(s1);| /* prints s1 out as a track */
+
+\verb|play(s2);| /* prints s2 out as a second track */
+
+MIDILC does not give the user the responsibility of memory management. Therefore, to complete a basic program using the code snippets above, simply close the \verb|main()| function with the corresponding bracket.
+
+To compile the program that you have just written, type the following into the command line:
+
+\verb|./midilcc sample_program.m [sample_program_output]|
+The last parameter is optional; if not given, a default name consisting of the name of the .m file with a .csv extenion will be given to the output CSV file. The compiler will print out any errors that may have occurred, and if the compilation was successful, a .csv file and a .midi file will be created in the same directory as the .m file. Simply open the .midi file with any media player to play it.
 \section{Twinkle Twinkle Little Star}
 \chapter{Language Reference Manual}
 
@@ -1056,6 +1134,7 @@ The input is a .m file written according to the LRM and the diagram in figure \r
 The MIDILC language logically consists of a lexer, parser, bytecode compiler, and assembler.  As the lexer reads in tokens, it invokes the parser.  At this point, syntax errors prevent the compiler from running and output an error.  When parsing is finished, the bytecode compiler is invoked, which generates a series of human-readable CSV bytecodes, which mimic the MIDI structure.  It is at this point that runtime errors (such as granularity issues or bounds check violation) are generated.  Finally, the assembler is run on the CSV to output a type Standard MIDI File.
 \section{Who Implemented What}
 Fred, Akiva, and Ben: Lexer, Parser, Bytecode, Exectuer, Compiler
+
 Fred and Ye: Assembler
 \chapter{Test Plan}
 \section{Representative Source}
