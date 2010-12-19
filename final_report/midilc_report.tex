@@ -1,6 +1,6 @@
 \documentclass[12pt,A4]{book}
 \title{MIDILC:  A MIDI Language Compiler for Programmatic Music Composition}
-\author{Alex ``Akiva'' Bamberger \\ Benjamin Mann \\ Frederic Lowenthal \\ Ye Liu}
+\author{Alex ``Akiva'' Bamberger \\ Benjamin Mann \\ Fredric Lowenthal \\ Ye Liu}
 \date{}
 
 \usepackage{graphicx}
@@ -120,8 +120,167 @@ MIDILC does not give the user the responsibility of memory management. Therefore
 To compile the program that you have just written, type the following into the command line:
 
 \verb|./midilcc sample_program.m [sample_program_output]|
+
 The last parameter is optional; if not given, a default name consisting of the name of the .m file with a .csv extenion will be given to the output CSV file. The compiler will print out any errors that may have occurred, and if the compilation was successful, a .csv file and a .midi file will be created in the same directory as the .m file. Simply open the .midi file with any media player to play it.
 \section{Twinkle Twinkle Little Star}
+
+The following tutorial will guide you through a simple program written in MIDILC, which produces a .midi file of the familiar tune “Twinkle Twinkle Little Star”. The full code can be found in the appendix.
+	
+The source files of MIDILC are saved as .m text files. First, create a .m file; call it twinkle.m. We 
+will have one function, namely the \verb|main()| function, for all the code in this program. We declare the 
+\verb|main()| function, and declare all the variables used, one per line:
+	
+	
+	/* twinkle twinkle little star*/
+
+\verb|main() {|
+
+		/* declare all the variables: Notes c through a, Sequences
+		first part and overall, and Number n */
+
+\verb|Note c;|
+
+\verb|Note d;|
+
+\verb|Note e;|
+
+\verb|Note f;|
+
+\verb|Note g;|
+
+\verb|Note a;|
+
+\verb|Sequence firstpart;|
+
+\verb|Sequence overall;|
+
+\verb|Number n;|
+
+
+The next step is to initialize all the variables. We will start with the \verb|Note| objects.
+
+
+/* set each of the notes to a quarter note in the 4th octave, note name as 
+indicated by the capital letters */
+
+	\verb|c = C4q;| /* note C, in the 4th octave, quarter-note duration */
+	
+	\verb|d = D4q;|
+	
+	\verb|e = E4q;|
+	
+	\verb|f = F4q;|
+	
+	\verb|g = G4q;|
+	
+	\verb|a = A4q;|
+
+
+Next, we initialize the \verb|Sequence| objects. Notice that unlike \verb|Note|, we must call on the new_sequence() function.
+
+	
+	/* initialize sequences */
+	
+	\verb|firstpart = new_sequence();|
+	
+	\verb|overall = new_sequence();|
+
+
+Now, we are ready to add notes to the \verb|Sequence| objects. Let’s start with 
+firstpart, which we will use to store the first two stanzas of the song.
+
+
+	/* add the first two stanzas of the song to 
+	
+	the \verb|Sequence| firstpart */
+	
+	\verb|firstpart = firstpart + c;|
+	
+	\verb|firstpart = firstpart + c;|
+	
+	\verb|firstpart = firstpart + g;|
+	
+	\verb|firstpart = firstpart + g;|
+	
+	\verb|firstpart = firstpart + a;|
+	
+	\verb|firstpart = firstpart + a;|
+	
+	/* make the last note's duration two quarter notes long 
+	
+	(4 beats longer, 16th note per beat) */
+	
+	\verb|firstpart = firstpart + (g + 4);|
+	
+	\verb|firstpart = firstpart + f;|
+	
+	\verb|firstpart = firstpart + f;|
+	
+	\verb|firstpart = firstpart + e;|
+	
+	\verb|firstpart = firstpart + e;|
+	
+	\verb|firstpart = firstpart + d;|
+	
+	\verb|firstpart = firstpart + d;|
+	
+	\verb|firstpart = firstpart + (c + 4);|
+	
+
+Next, we will start building the main sequence (overall), using a loop 
+for the middle two identical stanzas of the song.
+
+	
+	/* add the first part to the overall \verb|Sequence| */
+	
+	\verb|overall = overall + firstpart;|
+	
+	/* add the middle section of the song to overall twice, 
+by using a for-loop */
+
+	
+	\verb|for (n = 0; n < 2; n = n+1) {|
+	
+		\indent\verb|overall = overall + g;|
+	
+		\indent\verb|overall = overall + g;|
+	
+		\indent\verb|overall = overall + f;|
+	
+		\indent\verb|overall = overall + f;|
+	
+		\indent\verb|overall = overall + e;|
+	
+		\indent\verb|overall = overall + e;|
+	
+		\indent\verb|overall = overall + (d + 4);|
+	
+	\verb|}
+	
+	/* add firstpart to overall again, since they repeat*/
+	
+	\verb|overall = overall + firstpart;|
+	
+
+We are almost ready to write the program out to a .csv file. Let us 
+lower the tempo of the song from the default 120 beats per minute (bpm) 
+to 90, then call on the play() function to create the CSV file.
+
+
+	/* set tempo from default 120 to 90, since it is a slow song */
+	
+	\verb|set_tempo(90);|
+	
+	/* call on play() to create the csv file */
+	
+	\verb|play(overall);|
+	
+\verb|}|
+
+Congratulations, you have just written your first MIDILC program! 
+To compile the program, invoke the MIDILC compiler (midilcc), as 
+described in the previous section.
+
 \chapter{Language Reference Manual}
 
 MIDILC is a C-like language that makes it simpler to algorithmically generate music.  It simplifies MIDI music creation by allowing programmers to specify song information in musical terms and write functions that process existing musical information.  By building off of simpler musical functions, such as arpeggios and chords, complex musical compositions can easily be programmed.
