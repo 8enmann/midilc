@@ -1614,6 +1614,101 @@ arpeggiate(c)
 \section{Testing automation}
 We chose our test cases starting from the most basic, and gradually increased the complexity of them to test and or v.  We initially chose test cases by selecting the basic features of our language (the different data types, basic control features, and built-in functions), and ensuring that they work as expected.  These tests are very simple scripts that include the different ways these language features can be used. For example, we tested the different ways of assigning and modifying Note, Chord, and Sequence types. Test cases that represent previous problem areas, such as the \verb|set_tempo()| function, were chosen next to ensure that these problems have been dealt with.  The next step was to add cases to test all the different ways of modifying data, including use of multiple functions, the dot operator, and the subscript operator.  Some other tests included simple library functions, such as scale generators and major/minor chord generators.  Finally, for completeness, we wrote more complex functions to represent different ways the language would actually be used, including tests that produce full songs and generate harmonies based on melodies.
 
+An automated test suite, based off of the MICROC test suite, was used for regression testing and ensuring that all language features work as expected.  Since our language doesn’t include an interpreter, the interpreter aspect in the MICROC test suite was removed from our test suite. Because our assembler was infrequently modified after the initial implementation, and due to the complexity of assembling each CSV output file, the testing framework compares against the intermediate CSV files instead of the final MIDI output.  Our testing involved running the testall.sh shell script to compare output from each of the tests in the suite, which reports the status for each teset run with either OK or NO (did not pass), before committing any changes.  We did not use a code coverage tool, but instead hand-selected cases that include all aspects of the language, as we believe that this is more well-suited for our language.
+
+Each person performed tests on their own parts of the language. The tests for the features of the complete language, as well as the library functions, were divided among the group. Here is a list of what each member implemented.
+
+\noindent Ben:
+
+	test-add.m
+	
+	test-chord.m
+	
+	test-direct1.m
+	
+	test-divide.m
+	
+	test-dvorak.m
+	
+	test-for2.m
+	
+	test-for3.m
+	
+	test-note.m
+	
+	test-rand.m
+	
+	test-subscript.m
+
+
+\noindent Fred:
+
+	test-arpeggio.m
+	
+	test-casts.m
+	
+	test-chromatic.m
+	
+	test-chromatic-subscript.m
+	
+	test-direct.m
+	
+	test-equality.m
+	
+	test-gen-harmony.m
+	
+	test-global.m
+	
+	test-major.m
+	
+	test-instrument.m
+	
+	test-minor.m
+	
+	test-melody.m
+	
+	test-numerical-inequality.m
+	
+	test-shift.m
+	
+	test-sub.m
+	
+	test-play-chord.m
+	
+	test-play-note.m
+	
+	test-sequence.m
+	
+	test-tempo.m
+
+\noindent Akiva:
+	
+	pi-symphony.m
+	
+	test-for1.m
+	
+	test-for4.m
+	
+	test-for5.m
+	
+	test-recursion.m
+	
+	test-stairway.m
+	
+\noindent Ye:
+	
+	test-harmonicminor.m
+	
+	test-inequality.m
+	
+	test-majorscale.m
+	
+	test-melodicminor.m
+	
+	test-multiply.m
+	
+	test-naturalminor.m
+
 \chapter{Lessons Learned}
 \section{Most Important Lessons}
 \subsection{Akiva Bamberger}
