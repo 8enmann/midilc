@@ -554,7 +554,8 @@ Added the most ballin' test ever.
 ------------------------------------------------------------------------
 r110 | Fredmaster2 | 2010-12-17 17:47:14 -0500 (Fri, 17 Dec 2010) | 1 line
 
-Implemented setting instruments via name in the assembler.  For backwards compatibility, numbers are still supported (using quotation marks)
+Implemented setting instruments via name in the assembler.
+For backwards compatibility, numbers are still supported (using quotation marks)
 ------------------------------------------------------------------------
 r109 | Akiva.Bamberger | 2010-12-17 16:26:42 -0500 (Fri, 17 Dec 2010) | 2 lines
 
@@ -607,9 +608,11 @@ Fixed warning and some formatting.
 ------------------------------------------------------------------------
 r98 | Fredmaster2 | 2010-12-17 02:41:35 -0500 (Fri, 17 Dec 2010) | 3 lines
 
-Implemented string literals for specifying instruments, and modified test and set_instrument function accordingly.
+Implemented string literals for specifying instruments, and modified test 
+and set_instrument function accordingly.
 
-The assembler has not yet been updated, so the csv files produced with an instrument set will not currently work with the compiler
+The assembler has not yet been updated, so the csv files produced with an instrument 
+set will not currently work with the compiler
 ------------------------------------------------------------------------
 r97 | 8enmann@gmail.com | 2010-12-17 00:12:36 -0500 (Fri, 17 Dec 2010) | 2 lines
 
@@ -618,7 +621,9 @@ Renamed a bunch of tests, added comments, and added attribution.
 ------------------------------------------------------------------------
 r95 | yeliu2428@gmail.com | 2010-12-16 23:19:39 -0500 (Thu, 16 Dec 2010) | 1 line
 
-added novice programs to final_report/novice. there's a program that generates a sequence (test-twinkle), one that generates a random sequence (test-randomseq), and one that generates a two-sequence file (test-doubleseq).
+added novice programs to final_report/novice. there's a program that generates a 
+sequence (test-twinkle), one that generates a random sequence (test-randomseq), 
+and one that generates a two-sequence file (test-doubleseq).
 ------------------------------------------------------------------------
 r93 | Fredmaster2 | 2010-12-16 22:07:26 -0500 (Thu, 16 Dec 2010) | 1 line
 
@@ -630,7 +635,8 @@ Fixed PPQ issue - 16 to 4 (i.e. everything's 4x slower now)
 ------------------------------------------------------------------------
 r91 | Akiva.Bamberger | 2010-12-16 20:56:50 -0500 (Thu, 16 Dec 2010) | 2 lines
 
-Changed code to allow addition of two notes-- this results in the duration of the second being added on to the duration of the first.
+Changed code to allow addition of two notes-- this results in the duration of the
+second being added on to the duration of the first.
 
 ------------------------------------------------------------------------
 r90 | Akiva.Bamberger | 2010-12-16 20:21:20 -0500 (Thu, 16 Dec 2010) | 2 lines
@@ -682,7 +688,8 @@ Allowed using types in declarations.
 ------------------------------------------------------------------------
 r85 | Fredmaster2 | 2010-12-16 12:17:36 -0500 (Thu, 16 Dec 2010) | 3 lines
 
-Added number-based instrument_set and tempo_set assembler implementations (instrument lookup check not yet added).
+Added number-based instrument_set and tempo_set assembler implementations 
+(instrument lookup check not yet added).
 
 Added set_instrument and set_tempo tests
 ------------------------------------------------------------------------
@@ -697,9 +704,11 @@ to allow for breaks and continues to work as intended.
 ------------------------------------------------------------------------
 r83 | Fredmaster2 | 2010-12-15 17:35:50 -0500 (Wed, 15 Dec 2010) | 3 lines
 
-Changed set_tempo to add tempo_marker, and added set_instrument function (currently uses instrument number, need to add string to stack?)
+Changed set_tempo to add tempo_marker, and added set_instrument function 
+(currently uses instrument number, need to add string to stack?)
 
-These functions work, and pass tests, but the version of the assembler that supports them hasn't been committed yet
+These functions work, and pass tests, but the version of the assembler that 
+supports them hasn't been committed yet
 ------------------------------------------------------------------------
 r82 | 8enmann@gmail.com | 2010-12-15 03:43:01 -0500 (Wed, 15 Dec 2010) | 4 lines
 
@@ -719,8 +728,8 @@ every time, even across compilation.  At least it's testable!
 r80 | 8enmann@gmail.com | 2010-12-15 03:13:27 -0500 (Wed, 15 Dec 2010) | 4 lines
 
 Modified makefile so you can just type "make test" to run all the tests.
-Also edited the test.sh script to make the gold standard of the correct filename format.
-Added a missing gold standard for for4.
+Also edited the test.sh script to make the gold standard of the correct 
+filename format. Added a missing gold standard for for4.
 
 ------------------------------------------------------------------------
 r79 | 8enmann@gmail.com | 2010-12-15 03:00:21 -0500 (Wed, 15 Dec 2010) | 2 lines
@@ -752,7 +761,8 @@ Added fancy tests to TODO
 ------------------------------------------------------------------------
 r74 | Fredmaster2 | 2010-12-14 22:07:17 -0500 (Tue, 14 Dec 2010) | 1 line
 
-Added test-attribute gold standard and changed test.sh to not remove csv file (to make it easier to produce gold standards).
+Added test-attribute gold standard and changed test.sh to not remove csv file
+(to make it easier to produce gold standards).
 ------------------------------------------------------------------------
 r73 | Fredmaster2 | 2010-12-14 21:56:47 -0500 (Tue, 14 Dec 2010) | 1 line
 
@@ -901,14 +911,16 @@ r47 | 8enmann@gmail.com | 2010-12-11 20:06:28 -0500 (Sat, 11 Dec 2010) | 4 lines
 
 Everything compiles except the toplevel because it needs the executor.
 LOTS of things changed, mostly do to with how operators get passed around.
-Still a lot to do.  Added comments in some of the places.  Threw errors for some unimplemented stuff.
+Still a lot to do.  Added comments in some of the places.  Threw errors for 
+some unimplemented stuff.
 
 ------------------------------------------------------------------------
 r45 | 8enmann@gmail.com | 2010-12-04 16:33:12 -0500 (Sat, 04 Dec 2010) | 4 lines
 
 Modified bytecode spec to use uniform types.  Still need to add type-specific operators.
 
-Added a function to the compiler that converts note literals into tuples with pitch and duration as int * int tuples.
+Added a function to the compiler that converts note literals into tuples with pitch 
+and duration as int * int tuples.
 
 ------------------------------------------------------------------------
 r44 | 8enmann@gmail.com | 2010-12-03 16:44:01 -0500 (Fri, 03 Dec 2010) | 2 lines
@@ -989,7 +1001,8 @@ Updated parser with types
 ------------------------------------------------------------------------
 r25 | 8enmann@gmail.com | 2010-12-03 12:59:42 -0500 (Fri, 03 Dec 2010) | 4 lines
 
-Added some necessary files, modified slightly from their MICROC originals.  Note the TODO file in tests, which contains a list of tests that need to be written as they are supported.
+Added some necessary files, modified slightly from their MICROC originals.  Note the 
+TODO file in tests, which contains a list of tests that need to be written as they are supported.
 Tests can't be written until the whole pipeline up to the interpreter is somewhat complete.
 
 
