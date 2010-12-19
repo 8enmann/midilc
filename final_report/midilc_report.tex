@@ -513,6 +513,11 @@ A general style guide was used by the team during development.
 12/11 & Finish overall system (source should compile into MIDI files)\\
 12/18 & Finish up final sections of report\\
 \end{tabular}
+\section{Roles and Responsibilities}
+\subsection{Akiva Bamberger}
+\subsection{Ben Mann}
+\subsection{Fred Lowenthal}
+\subsection{Ye Liu}
 \section{Languages and Tools Used}
 The team used O'Caml, Java, and bash scripting to complete the langauge. The tools used included: gedit and Vim for editing O'Caml; Eclipse for editing Java; and gedit for editing bash scripts. The javax.swing.midi library proved most useful for transcribing midi from CSV. timidity, a .midi-to-.wav converter, was used to compile .wav files from the midi output by the assembler. A Google code hosted SVN repository was used for version control. E-mail and Google Docs were used to share documentation.
 
@@ -1318,7 +1323,7 @@ arpeggiate(c)
 We chose our test cases starting from the most basic, and gradually increased the complexity of them to test and or v.  We initially chose test cases by selecting the basic features of our language (the different data types, basic control features, and built-in functions), and ensuring that they work as expected.  These tests are very simple scripts that include the different ways these language features can be used. For example, we tested the different ways of assigning and modifying Note, Chord, and Sequence types. Test cases that represent previous problem areas, such as the \verb|set_tempo()| function, were chosen next to ensure that these problems have been dealt with.  The next step was to add cases to test all the different ways of modifying data, including use of multiple functions, the dot operator, and the subscript operator.  Some other tests included simple library functions, such as scale generators and major/minor chord generators.  Finally, for completeness, we wrote more complex functions to represent different ways the language would actually be used, including tests that produce full songs and generate harmonies based on melodies.
 
 \chapter{Lessons Learned}
-\section{Most Important Learning}
+\section{Most Important Lessons}
 \subsection{Akiva Bamberger}
 \subsection{Ben Mann}
 \subsection{Fred Lowenthal}
