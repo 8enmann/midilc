@@ -51,7 +51,9 @@ main() {
 
 MIDILC’s basic types are Number, Note, Chord, and Sequence, the last three of which can be written into .midi files and played. All variables must be declared, one at a time, before they are called.
 
-Numbers, the most basic type in MIDILC, supports integer values from 0 to 127. These numbers correspond to the 128 MIDI instruments and notes.
+\noindent Numbers, the most basic type in MIDILC, supports integer values from 0 to 127. These numbers correspond to the 128 MIDI instruments and notes.
+
+\vspace{5 mm}
 
 \verb|Number num;| /*declares the variable num */
 
@@ -59,21 +61,39 @@ Numbers, the most basic type in MIDILC, supports integer values from 0 to 127. T
 
 \verb|num = num + 1;| /* increment num by 1, so that it is now the value 5 */
 
-The following snippet will provide you with a Note, the simplest of the playable musical types.
+\vspace{5 mm}
+
+\noindent The following snippet will provide you with a Note, the simplest of the playable musical types.
+
+\vspace{5 mm}
 
 \verb|Note n;| /* declares the variable n*/
 
-\verb|n = A;| /* sets n to the note A, which by default is in the 3rd octave and a quarter note */
+\verb|n = A;| /* sets n to the note A, which by default is in 
 
-Notes can also be initiated with more options:
+\indent \indent \indent the 3rd octave and a quarter note */
+
+\vspace{5 mm}
+
+\noindent Notes can also be initiated with more options:
+
+\vspace{5 mm}
 
 \verb|n = A4w;| /* sets n to the note A, in the 4th octave, as a whole note */
 
-\verb|n = A4w + 4;| /* sets n to A in the 4th octave as a whole note, and add 4 beats (a quarter note’s worth) to its duration */
+\verb|n = A4w + 4;| /* sets n to A in the 4th octave as a whole note, 
 
-\verb|n = A4w .+ 4;| /* sets n to A in the 4th octave as a whole note, then increase its pitch by 4 half steps (to C sharp) */
+\indent \indent \indent and add 4 beats (a quarter note’s worth) to its duration */
 
-The next type, \verb|Chord|, can be constructed from scratch, or based on notes that already exist. Unlike Note, Chord objects must be initiated with the \verb|new_chord()| function. Notice that since the \verb|+=| operator is not supported, adding to a \verb|Chord| requires one to set the Chord to itself plus the added object.
+\verb|n = A4w .+ 4;| /* sets n to A in the 4th octave as a whole note, then 
+
+\indent \indent \indent increase its pitch by 4 half steps (to C sharp) */
+
+\vspace{5 mm}
+
+\noindent The next type, \verb|Chord|, can be constructed from scratch, or based on notes that already exist. Unlike Note, Chord objects must be initiated with the \verb|new_chord()| function. Notice that since the \verb|+=| operator is not supported, adding to a \verb|Chord| requires one to set the Chord to itself plus the added object.
+
+\vspace{5 mm}
 
 \verb|Chord a;|
 
@@ -85,13 +105,19 @@ The next type, \verb|Chord|, can be constructed from scratch, or based on notes 
 
 \verb|a = new_chord();| /* initializes a Chord object that plays nothing */
 
-\verb|b = new_chord(C, E, G);| /* initializes b to be a C major chord in the (default) 3rd octave with (default) duration of a quarter note*/
+\verb|b = new_chord(C, E, G);| /* initializes b to be a C major chord in the 
+
+\indent \indent \indent (default) 3rd octave with (default) duration of a quarter note*/
 
 \verb|c = new_chord(n);| /* initializes c to be a chord containing Note n */
 
 \verb|a = a + n;| /* adds the note n to a, which previously contained nothing playable */
 
-Sequence objects can be thought of as a collection of Note, Chord, and other Sequence objects. Construction of new Sequence objects is similar to that of new Chord objects. Both Note and Chord objects can be added to a Sequence object, in any permutation.
+\vspace{5 mm}
+
+\noindent Sequence objects can be thought of as a collection of Note, Chord, and other Sequence objects. Construction of new Sequence objects is similar to that of new Chord objects. Both Note and Chord objects can be added to a Sequence object, in any permutation.
+
+\vspace{5 mm}
 
 \verb|Sequence s1;| /* declares s1 */
 
@@ -109,28 +135,39 @@ Sequence objects can be thought of as a collection of Note, Chord, and other Seq
 
 \verb|s2 = s2 + b;| /* adds Chord object b to s2 */
 
-Finally, to print Sequence objects to .midi, the \verb|play()|function is invoked. \verb|play()| takes as an argument a \verb|Sequence| to be written out, and each time \verb|play()| is called, a new track is created. Thus, multiple calls of \verb|play()| in the same file will result in a multi-track .midi being created.
+\vspace{5 mm}
+
+\noindent Finally, to print Sequence objects to .midi, the \verb|play()|function is invoked. \verb|play()| takes as an argument a \verb|Sequence| to be written out, and each time \verb|play()| is called, a new track is created. Thus, multiple calls of \verb|play()| in the same file will result in a multi-track .midi being created.
+
+\vspace{5 mm}
 
 \verb|play(s1);| /* prints s1 out as a track */
 
 \verb|play(s2);| /* prints s2 out as a second track */
 
-MIDILC does not give the user the responsibility of memory management. Therefore, to complete a basic program using the code snippets above, simply close the \verb|main()| function with the corresponding bracket.
+\vspace{5 mm}
+
+\noindent MIDILC does not give the user the responsibility of memory management. Therefore, to complete a basic program using the code snippets above, simply close the \verb|main()| function with the corresponding bracket.
 
 To compile the program that you have just written, type the following into the command line:
 
+\vspace{5 mm}
+
 \verb|./midilcc sample_program.m [sample_program_output]|
 
-The last parameter is optional; if not given, a default name consisting of the name of the .m file with a .csv extenion will be given to the output CSV file. The compiler will print out any errors that may have occurred, and if the compilation was successful, a .csv file and a .midi file will be created in the same directory as the .m file. Simply open the .midi file with any media player to play it.
+\vspace{5 mm}
+
+\noindent The last parameter is optional; if not given, a default name consisting of the name of the .m file with a .csv extenion will be given to the output CSV file. The compiler will print out any errors that may have occurred, and if the compilation was successful, a .csv file and a .midi file will be created in the same directory as the .m file. Simply open the .midi file with any media player to play it.
 \section{Twinkle Twinkle Little Star}
 
-The following tutorial will guide you through a simple program written in MIDILC, which produces a .midi file of the familiar tune “Twinkle Twinkle Little Star”. The full code can be found in the appendix.
+\indent The following tutorial will guide you through a simple program written in MIDILC, which produces a .midi file of the familiar tune “Twinkle Twinkle Little Star”. The full code can be found in the appendix.
 	
 The source files of MIDILC are saved as .m text files. First, create a .m file; call it twinkle.m. We 
 will have one function, namely the \verb|main()| function, for all the code in this program. We declare the 
-\verb|main()| function, and declare all the variables used, one per line:
-	
-	
+\verb|main()| function, and declare all the variables used, one per line:	
+
+\vspace{5 mm}
+
 	/* twinkle twinkle little star*/
 
 \verb|main() {|
@@ -156,9 +193,11 @@ will have one function, namely the \verb|main()| function, for all the code in t
 
 \verb|Number n;|
 
+\vspace{5 mm}
 
-The next step is to initialize all the variables. We will start with the \verb|Note| objects.
+\noindent The next step is to initialize all the variables. We will start with the \verb|Note| objects.
 
+\vspace{5 mm}
 
 /* set each of the notes to a quarter note in the 4th octave, note name as 
 indicated by the capital letters */
@@ -175,20 +214,24 @@ indicated by the capital letters */
 	
 	\verb|a = A4q;|
 
+\vspace{5 mm}
 
-Next, we initialize the \verb|Sequence| objects. Notice that unlike \verb|Note|, we must call on the new_sequence() function.
+\noindent Next, we initialize the \verb|Sequence| objects. Notice that unlike \verb|Note|, we must call on the new_sequence() function.
 
-	
+\vspace{5 mm}
+
 	/* initialize sequences */
 	
 	\verb|firstpart = new_sequence();|
 	
 	\verb|overall = new_sequence();|
 
+\vspace{5 mm}
 
-Now, we are ready to add notes to the \verb|Sequence| objects. Let’s start with 
+\noindent Now, we are ready to add notes to the \verb|Sequence| objects. Let’s start with 
 firstpart, which we will use to store the first two stanzas of the song.
 
+\vspace{5 mm}
 
 	/* add the first two stanzas of the song to 
 	
@@ -212,6 +255,8 @@ firstpart, which we will use to store the first two stanzas of the song.
 	
 	\verb|firstpart = firstpart + (g + 4);|
 	
+	\vspace{3 mm}
+		
 	\verb|firstpart = firstpart + f;|
 	
 	\verb|firstpart = firstpart + f;|
@@ -226,14 +271,18 @@ firstpart, which we will use to store the first two stanzas of the song.
 	
 	\verb|firstpart = firstpart + (c + 4);|
 	
+\vspace{5 mm}
 
-Next, we will start building the main sequence (overall), using a loop 
+\noindent Next, we will start building the main sequence (overall), using a loop 
 for the middle two identical stanzas of the song.
 
-	
+\vspace{5 mm}
+
 	/* add the first part to the overall \verb|Sequence| */
 	
 	\verb|overall = overall + firstpart;|
+	
+	\vspace{3 mm}
 	
 	/* add the middle section of the song to overall twice, 
 by using a for-loop */
@@ -241,31 +290,35 @@ by using a for-loop */
 	
 	\verb|for (n = 0; n < 2; n = n+1) {|
 	
-		\indent\verb|overall = overall + g;|
+		\indent \verb|overall = overall + g;|
 	
-		\indent\verb|overall = overall + g;|
+		\indent \verb|overall = overall + g;|
 	
-		\indent\verb|overall = overall + f;|
+		\indent \verb|overall = overall + f;|
 	
-		\indent\verb|overall = overall + f;|
+		\indent \verb|overall = overall + f;|
 	
-		\indent\verb|overall = overall + e;|
+		\indent \verb|overall = overall + e;|
 	
-		\indent\verb|overall = overall + e;|
+		\indent \verb|overall = overall + e;|
 	
-		\indent\verb|overall = overall + (d + 4);|
+		\indent \verb|overall = overall + (d + 4);|
 	
 	\verb|}
+	
+	\vspace{3 mm}
 	
 	/* add firstpart to overall again, since they repeat*/
 	
 	\verb|overall = overall + firstpart;|
 	
+\vspace{5 mm}
 
-We are almost ready to write the program out to a .csv file. Let us 
+\noindent We are almost ready to write the program out to a .csv file. Let us 
 lower the tempo of the song from the default 120 beats per minute (bpm) 
 to 90, then call on the play() function to create the CSV file.
 
+\vspace{5 mm}
 
 	/* set tempo from default 120 to 90, since it is a slow song */
 	
@@ -277,7 +330,9 @@ to 90, then call on the play() function to create the CSV file.
 	
 \verb|}|
 
-Congratulations, you have just written your first MIDILC program! 
+\vspace{5 mm}
+
+\noindent Congratulations, you have just written your first MIDILC program! 
 To compile the program, invoke the MIDILC compiler (midilcc), as 
 described in the previous section.
 
