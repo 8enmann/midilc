@@ -68,8 +68,8 @@ let translate (globals, functions) =
   (* Allocate "addresses" for each global variable *)
   let global_indexes = string_map_pairs StringMap.empty (enum 1 0 globals) in
 
-  (* Assign indexes to function names; built-in "play" and "set_tempo" are special *)
-    (** Built in functions play (to play a sequence), set tempo, constructors for Sequence and Chord
+  (** Assign indexes to function names; built-in "play" and "set_tempo" are special *)
+    (* Built in functions play (to play a sequence), set tempo, constructors for Sequence and Chord
         rand, and set_instrument *)
   let built_in_functions = StringMap.add "play" (-1) StringMap.empty in
   let built_in_functions = StringMap.add "set_tempo" (-2) built_in_functions     in
@@ -126,7 +126,7 @@ let translate (globals, functions) =
 	Block sl     ->  List.concat (List.map stmt sl)
       | Expr e       -> expr e @ [Drp]
       | Return e     -> expr e @ [Rts num_formals]
-      (** Break and Continue use Sjp command. 1 for break, 2 for continue*)
+      (* Break and Continue use Sjp command. 1 for break, 2 for continue*)
       | Break -> [Sjp(0,0,1)]
       | Continue -> [Sjp(0,0,2)];
       | If (p, t, f) -> let t' = stmt t and f' = stmt f in
