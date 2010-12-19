@@ -30,13 +30,9 @@ operators (Fig \ref{fig:types_in_midilc}).
 \label{fig:types_in_midilc}
 \end{figure}
 
-% TODO has a dynamic typing system with preset types
-% TODO why are you talking about what specific operators do in the introduction?? This is all in the LRM.  Also, we should have a table of what operators do on what objects since it's not completely consistent, eg Chord + Note appends the note to the Chord
-% TODO also it's not called bracket notation, it's called subscripting
-The langauge is dynamic, but introduces types for the programmer most comfortable with the syntax of C or Java. Types must be used upon variable declaration, but are left optional for function declarations and arguments. Each of the above primitives supports the + operator, which increments the duration of each note and the .+ operator, which increases the pitch of each note. Each type can be safely cast up in the following order: \verb|Number| → \verb|Note| → \verb|Chord| → \verb|Sequence|. The standard library, written in the language itself, supports major and minor chords, arpeggios, repetition, and other such basic and often used concepts. Note durations are specified in terms of whole notes (w), halves (h), quarters (q), eigths (e), and sixteenths (s). Sequences can either be appended to, which advances the ``current time'' by however long the appended sequence is, or else something can be inserted into a sequence at a given offset using bracket notation. Functions are specified in the same way as in C.
+The langauge is dynamically typed, but introduces preset types for the programmer most comfortable with the syntax of C or Java. Types must be used upon variable declaration, but are left optional for function declarations and arguments. Each type can be safely cast up in the following order: \verb|Number| $\rightarrow$ \verb|Note| $\rightarrow$ \verb|Chord| $\rightarrow$ \verb|Sequence|. The standard library, written in the language itself, supports major and minor chords, arpeggios, repetition, and other such basic and often used concepts. Note durations are specified in terms of whole notes (w), halves (h), quarters (q), eigths (e), and sixteenths (s). Sequences can either be appended to, which advances the ``current time'' by however long the appended sequence is, or else something can be inserted into a sequence at a given offset using subscripting. Functions are specified in the same way as in C.
 
-% TODO I'm pretty sure outputed is not a word
-Sequences and Chords can simply be outputed to the intermediate representation (IR) of CSV format using the play() function. In order to actually write the MIDI files, the CSV is fed to a Java program that interprets the CSV using the javax.sound.MIDI package.
+Sequences and Chords can be output to the intermediate representation (IR) of CSV format using the play() function. In order to actually write the MIDI files, the CSV is fed to a Java program that interprets the CSV using the javax.sound.MIDI package.
 
 Composing music on a computer is often done using GUIs that allow the user to drag and drop notes or using instrument inputs. This lets the musician hear his compositions as he is creating them, and often gives the musician a simple MP3 or MIDI ouput. As computer scientists, the MIDILC team finds such methods tedious, extraneuous and requiring too much natural music talent. MIDILC appeals to the virtues of any great programmer: laziness, hubris, and impatience \footnote{Wall, Larry. \textit{Programming Perl}, O'Reilly 2000.} and propose a language for those wishing to turn their quantitative skills into beautiful music.
 
@@ -49,7 +45,7 @@ MIDILC was designed with the programmer in mind, but uses all the musical notati
 \section{A Simple Melody}
 \section{Twinkle Twinkle Little Star}
 \chapter{Language Reference Manual}
-% TODO There are a bunch of things that never got transferred from the Google Doc.  Please go through this and fix it with the two side by side.
+
 MIDILC is a C-like language that makes it simpler to algorithmically generate music.  It simplifies MIDI music creation by allowing programmers to specify song information in musical terms and write functions that process existing musical information.  By building off of simpler musical functions, such as arpeggios and chords, complex musical compositions can easily be programmed.
 
 To eliminate the programming complexities from the MIDILC language, it has limited scope and data management capabilities.  MIDILC can be used following an imperative or functional paradigm and reduces hassle for the programmer by forcing static scope.
@@ -57,35 +53,42 @@ To eliminate the programming complexities from the MIDILC language, it has limit
 It compiles into MIDI files that can then be played in any standard media player.
 
 \section{Lexical Conventions}
+\begin{figure}
+\center
+\includegraphics[width=.75\textwidth]{notes.png}
+\label{fig:pitches_and_notes}
+\caption{The correspondence of notes and pitches in MIDI. }
+\end{figure}
 \subsection{Tokens}
 Tokens consist of identifiers, keywords, constants, operators, and separators.  As with C, MIDILC is a free-form language and all white space characters are ignored (with the exception of separating tokens), as braces are used to identify the start and end of code blocks and semicolons are used to end statements.
 \subsection{Comments}
 /* and */ are used to indicate a block of comments (C-style comments).  There are no C++-style comments in MIDILC.
 \subsection{Identifiers}
-These are sequences of letters, digits, and underscores, starting with a letter or underscore.  Identifiers cannot be of the format \verb|[A-G R][b #]?[0-9]?[w h q e s]?|, as these are reserved for \verb|Note| literals.
+These are sequences of letters, digits, and underscores, starting with a letter or underscore.  Identifiers cannot be of the format \verb|[A-G R][b|\#\verb|]?[0-9]?[w h q e s]?|, as these are reserved for \verb|Note| literals.
 \subsection{Keywords}
 MIDILC has very few keywords; these include the following:
-% TODO this used to be a table.  Why is it broken and terrible now??!
-Types	Control
-\verb|Number|	return
-\verb|Note|	continue
-\verb|Chord|	break
-\verb|Sequence|	if
-	else
-Void	while
-	for
+
+\begin{tabular}{|c|c|}
+\hline
+Types & Control \\ \hline
+\verb|Number| & \verb|return| \\ \hline
+\verb|Note|	& \verb|continue| \\ \hline
+\verb|Chord| & \verb|break| \\ \hline
+\verb|Sequence|	& \verb|if| \\ \hline
+\verb|Void|	& \verb|else| \\ \hline
+	& \verb|while| \\ \hline
+	& \verb|for| \\ \hline
+\end{tabular}
 
 
 \subsection{Constants/Literals}
-% TODO the first few sentences of this paragraph need to be rewritten.  Users can specify constants!
-% TODO note that an error will be thrown if the user tries to construct a note with illegal properties, such as a pitch of 200
-MIDILC has no facilities for specifying user-defined constants, but it does include a set of \verb|Note| literals, specified by the note letter, accidental (if any), MIDI octave, and a letter that indicates the note’s duration (optional, and defaulting to a quarter note).  Durations include w (for whole note), h (for half note), q (for quarter note), e (for eigth note), and s (for sixteenth note).  Rests are indicated by using R instead of a note. \verb|Chord| literals don’t exist, though Chords can easily be expressed using built-in chord generation function calls on \verb|Note| literals.  In addition, \verb|Number| literals also exist (integral numbers limited to signed 32-bit range).  MIDILC does not have floating-point literals.
+MIDILC allows a user to construct \verb|Note|s using pitch and duration (as \verb|Number| types), or using a set of \verb|Note| literals, specified by the note letter, accidental (if any), MIDI octave, and a letter that indicates the note’s duration (optional, and defaulting to a quarter note).  Duration can be specified by w (for whole note), h (for half note), q (for quarter note), e (for eigth note), and s (for sixteenth note).  Rests are indicated by using R instead of a note. Any \verb|Note| object constructed using a pitch with illegal properties will result in an error. \verb|Chord|s can easily be expressed using built-in chord generation function calls on \verb|Note| literals.  In addition, \verb|Number| literals also exist (integral numbers limited to signed 32-bit range).  MIDILC does not have floating-point literals.
 Note that literals look like the following:
-\verb|Ab7|
-\verb|C4s|
+\verb|Ab7|,
+\verb|C4s|,
 \verb|G5h|
-% TODO missing image here
-Pitches and \verb|Number| literals have the following correspondence:
+
+Pitches and \verb|Number| literals have the correspondence shown in figure \ref{fig:pitches_and_notes}.
 
 \section{Meaning of Identifiers}
 Identifiers in MIDILC have the following attributes: scope, name space, linkage, and storage duration, as detailed in Section 4.1. Since static scope is handled automatically, there are no storage class specifiers in MIDILC.
@@ -101,29 +104,27 @@ Storage duration denotes the lifetime of an object. All objects in MIDILC are st
 \subsection{Object Types}
 The MIDILC language supports two types of objects: numbers and musical notations.  Objects are dynamically typed.  Typing of an identifier is determined on assignment.
 \subsubsection{Number type}
-The only supported numerical type is \verb|Number|, which has a size of 32 bits and ranges from -231 to 231 - 1.  This is also the underlying type for all fields within the musical types.
+The only supported numerical type is \verb|Number|, which has a size of 32 bits and ranges from $-2^{31}$ to $2^{31} - 1$.  This is also the underlying type for all fields within the musical types.
 \subsubsection{Musical types}
 \verb|Note|, \verb|Chord|, and \verb|Sequence| are all of the musical types supported by MIDILC. \verb|Note| literals are  made up of strings consisting of integers and characters in sequences that match the following regular expression:
-\verb|[A-G R][b #]?[0-9]?[w h q e s]?|
+\verb|[A-G R][b |\#\verb|]?[0-9]?[w h q e s]?|
 As these types are not stored directly internally, their sizes are not exact. As a general rule, for non-empty objects,
 \verb|Number| < \verb|Note| < \verb|Chord| < \verb|Sequence| in terms of their relative sizes.
-\subsubsubsection{\verb|Note| type}
-\verb|Note| type has the following attributes: pitch, and duration. Pitch refers to the frequency of the note, and duration is specified as a type of note: whole, half, quarter, eighth, or sixteenth.  \verb|Note| literals with the pitch indicated as R instead of A-G are rests (numerically represented as -1).
-\subsubsubsection{\verb|Chord| type}
+\paragraph{Note type}
+\verb|Note| type has the following attributes: pitch and duration. Pitch refers to the frequency of the note (Fig \ref{fig:pitches_and_notes}), and duration is specified as a type of note: whole, half, quarter, eighth, or sixteenth.  \verb|Note| literals with the pitch indicated as R instead of A-G are rests (numerically represented as -1).
+\paragraph{Chord type}
 \verb|Chord| type has the following attributes: duration and length. Duration is a \verb|Number| type that specifies a type of note: whole, half, quarter, eighth, or sixteenth. All \verb|Note| literals within the same \verb|Chord| must have the same duration.  This property can be specified as number of sixteenths. Length of the \verb|Chord| refers to the number of \verb|Note| literals in the \verb|Chord|.
-\verb|Chord| literals can be constructed with the following syntax:
-{ \verb|Note|,  \verb|Note| , \verb|Note|... }
-\subsubsubsection{\verb|Sequence| type}
-\verb|Sequence| type has the following attributes: current, beginning, and length. Each is of type \verb|Number|. Beginning denotes the starting point of the \verb|Sequence|, while current denotes the current time (from beginning) where a new note may be inserted. The length of the \verb|Sequence| refers to the number of \verb|Note| literals or \verb|Chord| objects in the \verb|Sequence|.
+\verb|Chord| literals can be constructed with the following syntax: \verb|new_chord(Note n1,  Note n2, Note n3);|
+\paragraph{Sequence type}
+\verb|Sequence| type has the following attributes: current, beginning, and length. Each is of type \verb|Number|. Beginning denotes the starting point of the \verb|Sequence|, while current denotes the current time (from beginning) where a new note may be inserted. The length of the \verb|Sequence| refers to the number of \verb|Note| literals or \verb|Chord| objects in the \verb|Sequence|. Sequences can be constructed with the following command: \verb|new_sequence()|.
 \subsubsection{Derived types}
-% TODO Notes can also be derived from Numbers
-\verb|Chord| and \verb|Sequence| objects can be derived; a \verb|Chord| can be derived from a collection of \verb|Note| objects, and a \verb|Sequence| can be derived from a collection of \verb|Note| or \verb|Chord| objects.
-\subsubsection{\verb|Void| type}
-The Void type specifies an empty set of return values. It never refers to an object.
+\verb|Note|, \verb|Chord| and \verb|Sequence| objects can be derived. \verb|Note| can be derived from a \verb|Number| (specifying the pitch of the \verb|Note|, with duration of a quarter note). A \verb|Chord| be derived from a collection of \verb|Note| objects. A \verb|Sequence| can be derived from a collection of \verb|Note| or \verb|Chord| objects.
+\subsubsection{Void type}
+The \verb|Void| type specifies an empty set of return values. It never refers to an object.
 \subsection{Objects and lvalues}
 An object is a manipulable region of storage. An lvalue is an expression referring to an object, for example, an identifier.  Assignment causes the region of memory specified by the lvalue to be replaced or modified according to the value on the right side of the assignment.  For instance, if \verb|a = b| and \verb|c = b|, if \verb|b| is changed, \verb|a| and \verb|b| will remain unchanged.
 \section{Operator Conversions}
-Due to the nature of the primitive types, very few conversions are supported in MIDILC. It is possible to cast from \verb|Note| to \verb|Chord|, \verb|Note| to \verb|Sequence|, and \verb|Chord| to \verb|Sequence|, but not in the opposite direction.
+Due to the nature of the primitive types, very few conversions are supported in MIDILC. It is possible to cast from \verb|Number| to \verb|Note|, from \verb|Note| to \verb|Chord|, from \verb|Note| to \verb|Sequence|, and from \verb|Chord| to \verb|Sequence|. Casts cannot be done in the opposite direction.
 \subsection{Conversions of Number and Note}
 \verb|Number| objects can be converted into \verb|Note| objects as a note with the pitch represented as an integer in MIDI notation. \verb|Note| objects cannot be converted to \verb|Number| objects. The new object has a default duration of quarter note.
 \subsection{Conversions of Note and Chord}
@@ -132,37 +133,56 @@ Due to the nature of the primitive types, very few conversions are supported in 
 \verb|Note| objects can be converted into \verb|Sequence| objects as a sequence that contains a single note. \verb|Sequence| objects cannot be converted into \verb|Note| objects, as this is a narrowing conversion, even if the \verb|Sequence| contains only a single \verb|Note|.
 \subsection{Conversions of Chord and Sequence}
 \verb|Chord| objects can be converted into \verb|Sequence| objects as a sequence that contains a single chord. \verb|Sequence| objects cannot be converted into \verb|Chord| objects, as this is a narrowing conversion, even if the \verb|Sequence| contains only a single \verb|Chord|.
-\section{5. Expressions and Operators}
+\section{Expressions and Operators}
 
-In MIDILC, expressions include one or more operators and a number of operands that follow certain associativity rules. Operators may change the value of an operand or leave it alone.
+In MIDILC, expressions include one or more operators and a number of operands that follow certain associativity rules. Operators may change the value of an operand or leave it alone. Expressions (Fig \ref{fig:expressions}) can be used for assignment or other operations. Associativity of these assignments can be overrridden by parentheses (Fig \ref{fig:associativity}). Associativity of operators followed the table shown in figure \ref{fig:order_of_operations}.
 
-% TODO this session needs to be revamped extensively to specify what all the operators do.  Just go through every case in the executor and describe what they do.  Also, \verb needs to be used here MUCH more extensively.
-Examples of some expressions are as follows:
-assignment-expression:    note = Ab7
-operation-expression:        Ab7 .+ 4
-Associativity is overridden by use of parentheses. Some examples at play are below:
-Expression	Result	Explanation
-C7 .+ 4 	E7	\verb|Note| with E7 pitch
-3 + 2 * 4	11	Regular assignment order (multiplication has tightest binding, then addition)
-(3 + 2) * 4	20	Parentheses change order of operations
-note = C7;
-(note, note .+ 4, note .+ 7) 	(C7, E7, G7)	Addition operator has tightest binding, followed by the assignment operator
+\begin{figure}
+\center
+\begin{tabular}{|c|c|}
+\hline
+$assignment\mbox{-}expression$  & \verb|note = Ab7| \\ \hline
+$operation\mbox{-}expression$   & \verb|Ab7 .+ 4| \\ \hline
+\end{tabular}
+\label{fig:expressions}
+\caption{Examples of expressions}
+\end{figure}
 
+\begin{figure}
+\center
+\begin{tabular}{|p{.25\textwidth}|c|p{.25\textwidth}|}
+\hline
+Expression & Result & Explanation \\ \hline
+\verb|C7 .+ 4| & \verb|E7| & \verb|Note| with E7 pitch \\ \hline
+\verb|3 + 2 * 4| & \verb|11| &	Regular assignment order (multiplication has tightest binding, then addition) \\ \hline
+\verb|(3 + 2) * 4| &\verb|20| & Parentheses change order of operations \\ \hline
+\verb|note = C7;| \verb|new_chord(note,| \verb|note .+ 4,| \verb|note .+ 7);| & \verb|Chord| of \verb|(C7, E7, G7)| & Addition operator has tightest binding, followed by the assignment operator \\ \hline
+\end{tabular}
+\label{fig:associativity}
+\caption{Associativity overridden by use of parentheses.}
+\end{figure}
 
-The associativity of the built in functions are listed below:
-Tokens (From High to Low Priority)	Operators	Class	Associativity
-Identifiers, constants,
-parenthesized expression	Primary expression 	Primary	
-() [] .	Function calls, subscripting, direct selection	Postfix	L-R
-identifier as type	Cast	Binary	L-R
-+ -	Add/Minus	Binary	L-R
-== !=	Equality comparisons	Binary	L-R
-< <= >= >	Relational Comparisons	Binary	L-R
-&&	Logical and	Binary	L-R
-||	Logical or	Binary	L-R
-=	Assignment 	Binary	R-L
-,	Comma	Binary	L-R
-
+\begin{figure}
+\center
+\begin{tabular}{|p{.2\textwidth}|p{.2\textwidth}|c|c|}
+\hline
+Tokens\\(From High to Low Priority) & Operators & Class & Associativity \\ \hline
+Identifiers, constants, parenthesized expression & Primary expression & Primary	& \\ \hline
+\verb|() [] .|	& Function calls, subscripting, direct selection & Postfix & L-R \\ \hline
+\verb|id as Type| & Cast & Binary & L-R \\ \hline
+\verb|* /| &	Times/Divide	& Binary &	L-R \\ \hline
+\verb|.+ .-| &	DotPlus/DotMinus	& Binary &	L-R \\ \hline
+\verb|+ -| &	Add/Minus	& Binary &	L-R \\ \hline
+\verb|== !=| & Equality comparisons & Binary & L-R \\ \hline
+\verb|< <= >= >| & Relational Comparisons & Binary & L-R \\ \hline
+\verb|&&| &	Logical and	& Binary	& L-R \\ \hline
+\verb.||.	& Logical or & Binary & L-R \\ \hline
+\verb|=| &	Assignment  & 	Binary & R-L \\ \hline
+\verb|,| & Comma & Binary & L-R \\ \hline
+\end{tabular}
+\label{fig:order_of_operations}
+\caption{Order of operations for built in operators}
+\end{figure}
 
 \subsection{Primary Expressions}
 \subsubsection{Identifiers}
@@ -170,201 +190,285 @@ An lvalue or function designator, discussed in part 2.
 \subsubsection{Constants}
 An object of constant value, discussed in part 2.
 \subsubsection{Parenthesized Expressions}
-Parenthesized expressions allow a user to change the order of operations. They are executed before the operations and can be used as part of a larger expression. For example:
-without parentheses: 0 == note1.pitch > note2.pitch
-with parentheses:      0 == (note1.pitch > note2.pitch)
-This will change the order of operations, evaluating whether the pitch of note1 is greater than that of note2 before evaluating if that return value is equal to 0.
+Parenthesized expressions allow a user to change the order of operations. They are executed before the operations and can be used as part of a larger expression (Fig \ref{fig:associativity}).
 \subsection{Postfix}
-% TODO These operations are not allowed. Only identifiers can be subscripted or directly accessed.
 Postfix calls are made as follows:
-Function call:        (Ab6, Ab7, C4)
-Subscripting:        (Ab6, Ab7, C4)[1]
-Direct selection:    (Ab6, Ab7, C4).length
+
+\begin{tabular}{|c|c|}
+\hline
+Function call & \verb|Chord c; c =  new_chord(Ab6, Ab7, C4);| \\ \hline
+Subscripting & \verb|Note n; n = c[0];| \\ \hline
+Direct selection &    \verb|Number i; i = n.pitch;| \\ \hline
+\end{tabular}
+
 \subsubsection{Function calls}
 The syntax of a function call is as follows:
-postfix-expression (argument-expression-listopt)
-argument-expression-list: argument-expression
-argument-expression-list, argument-expression
+
+\begin{tabular}{l l}
+$postfix\mbox{-}expression$ & $\rightarrow (argument\mbox{-}expression\mbox{-}list_{opt})$\\
+$argument\mbox{-}expression\mbox{-}list$ & $\rightarrow argument\mbox{-}expression$\\
+& $\rightarrow argument\mbox{-}expression\mbox{-}list, argument\mbox{-}expression$
+\end{tabular}
+
 An argument expression list may either be a single argument or a list of arguments. All functions are allowed to be recursive.
 Each function must be declared before it is called. With that in mind, certain casts are made by the runtime compiler to match arguments. A \verb|Number| may be cast to a \verb|Note|, \verb|Chord|, or \verb|Sequence|, for example.
 A function may only take the a parameter of type Void. For functions like this, a function call may include no parameters.
+
 \subsubsection{Subscripting}
 Certain objects may be acted upon by the subscripting operation. For example, a \verb|Chord| object may be acted upon by a subscript to select a particular note in the chord. Similarly, a \verb|Sequence| object may be acted upon to select a \verb|Chord| at any particular moment in time. For a \verb|Chord| object, the index of the subscript reflects the order that a \verb|Note| was added. For a \verb|Sequence| object, the index subscript indicates the order that Chords were inserted in.
 The subscripting operator allows both retrieval and mutation of elements in those objects that support it. There is no implicit casting for subscription.
+
 \subsubsection{Direct Selection}
-Used to change pitch and duration in objects of type \verb|Note|, \verb|Chord|, or \verb|Sequence|. Pitch and duration are treated as objects of type  \verb|Number| with the pitch affected (either positively or negatively) by the successor operand. For example, C7.pitch = C7.pitch + 1 will result in C#7.
-Similarly for duration: C7.duration = C7.duration + 1 will result in C7 with a duration 1/16th greater.
+Used to change pitch and duration in objects of type \verb|Note|, \verb|Chord|, or \verb|Sequence|. Pitch and duration are treated as objects of type  \verb|Number| with the pitch affected (either positively or negatively) by the successor operand. For example, \verb|C7.pitch = C7.pitch + 1| will result in C\#7.
+Similarly for duration: \verb|C7.duration = C7.duration + 1| will result in C7 with a duration of a 1/16th note greater.
 Direct selection can be done for the following parameters on the following objects:
 \verb|Note|: pitch, duration
 \verb|Chord|: duration, length
-\verb|Sequence|: current, beginning, length
+\verb|Sequence|: current, length
 
 \subsection{Unary Operations}
 \subsubsection{Casting}
 Syntax of casting is as follows:
-cast-expression: unary-expression
-(type-name) cast-expression
-Casting allows a user to explicitly change the Type of an object, according to the order established in 4.2.2 (Musical Types). Implicitly casting will take place during a function call or in the use of a binary operator between two objects of different type. If, however, we wanted to craft two notes, and then append one to another in sequence, we would need to do the following:
-\verb|Sequence| s = ((\verb|Sequence|) note1 + (\verb|Sequence|) note2)
+
+\begin{tabular}{l l}
+$cast\mbox{-}expression$  & $\rightarrow unary\mbox{-}expression$ \\
+& $\rightarrow (cast\mbox{-}expression$ as $type\mbox{-}name)$ 
+\end{tabular}
+
+Casting allows a user to explicitly change the Type of an object, according to the order established in Musical Types. Implicitly casting will take place during a function call or in the use of a binary operator between two objects of different type. If, however, we wanted to craft two notes, and then append one to another in a chord, we would need to do the following:
+\verb|s = (((note1 as Chord) as Sequence) + note2)|
 This would allow us to use the + operator of Sequences instead of the + operator of Notes.
 \subsection{Binary Operations}
+
+
+%TODO work on this section (mult/divide, dotadd/dotminus, add/subtract)
+\subsubsection{Mult/Divide}
+
+\subsubsection{DotAdd/DotMinus}
+
 \subsubsection{Add/Subtract}
 Used to add or subtract two \verb|Number| objects. When applied to objects of type \verb|Note|, \verb|Chord|, or \verb|Sequence|, results in a \verb|Sequence| object with given elements concatenated. If two or more objects of different type are concatenated, the element of highest cast determines the cast. That is, a \verb|Note| added to a \verb|Sequence| would return a new \verb|Sequence| with the given note appended as a degenerate \verb|Chord| to the end.
-Syntax is as follows:
-add-expression: cast-expression
-              add-expression + cast-expression
 
-add-expression - cast-expression
+Syntax is as follows:\\
+
+\begin{tabular}{l l}
+$add\mbox{-}expression$ & $\rightarrow cast\mbox{-}expression$ \\
+& $\rightarrow add\mbox{-}expression + cast\mbox{-}expression$\\
+& $\rightarrow add\mbox{-}expression - cast\mbox{-}expression$
+\end{tabular}
+
 \subsubsection{Relational comparisons}
 Yields a \verb|Number| result (1 if true, 0 if false). Allows for comparison between objects (casting is done in one direction).
-relational-expression:    add-expression
 
-relational-expression < add-expression
+\begin{tabular}{l l}
+$relational\mbox{-}expression$  & $\rightarrow add\mbox{-}expression$\\
+& $\rightarrow relational\mbox{-}expression < add\mbox{-}expression$ \\
+& $\rightarrow relational\mbox{-}expression > add\mbox{-}expression$ \\
+& $\rightarrow relational\mbox{-}expression <= add\mbox{-}expression$ \\
+& $\rightarrow relational\mbox{-}expression >= add\mbox{-}expression$ \\
+\end{tabular}
 
-relational-expression > add-expression
-
-relational-expression <= add-expression
-
-relational-expression >= add-expression
 \subsubsection{Equality comparisons}
 Compares two values for equality. MIDILC uses the number 0 to denote false and all values other than 0 to denote truth. Equality follows the following rules:
 Two \verb|Number| objects are equal if they evaluate to the same value
 Two \verb|Note| objects are equal if they have the same pitch and duration
 Two \verb|Chord| objects are equal if they have the same notes and the same duration
 Two \verb|Sequence| objects are equal if they have the same chords in the same order
-equality-expression:    relational-expression
 
-equality-expression == relational-expression
+\begin{tabular}{l l}
+$equality\mbox{-}expression$  & $\rightarrow relational\mbox{-}expression$\\
+& $\rightarrow equality\mbox{-}expression$ == $relational\mbox{-}expression$\\
+& $\rightarrow equality\mbox{-}expression$ != $relational\mbox{-}expression$\\
+\end{tabular}
 
-equality-expression != relational-expression
 \subsubsection{Logical and}
-Performs a logical “and” on two expressions. Returns 0 if the left expression evaluates to 0. Otherwise, evaluates right expression. If true, returns 1; if false, 0.
+Performs a logical ``and'' on two expressions. Returns 0 if the left expression evaluates to 0. Otherwise, evaluates right expression. If true, returns 1; if false, 0.
 Syntax:
-logical-AND-expression: logical-OR-expression
-               logical-AND-expression && logical-OR-expression
-This is lazy evaluation.
+
+\begin{tabular}{l l}
+$logical\mbox{-}AND\mbox{-}expression$  & $\rightarrow logical\mbox{-}OR\mbox{-}expression$\\
+& $\rightarrow logical\mbox{-}AND\mbox{-}expression$ \verb|&&| $logical\mbox{-}OR\mbox{-}expression$
+\end{tabular}
+
+This is done with lazy evaluation.
 \subsubsection{Logical or}
-Performs a logical “or” on two expressions. Returns 1 if ever the left expression evaluates to 1. Otherwise, evaluates right expression. If true, 1; if false, 0.
+Performs a logical ``or'' on two expressions. Returns 1 if ever the left expression evaluates to 1. Otherwise, evaluates right expression. If true, 1; if false, 0.
 Syntax:
-logical-OR-expression: logical-AND-expression
-               logical-OR-expression || logical-AND-expression
+
+\begin{tabular}{l l}
+$logical\mbox{-}OR\mbox{-}expression$  & $\rightarrow logical\mbox{-}AND\mbox{-}expression$\\
+& $\rightarrow logical\mbox{-}OR\mbox{-}expression $ \verb.||. $ logical\mbox{-}AND\mbox{-}expression$
+\end{tabular}
+
 This is again an example of MIDILC’s power to perform lazy evaluation.
 \subsubsection{Assignment}
 Right associative. The expression on the right is evaluated and then used to set the lvalue. The rvalue must have the same type as the lvalue; no casting is implicitly done.
 \subsubsection{Comma}
 Separates elements in a list (such as parameters in a function or \verb|Note| literals in a \verb|Chord|). Example of \verb|Chord| constructor:
-\verb|Chord| myChord = {C4, E4};
+\verb|Chord myChord;| \verb|myChord = new_chord(C4, E4);|
 \section{Declarations}
 Declarations specify the interpretation given to a set of identifiers.
-direct-declarator:    type-specifier declarator
-init-declarator:    type-specifier declarator = initializer
+
+\begin{tabular}{l l}
+$direct\mbox{-}declarator$ & $\rightarrow type\mbox{-}specifier$ $declarator$\\
+$init\mbox{-}declarator$ & $\rightarrow type\mbox{-}specifier$ $declarator = initializer$
+\end{tabular}
+
 Only a single declarator can be declared at once.  Declarators must be preceded by the type of the identifier.  At most one declaration of the identifier can appear in the same scope and name space.  
 \subsection{Storage class specifiers}
 Static scope is handled automatically because functions have access to any identifiers not declared in their scope. No storage class specifiers are available.
-\subsection{6.2 Type specifiers}
+\subsection{Type specifiers}
 Type specifiers listed below.  Syntax as follows:
-type-specifier:    Void
 
-    \verb|Number|
+\begin{tabular}{l l}
+$type\mbox{-}specifier$  & \verb|Void| \\
+& \verb|Number|\\
+& \verb|Note|\\
+& \verb|Chord|\\
+& \verb|Sequence|
+\end{tabular}
 
-    \verb|Note|
-
-    \verb|Chord|
-
-    \verb|Sequence|
-\subsection{Custom types}
-Custom types are not available in MIDILC.  The provided datatypes should be able to completely specify a piece of music. As such, enumerations are also unsupported.
 \subsection{Type qualifiers}
 Types cannot be declared mutable or immutable by the programmer.  All types are mutable
 \subsection{Function Declarators}
 There are no function prototypes (all function declarations are definitions).  The syntax for function declarators is shown below:
-direct-declarator (identifier-listopt) { body }
-identifier-list:
-identifier-list, direct-declarator
+
+\begin{tabular}{l l l}
+$direct\mbox{-}declarator $ & $\rightarrow (identifier\mbox{-}list_{opt})$ { $body$ } \\
+$identifier\mbox{-}list$  & $\rightarrow identifier\mbox{-}list,$ $direct\mbox{-}declarator$
+\end{tabular}
+
 For example,
-T D(identifier-listopt)
+$T$ $D$ $(identifier\mbox{-}list_{opt})$
 creates a function with identifier D and return type T with the specified parameters. An identifier list declares the types of and identifiers for the formal parameters of a function.
+
 Function declarators do not support variable additional arguments.  
+
 If the type of any parameter declared in the identifier list is other than that which would be derived using the default argument promotions, an error is posted.  Otherwise, a warning is posted and the function prototype remains in scope.
+
 When a function is invoked for which a function is defined, no attempt is made to convert each actual parameter to the type of the corresponding formal parameter specified in the function prototype. Instead an error is thrown.  
+
 The following is an example of a function definition:
-\verb|Chord| transposeChord( \verb|Chord| oldChord, \verb|Note| newKey ) { ... }
-This declares a function transposeChord() which returns a \verb|Chord| and has two parameters: a \verb|Chord| and a \verb|Note|.  
+\verb|Chord transposeChord(Chord oldChord,| \verb|Note newKey) { ... }|
+This declares a function \verb|transposeChord()| which returns a \verb|Chord| and has two parameters: a \verb|Chord| and a \verb|Note|.  
 \subsection{Initialization}
 A declaration of a type can specify an initial value for the identifier after being declared.  The initializer is preceded by = and consists of an expression.
-initializer:    assignment-expression
+
+\begin{tabular}{l l}
+$initializer$ & $\rightarrow assignment\mbox{-}expression$\\
+\end{tabular}
+
 Variables that are not explicitly initialized may cause a null pointer exception during compilation. When an initializer applies to a literal, it consists of a single expression, perhaps in parentheses.  The initial value of the object is taken from the expression.  Type conversion is only attempted with an explicit cast.
+
 \subsubsection{Examples of initialization}
-\verb|Note| root;
+\begin{verbatim}
+Note root;
+Chord notes;
+Sequence gProgression;
+/*Initializes root with a note literal.*/
 root = C3q;
-Initializes root with a note literal.
-\verb|Chord| notes;
-notes = ( root, root .+ 4, root .+ 7 );
-Initializes notes with a chord literal
-\verb|Sequence| gProgression;
+
+/*Initializes notes with a chord literal*/
+notes = new_chord( root, root .+ 4, root .+ 7 );
+
+/*Initializes gProgression with the result of the function call.*/
 gProgression = oneFourFiveProg( G7q );
-Initializes gProgression with the result of the function call.
+\end{verbatim}
 \section{Statements}
 A statment is a complete instruction to the midi compiler. Except as indicated, statements are executed in sequence.  Statements have the following form:
-statement:        expression-statement
 
-        selection-statement
+\begin{tabular}{l l}
+$statement$ & $\rightarrow expression\mbox{-}statement$\\
+& $\rightarrow selection\mbox{-}statement$\\
+& $\rightarrow iteration\mbox{-}statement$\\
+& $\rightarrow jump\mbox{-}statement$\\
+\end{tabular}
 
-        iteration-statement
-
-        jump-statement
 \subsection{Expression statement}
 Most statements are expression statements, which have the following form:
-expression-statement:        expression;
+
+\begin{tabular}{l l}
+$expression\mbox{-}statement$ & $\rightarrow expression;$
+\end{tabular}
+
 Usually expression statements are expressions evaluated for their side effects such as assignments or function calls.
 \subsection{Compound statement or block}
 A compound statement (or block) groups a set of statements into a syntactic unit.  The set can have its own declarations and initializers, and as the following form:
-compound-statement:        {declaration-list statement-listopt}
-declaration-list:        declaration
-                    declaration-list declaration
-statement-list    :        statement
-                    statement-list statement
+
+\begin{tabular}{l l}
+$compound\mbox{-}statement$  & $\rightarrow \{declaration\mbox{-}list$ $statement\mbox{-}list_{opt}\}$\\
+$declaration\mbox{-}list$ & $\rightarrow declaration$\\
+& $\rightarrow declaration\mbox{-}list$ $declaration$\\
+$statement\mbox{-}list$  & $\rightarrow statement$\\
+& $\rightarrow statement\mbox{-}list$ $statement$\\
+\end{tabular}
+
 Declarations within compound statements have block scope.  If any of the identifiers in the declaration list were previously declared, the outer declaration is hidden for the duration of the block, after which it resumes its force.  Function declarations can only be defined at the outermost scope.
 \subsection{Selection statements}
 Selection statements include the if and else statements and have the following form:
-selection-statement:        if (expression) statement
-                    if (expression) statement else statement
+
+\begin{tabular}{l l}
+$selection\mbox{-}statement$ & $\rightarrow if$ $(expression)$ $statement$\\
+& $\rightarrow if$ $(expression)$ $statement$ $else$ $statement$
+\end{tabular}
+
 Selection statements choose one of a set of statements to execute, based on the evaluation of the expression.  The expression is referred to as the controlling expression.
 \subsubsection{if statement}
-The controlling expression of an if  statement must have \verb|Number| type. For both forms of the if statement, the first statement is executed if the controlling expression evaluates to nonzero.  For the second form, the second statement is executed if the controlling expression evaluates to zero.  An else clause that follows multiple sequential else-less if statements is associated with the most recent if statement in the same block (that is, not in an enclosed block).
+The controlling expression of an \verb|if| statement must have \verb|Number| type. For both forms of the \verb|if| statement, the first statement is executed if the controlling expression evaluates to nonzero.  For the second form, the second statement is executed if the controlling expression evaluates to zero.  An else clause that follows multiple sequential else-less if statements is associated with the most recent \verb|if| statement in the same block (that is, not in an enclosed block).
 \subsection{Iteration statements}
 Iteration statements execute the attached statement (called the body) repeatedly until the controlling expression evaluates to zero.  In the for statement, the second expression is the controlling expression.  The format is as follows:
-iteration-statement:        while(expression) statement
-            for (expression; expression ; expression) statement
+
+\begin{tabular}{l l}
+$iteration\mbox{-}statement$ & $\rightarrow while(expression)$ $statement$\\
+& $\rightarrow for$ $(expression;$ $expression$ $;$ $expression)$ $statement$
+\end{tabular}
+
 The controlling expression must have \verb|Number| type.
 \subsubsection{while statement}
-The controlling expression of a while statement is evaluated before each execution of the body.
+The controlling expression of a \verb|while| statement is evaluated before each execution of the body.
 \subsubsection{for statement}
 The for statement has the form specified above.  The first expression specifies the initialization for the loop.  The second expression is the controlling expression, which is evaluated before each iteration.  The third expression often specifies incrementation.  It is evaluated after each iteration. It is equivalent to the following:
-expression-1:    while (expression-2) {statement expression-3}
-One exception exists, however.  If a continue statement is encountered, expression-3 of the for statement is executed prior to the next iteration.
+
+\begin{tabular}{l l}
+$expression\mbox{-}1$  & $\rightarrow while$ $(expression\mbox{-}2)$ $\{statement$ $expression\mbox{-}3\}$\\
+\end{tabular}
+
+One exception exists, however.  If a \verb|continue| statement is encountered, $expression\mbox{-}3$ of the \verb|for| statement is executed prior to the next iteration.
 \subsection{Jump statements:}
-jump-statement:        continue;
-                break;
-                return expressionopt;
+
+\begin{tabular}{l l}
+$jump\mbox{-}statement$ & $\rightarrow$\verb|continue|\\
+                & $\rightarrow$\verb|break|\\
+                & $\rightarrow$\verb|return| $expression_{opt};$
+\end{tabular}
+
 \subsubsection{continue statement}
-The continue statement can appear only in the body of an iteration statement.  It causes control to pass to the loop-continuation portion of the smallest enclosing while, do, or for statement; that is, to the end of the loop.
+The \verb|continue| statement can appear only in the body of an iteration statement.  It causes control to pass to the loop-continuation portion of the smallest enclosing \verb|while| or \verb|for| statement; that is, to the end of the loop.
 \subsubsection{break statement}
-The break statement can appear only in the body of an iteration statement or code attached to a switch statement. It transfers control to the statement immediately following the smallest enclosing iteration, terminating its execution.
+The \verb|break| statement can appear only in the body of an iteration statement or code attached to a switch statement. It transfers control to the statement immediately following the smallest enclosing iteration, terminating its execution.
 \subsubsection{return statement}
-A function returns to its caller by means of the return statement. The value of the expression is returned to the caller as the value of the function call expression. The return statement cannot have an expression if the type of the current function is Void.
-If the end of a function is reached before the execution of an explicit return, an implicit return (with no expression) is executed. If the value of the function call expression is used when none is returned, the behavior is undefined.
+A function returns to its caller by means of the \verb|return| statement. The value of the expression is returned to the caller as the value of the function call expression. The \verb|return| statement cannot have an expression if the type of the current function is \verb|Void|.
+If the end of a function is reached before the execution of an explicit \verb|return|, an implicit \verb|return| (with no expression) is executed. If the value of the function call expression is used when none is returned, the behavior is undefined.
 
-Appendix A. Built-In Functions
+\section{Built-In Functions}
 
-void play(\verb|Sequence| s)
-    Instructs compiler to write sequence s to the MIDI file.
-void set_tempo(\verb|Number| n)
-    Sets the tempo of the file to number n.
-\verb|Sequence| new_sequence()
-    Initializes an empty \verb|Sequence|.
+\begin{tabular}{l p{.4\textwidth}}
+\verb|Void play(Sequence s)| & Instructs compiler to write a \verb|Sequence| to the MIDI file.\\
+\verb|Void set_tempo(Number n)| & Sets the tempo of the file to \verb|Number|.\\
+\verb|Void set_instrument("instrument")| & Sets the instrument for the song\\
+\verb|Sequence new_sequence()| & Initializes an empty \verb|Sequence|.\\
+\verb|Chord new_chord(Note n1, Note n2, ...)| & Initializes a \verb|Chord| object.\\
+\end{tabular}
+
 \chapter{Project Plan}
+
 \chapter{Architecture \& Design}
+\begin{figure}
+\center
+\includegraphics[width=\textwidth]{blockdiagram.png}
+\label{fig:block_diagram}
+\caption{A simplified diagram displaying the conversion of source code to .midi music.}
+\end{figure}
 \chapter{Test Plan}
 \chapter{Lessons Learned}
 \chapter{Appendix}
