@@ -149,11 +149,6 @@ public class CSV2MIDI{
 				track.add(createNoteOnEvent(note,tick,channel,velocity));				//add note to the track
 				track.add(createNoteOffEvent(note,tick+duration,channel));				//add a noteOffEvent to terminate this note
 			}catch(NumberFormatException e){																						//current CSV position not an integer
-				/*if(csvFile.data.elementAt(currentCSVPos).toString().compareTo("\n")==0){  //if it's a new line
-					column=0;																																//go back to 1st column
-				}else if(csvFile.data.elementAt(currentCSVPos).toString().compareTo(",")==0){ //if it's just a comma
-					column++;
-				}*/
 				currentCSVPos++;
 			}
 		}

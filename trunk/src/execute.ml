@@ -100,7 +100,8 @@ let execute_prog prog =
           | (Not(p,d), Not(p2,d2)) -> Not(p, d+d2)
           | (Cho(l), Not(p,d)) ->Cho(l @ [p])
           | ((Seq ([c; l] :: cs )), (Not(p, d))) -> Seq([c+d; l+1] :: cs @ [[1;d;c;p]])
-          | ((Seq ([c; l] :: cs )), (Cho(chord))) -> Seq([c+(List.nth chord 1); l+1] :: cs @  [[(List.hd chord); (List.nth chord 1); c] @ (List.tl (List.tl (List.tl chord)))])
+          | ((Seq ([c; l] :: cs )), (Cho(chord))) -> Seq([c+(List.nth chord 1); l+1] :: cs @  
+                                    [[(List.hd chord); (List.nth chord 1); c] @ (List.tl (List.tl (List.tl chord)))])
           | ((Seq ([c1; l1] :: cs1 )), (Seq ([c2; l2] :: cs2 ))) -> Seq([c1+c2; l1+l2] :: cs1 @ (shift_chords cs2 c1))
           | _ -> raise (Failure ("unexpected types for +")))
       | Sub -> (match (opA, opB) with 
@@ -157,9 +158,15 @@ let execute_prog prog =
   | Lfp i -> stack.(sp)   <- stack.(fp+i) ; exec fp (sp+1) (pc+1)
   | Sfp i -> stack.(fp+i) <- stack.(sp-1) ; exec fp sp     (pc+1)
     (** Sjp, to set jump points for use by break and continue*)
-  | Sjp(i,j,k) -> if k=0 then (jumps.(jp.(0)) <- pc+i+2; jumps.(jp.(0)+1) <- pc+3+j; jp.(0)<-jp.(0)+2; exec fp sp (pc+1))
-                  else (if k<=2  then exec fp sp jumps.(jp.(0)-k)
-                  else (jp.(0)<-jp.(0)-2; exec fp sp (pc+1)) ); 
+  | Sjp(start_jump,end_jump,command) -> if command=0 
+                                        then (jumps.(jp.(0)) <- pc+start_jump+2; jumps.(jp.(0)+1) <- pc+3+end_jump;
+                                             jp.(0)<-jp.(0)+2;
+                                             exec fp sp (pc+1))
+                                        else 
+                                            (if command<=2  
+                                             then exec fp sp jumps.(jp.(0)-command)
+                                             else (jp.(0)<-jp.(0)-2; 
+                                                   exec fp sp (pc+1)) ); 
 
   (** this is the print command. change it to set tempo and play *)
   | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline ("Tempo,"^string_of_int i); exec fp sp (pc+1)
@@ -167,7 +174,11 @@ let execute_prog prog =
     (** Play command*)
   | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline (print_sequence s); exec fp sp (pc+1)
             | Cho d -> let a = List.hd (List.tl d) in let c = List.hd (List.tl (List.tl d)) in
-                ignore(List.map print_endline (List.map (fun b -> if b > 0 then string_of_int c^","^string_of_int a^","^string_of_int b else "") (List.tl (List.tl (List.tl d))))); exec fp sp (pc+1)
+                ignore(List.map print_endline (List.map (fun b -> if b > 0 
+                                                                  then string_of_int c^","^string_of_int a^","^string_of_int b 
+                                                                  else "") 
+                                                        (List.tl (List.tl (List.tl d)))));
+                exec fp sp (pc+1)
             |_ -> raise (Failure ("unexpected type for play")))
     (** Sequence constructor *)
   | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
