@@ -400,8 +400,8 @@ Syntax is as follows:\\
 
 \begin{tabular}{l l}
 $dot\mbox{-}plus\mbox{-}minus\mbox{-}expression$ & $\rightarrow argument\mbox{-}expression$ \\
-& $\rightarrow add\mbox{-}expression .+ argument\mbox{-}expression$\\
-& $\rightarrow add\mbox{-}expression .- argument\mbox{-}expression$
+& $\rightarrow dot\mbox{-}plus\mbox{-}minus\mbox{-}expression .+ argument\mbox{-}expression$\\
+& $\rightarrow dot\mbox{-}plus\mbox{-}minus{-}expression .- argument\mbox{-}expression$
 \end{tabular}
 
 \subsubsection{Add/Subtract}
@@ -1499,7 +1499,7 @@ arpeggiate(c)
 \end{verbatim}
 
 \section{Testing automation}
-We chose our test cases starting from the most basic, and gradually increased the complexity of them to test and or v.  We initially chose test cases by selecting the basic features of our language (the different data types, basic control features, and built-in functions), and ensuring that they work as expected.  These tests are very simple scripts that include the different ways these language features can be used. For example, we tested the different ways of assigning and modifying Note, Chord, and Sequence types. Test cases that represent previous problem areas, such as the \verb|set_tempo()| function, were chosen next to ensure that these problems have been dealt with.  The next step was to add cases to test all the different ways of modifying data, including use of multiple functions, the dot operator, and the subscript operator.  Some other tests included simple library functions, such as scale generators and major/minor chord generators.  Finally, for completeness, we wrote more complex functions to represent different ways the language would actually be used, including tests that produce full songs and generate harmonies based on melodies.
+We chose our test cases starting from the most basic, and gradually increased the complexity of them to test.  We initially chose test cases by selecting the basic features of our language (the different data types, basic control features, and built-in functions), and ensuring that they work as expected.  These tests are very simple scripts that include the different ways these language features can be used. For example, we tested the different ways of assigning and modifying Note, Chord, and Sequence types. Test cases that represent previous problem areas, such as the \verb|set_tempo()| function, were chosen next to ensure that these problems have been dealt with.  The next step was to add cases to test all the different ways of modifying data, including use of multiple functions, the dot operator, and the subscript operator.  Some other tests included simple library functions, such as scale generators and major/minor chord generators.  Finally, for completeness, we wrote more complex functions to represent different ways the language would actually be used, including tests that produce full songs and generate harmonies based on melodies.
 
 An automated test suite, based off of the MICROC test suite, was used for regression testing and ensuring that all language features work as expected.  Since our language doesn’t include an interpreter, the interpreter aspect in the MICROC test suite was removed from our test suite. Because our assembler was infrequently modified after the initial implementation, and due to the complexity of assembling each CSV output file, the testing framework compares against the intermediate CSV files instead of the final MIDI output.  Our testing involved running the testall.sh shell script to compare output from each of the tests in the suite, which reports the status for each teset run with either OK or NO (did not pass), before committing any changes.  We did not use a code coverage tool, but instead hand-selected cases that include all aspects of the language, as we believe that this is more well-suited for our language.
 
@@ -1610,4 +1610,2325 @@ Try to work as a group as much as possible, and to distribute the workload evenl
 
 SVN log messages, SVN update emails, and TODO lists are your friends.
 \chapter{Appendix}
+\section{ast.ml}
+\begin{verbatim}
+type op = Add | Sub | Mult | Div |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | DotAdd | DotSub| Mod
+
+type expr =
+    Literal of int
+  | NoteLiteral of string
+  | StringLiteral of string
+  | Cast of string * string
+  | Id of string
+  | MemberOp of string * string
+  | LMemberOp of string * string * expr
+  | ElementOp of string * expr
+  | LElementOp of string * expr * expr
+  | Binop of expr * op * expr
+  | Assign of string * expr
+  | Call of string * expr list
+  | Noexpr
+
+type stmt =
+    Block of stmt list
+  | Expr of expr
+  | Return of expr
+  | Continue
+  | Break
+  | If of expr * stmt * stmt
+  | For of expr * expr * expr * stmt
+  | While of expr * stmt * int
+
+type func_decl = {
+    fname : string;
+    formals : string list;
+    locals : string list;
+    body : stmt list;
+  }
+
+type program = string list * func_decl list
+
+let rec string_of_expr = function
+    Literal(l) -> string_of_int l
+  | NoteLiteral(n) -> n
+  | StringLiteral(s) -> "\"" ^ s ^ "\"";
+  | Id(s) -> s
+  | Cast(t, id) ->  id ^ " as " ^ t
+  | ElementOp(s, e1) -> s ^ "[" ^ string_of_expr e1 ^ "]";
+  | LElementOp(s, e1, e2) -> s ^ "[" ^ string_of_expr e1 ^ "] = " ^ string_of_expr e2
+  | MemberOp(id, field) -> id ^ "." ^ field
+  | LMemberOp(id, field, e) -> id ^ "." ^ field ^ " = " ^ string_of_expr e
+  | Binop(e1, o, e2) ->
+      string_of_expr e1 ^ " " ^
+      (match o with
+	Add -> "+" | Sub -> "-"
+      | DotAdd -> ".+" | DotSub -> ".-" 
+      | Equal -> "==" | Neq -> "!="
+      | Less -> "<" | Leq -> "<=" | Greater -> ">" | Geq -> ">="
+      | And -> "&&" | Or -> "||" | Mod -> "%" | Mult -> "*" | Div -> "/") ^ 
+      " " ^ string_of_expr e2
+  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | Call(f, el) ->
+      f ^ "(" ^ String.concat ", " (List.map string_of_expr el) ^ ")"
+  | Noexpr -> ""
+
+let rec string_of_stmt = function
+    Block(stmts) ->
+      "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
+  | Expr(expr) -> string_of_expr expr ^ ";\n";
+  | Return(expr) -> "return " ^ string_of_expr expr ^ ";\n";
+  | Break -> "break;\n";
+  | Continue -> "continue;\n";
+  | If(e, s, Block([])) -> "if (" ^ string_of_expr e ^ ")\n" ^ string_of_stmt s
+  | If(e, s1, s2) ->  "if (" ^ string_of_expr e ^ ")\n" ^
+      string_of_stmt s1 ^ "else\n" ^ string_of_stmt s2
+  | For(e1, e2, e3, s) ->
+      "for (" ^ string_of_expr e1  ^ " ; " ^ string_of_expr e2 ^ " ; " ^
+      string_of_expr e3  ^ ") " ^ string_of_stmt s
+  | While(e, s, l) -> "while (" ^ string_of_expr e ^ ") " ^ string_of_stmt s
+
+let string_of_vdecl id = "Type " ^ id ^ ";\n"
+
+let string_of_fdecl fdecl =
+  fdecl.fname ^ "(" ^ String.concat ", " fdecl.formals ^ ")\n{\n" ^
+  String.concat "" (List.map string_of_vdecl fdecl.locals) ^
+  String.concat "" (List.map string_of_stmt fdecl.body) ^
+  "}\n"
+
+let string_of_program (vars, funcs) =
+  String.concat "" (List.map string_of_vdecl vars) ^ "\n" ^
+  String.concat "\n" (List.map string_of_fdecl funcs)
+\end{verbatim}
+\section{bytecode.ml}
+\begin{verbatim}
+type bstmt =
+    Num of int              (* Push a literal *)
+  | Cho of int list         (* Push a Chord [len; dur; start; p; p; p...] *)
+  | Seq of int list list    (* Push a sequence [[cur;len];[cho];[cho]...] *)
+  | Not of (int * int)      (* Push a Note (pitch, duration) *)
+  | Stn of string           (* Push a string literal *)
+  | Ele                     (* access an element of a sequence *)
+  | Leo                     (* Assign to an element of a sequence *)
+  | Sjp of (int * int * int)(* Set/get jump points *)
+  | Cst of string           (* Cast to a different type *)
+  | Mem of string           (* access a member of a data type using the field name *)
+  | Lmo of string           (* Assign to a member of a data type *)
+  | Drp                     (* Discard a value *)
+  | Bin of Ast.op           (* Perform arithmetic on top of stack *)
+  | Lod of int    (* Fetch global variable *)
+  | Str of int    (* Store global variable *)
+  | Lfp of int    (* Load frame pointer relative *)
+  | Sfp of int    (* Store frame pointer relative *)
+  | Jsr of int    (* Call function by absolute address *)
+  | Ent of int    (* Push FP, FP -> SP, SP += i *)
+  | Rts of int    (* Restore FP, SP, consume formals, push result *)
+  | Beq of int    (* Branch relative if top-of-stack is zero *)
+  | Bne of int    (* Branch relative if top-of-stack is non-zero *)
+  | Bra of int    (* Branch relative *)
+  | Hlt           (* Terminate *)
+
+type prog = {
+    num_globals : int;   (* Number of global variables *)
+    text : bstmt array; (* Code for all the functions *)
+  }
+  
+let string_of_list l = 
+  let rec help_string_of_list l s = match l
+  with [] -> s ^ "]"
+  | head :: tail -> help_string_of_list tail (s ^ (string_of_int head) ^ ";") in
+  help_string_of_list l "["
+    
+let string_of_list_list l =
+  let rec help_string_of_list_list l s = match l
+  with [] -> s ^ "]"
+  | head :: tail -> help_string_of_list_list tail (s ^ (string_of_list head) ^ ";") in help_string_of_list_list l "["
+    
+let print_sequence m = 
+  let rec help_print_sequence l s = match l 
+  with [] -> s 
+  | head :: tail -> help_print_sequence tail 
+	s^(let b = 
+	  (List.fold_left (fun t e->t^"\n"^e) "" 
+	     (let i = List.tl head in 
+	     let duration = List.hd i in 
+	     let k = List.tl i in 
+	     let start = List.hd k in 
+	     (List.map 
+		(fun pitch -> if pitch > 0 then
+		  (string_of_int start) ^ "," ^ 
+		  (string_of_int duration) ^ "," ^ 
+		  (string_of_int pitch) else ""))
+	       (List.tl k))) in 
+	(String.sub b 1 (String.length b - 1)))
+      ^"\n" in 
+  help_print_sequence (List.rev (List.tl m)) ""
+    
+let string_of_stmt = function
+    Num(i) -> "Num " ^ string_of_int i
+  | Not(i,j) -> "Not " ^ "(" ^ string_of_int i ^ "," ^ string_of_int j ^ ")"
+  | Cho(l) -> "Cho " ^ (string_of_list l)
+  | Seq(s) -> "Seq " ^ (print_sequence s)
+  | Stn(s) -> "Stn " ^ s
+  | Cst(t) -> "Cst " ^ t
+  | Drp -> "Drp"
+  | Bin(Ast.Add) -> "Add"
+  | Bin(Ast.Sub) -> "Sub"
+  | Bin(Ast.Mult) -> "Mul"
+  | Bin(Ast.Div) -> "Div"
+  | Bin(Ast.Mod) -> "Mod"
+  | Bin(Ast.DotAdd) -> "Dad"
+  | Bin(Ast.DotSub) -> "Dsu"
+  | Bin(Ast.Or) -> "Or"
+  | Bin(Ast.And) -> "And"
+  | Bin(Ast.Equal) -> "Eql"
+  | Bin(Ast.Neq) -> "Neq"
+  | Bin(Ast.Less) -> "Lt"
+  | Bin(Ast.Leq) -> "Leq"
+  | Bin(Ast.Greater) -> "Gt"
+  | Bin(Ast.Geq) -> "Geq"
+  | Ele -> "Ele"
+  | Leo -> "Leo"
+  | Sjp(i,j,k) -> "Sjp (" ^ string_of_int i ^ "," ^ string_of_int j ^ "," ^ string_of_int k ^ ")"
+  | Mem(s) -> "Mem " ^ s
+  | Lmo(s) -> "Lmo " ^ s
+  | Lod(i) -> "Lod " ^ string_of_int i
+  | Str(i) -> "Str " ^ string_of_int i
+  | Lfp(i) -> "Lfp " ^ string_of_int i
+  | Sfp(i) -> "Sfp " ^ string_of_int i
+  | Jsr(i) -> "Jsr " ^ string_of_int i
+  | Ent(i) -> "Ent " ^ string_of_int i
+  | Rts(i) -> "Rts " ^ string_of_int i
+  | Bne(i) -> "Bne " ^ string_of_int i
+  | Beq(i) -> "Beq " ^ string_of_int i
+  | Bra(i) -> "Bra " ^ string_of_int i
+  | Hlt    -> "Hlt"
+
+let string_of_prog p =
+  string_of_int p.num_globals ^ " global variables\n" ^
+  let funca = Array.mapi
+      (fun i s -> string_of_int i ^ " " ^ string_of_stmt s) p.text
+  in String.concat "\n" (Array.to_list funca)
+\end{verbatim}
+\section{compile.ml}
+\begin{verbatim}
+open Ast
+open Bytecode
+
+module StringMap = Map.Make(String)
+
+(* Symbol table: Information about all the names in scope *)
+type env = {
+    function_index : int StringMap.t; (* Index for each function *)
+    global_index   : int StringMap.t; (* "Address" for global variables *)
+    local_index    : int StringMap.t; (* FP offset for args, locals *)
+  }
+
+(* val enum : int -> 'a list -> (int * 'a) list *)
+let rec enum stride n = function
+    [] -> []
+  | hd::tl -> (n, hd) :: enum stride (n+stride) tl
+
+(* val string_map_pairs StringMap 'a -> (int * 'a) list -> StringMap 'a *)
+let string_map_pairs map pairs =
+  List.fold_left (fun m (i, n) -> StringMap.add n i m) map pairs
+
+(** Note map, used to map from note literals to pitch integers *)
+let note_map = StringMap.add "C" 0 StringMap.empty
+(* Rest is given value of -500; pitches less than 0 are not printed in the end. *)
+let note_map = StringMap.add "R" (-500) note_map
+let note_map = StringMap.add "D" 2 note_map
+let note_map = StringMap.add "E" 4 note_map
+let note_map = StringMap.add "F" 5 note_map
+let note_map = StringMap.add "G" 7 note_map
+let note_map = StringMap.add "A" 9 note_map
+let note_map = StringMap.add "B" 11 note_map
+let note_map = StringMap.add "w" 16 note_map
+let note_map = StringMap.add "h" 8 note_map
+let note_map = StringMap.add "q" 4 note_map
+let note_map = StringMap.add "e" 2 note_map
+let note_map = StringMap.add "s" 1 note_map
+
+(** Returns the pitch, duration of a note *)
+let int_of_note n =
+  let a = Array.make 4 0 in
+  a.(0) <- StringMap.find (String.sub n 0 1) note_map;
+  for i = 1 to (String.length n) - 1 do
+    (* check for an accidental *)
+    if n.[i] == 'b' then a.(0) <- a.(0) - 1;
+    if n.[i] == '#' then a.(0) <- a.(0) + 1;
+    (* check for an octave *)
+    if String.contains "0123456789" n.[i] then
+      (a.(0) <- a.(0) + 12 * ((int_of_char n.[i])  - (int_of_char '0') + 1);
+      a.(2) <- 1); (* mark octave as set *)
+    (* check for a duration *)
+    if String.contains "whqes" n.[i] then
+      (a.(1) <- StringMap.find (String.sub n i 1) note_map;
+      a.(3) <- 1) (* mark duration as set *)
+  done;
+  (* Set default octave *)
+  if a.(2) == 0 then a.(0) <- a.(0) + 12 * 5;
+  (* Set default duration *)
+  if a.(3) == 0 then a.(1) <- 4;
+  (*return*)
+  (a.(0), a.(1))
+  
+
+(** Translate a program in AST form into a bytecode program.  Throw an
+    exception if something is wrong, e.g., a reference to an unknown
+    variable or function *)
+let translate (globals, functions) =
+
+  (* Allocate "addresses" for each global variable *)
+  let global_indexes = string_map_pairs StringMap.empty (enum 1 0 globals) in
+
+  (** Assign indexes to function names; built-in "play" and "set_tempo" are special *)
+    (* Built in functions play (to play a sequence), set tempo, constructors for Sequence and Chord
+        rand, and set_instrument *)
+  let built_in_functions = StringMap.add "play" (-1) StringMap.empty in
+  let built_in_functions = StringMap.add "set_tempo" (-2) built_in_functions     in
+  let built_in_functions = StringMap.add "new_sequence" (-3) built_in_functions in
+  let built_in_functions = StringMap.add "new_chord" (-4) built_in_functions in
+  let built_in_functions = StringMap.add "rand" (-5) built_in_functions in
+  let built_in_functions = StringMap.add "set_instrument" (-6) built_in_functions in
+  let function_indexes = string_map_pairs built_in_functions
+      (enum 1 1 (List.map (fun f -> f.fname) functions)) in
+
+  (* Translate a function in AST form into a list of bytecode statements *)
+  let translate env fdecl =
+    (* Bookkeeping: FP offsets for locals and arguments *)
+    let num_formals = List.length fdecl.formals
+    and num_locals = List.length fdecl.locals
+    and local_offsets = enum 1 1 fdecl.locals
+    and formal_offsets = enum (-1) (-2) fdecl.formals in
+    let env = { env with local_index = string_map_pairs
+		  StringMap.empty (local_offsets @ formal_offsets) } in
+
+    let rec expr = function
+	Literal i -> [Num i]
+	    | NoteLiteral n -> [Not (int_of_note n)]
+		  | StringLiteral s -> [Stn s]
+      | Id s ->
+	  (try [Lfp (StringMap.find s env.local_index)]
+          with Not_found -> try [Lod (StringMap.find s env.global_index)]
+          with Not_found -> raise (Failure ("undeclared variable " ^ s)))
+      | Cast (t, s) -> expr (Id(s)) @ [Cst t]
+      (* probably need to do type checking here *)
+      | Binop (e1, op, e2) -> expr e1 @ expr e2 @ [Bin op]
+      (* check that expr is of type Number *)
+      | ElementOp (s, e) -> expr e @ expr (Id(s)) @ [Ele]
+      | LElementOp (s, e1, e2) -> expr e2 @ expr e1 @ expr (Id(s)) @ [Leo] @
+	  (try [Sfp (StringMap.find s env.local_index)]
+  	  with Not_found -> try [Str (StringMap.find s env.global_index)]
+	  with Not_found -> raise (Failure ("undeclared variable " ^ s)))
+      | MemberOp (s, field) -> expr (Id(s)) @ [Mem field]
+      | LMemberOp (s, field, e) -> expr e @ expr (Id(s)) @ [Lmo field] @
+	  (try [Sfp (StringMap.find s env.local_index)]
+  	  with Not_found -> try [Str (StringMap.find s env.global_index)]
+	  with Not_found -> raise (Failure ("undeclared variable " ^ s)))
+      | Assign (s, e) -> expr e @
+	  (try [Sfp (StringMap.find s env.local_index)]
+  	  with Not_found -> try [Str (StringMap.find s env.global_index)]
+	  with Not_found -> raise (Failure ("undeclared variable " ^ s)))
+      | Call (fname, actuals) -> (try
+	  (List.concat (List.map expr (List.rev (if fname="new_chord" then [Literal (List.length actuals)] @ actuals else actuals)))) @
+	  [Jsr (StringMap.find fname env.function_index) ]
+        with Not_found -> raise (Failure ("undefined function " ^ fname)))
+      | Noexpr -> []
+
+    in let rec stmt = function
+	Block sl     ->  List.concat (List.map stmt sl)
+      | Expr e       -> expr e @ [Drp]
+      | Return e     -> expr e @ [Rts num_formals]
+      (* Break and Continue use Sjp command. 1 for break, 2 for continue*)
+      | Break -> [Sjp(0,0,1)]
+      | Continue -> [Sjp(0,0,2)];
+      | If (p, t, f) -> let t' = stmt t and f' = stmt f in
+	expr p @ [Beq(2 + List.length t')] @
+	t' @ [Bra(1 + List.length f')] @ f'
+      | For (e1, e2, e3, b) ->
+	  stmt (Block([Expr(e1); While(e2, Block([b; Expr(e3)]), List.length (stmt b))]))
+      | While (e, b,l) -> 
+	  let b' = stmt b and e' = expr e in
+	  [Sjp((if l<0 then List.length b' else l), List.length b' + List.length e', 0)] @ [Bra (1+ List.length b')] @ b' @ e' @
+	  [Bne (-(List.length b' + List.length e'))] @ [Sjp(0,0,3)]
+
+    in [Ent num_locals] @      (* Entry: allocate space for locals *)
+    stmt (Block fdecl.body) @  (* Body *)
+    [Num 0; Rts num_formals]   (* Default = return 0 *)
+
+  in let env = { function_index = function_indexes;
+		 global_index = global_indexes;
+		 local_index = StringMap.empty } in
+
+  (* Code executed to start the program: Jsr main; halt *)
+  let entry_function = try
+    [Jsr (StringMap.find "main" function_indexes); Hlt]
+  with Not_found -> raise (Failure ("no \"main\" function"))
+  in
+    
+  (* Compile the functions *)
+  let func_bodies = entry_function :: List.map (translate env) functions in
+
+  (* Calculate function entry points by adding their lengths *)
+  let (fun_offset_list, _) = List.fold_left
+      (fun (l,i) f -> (i :: l, (i + List.length f))) ([],0) func_bodies in
+  let func_offset = Array.of_list (List.rev fun_offset_list) in
+
+  { num_globals = List.length globals;
+    (* Concatenate the compiled functions and replace the function
+       indexes in Jsr statements with PC values *)
+    text = Array.of_list (List.map (function
+	Jsr i when i > 0 -> Jsr func_offset.(i)
+      | _ as s -> s) (List.concat func_bodies))
+  }
+\end{verbatim}
+\section{execute.ml}
+\begin{verbatim}
+open Ast
+open Bytecode
+
+(* Stack layout just after "Ent":
+
+              <-- SP
+   Local n
+   ...
+   Local 0
+   Saved FP   <-- FP
+   Saved PC
+   Arg 0
+   ...
+   Arg n *)
+ 
+(* Increase the start time of each chord in the sequence by shift *)   
+let shift_chords chord_list shift =
+  let shift_chord chord =
+    [(List.hd chord); (List.nth chord 1); (List.nth chord 2) + shift] @ (List.tl (List.tl (List.tl chord)))
+  in List.map shift_chord chord_list
+  
+(** Replace element of list*)
+let replace_element l i n skip = 
+  let a = Array.of_list l in
+  a.(i+skip) <- n; Array.to_list a
+
+let execute_prog prog =
+  (** Stack, Globals, and Jump variables *)
+  let stack = Array.make 1024 (Num(0))
+  and jumps = Array.make 20 0 
+  and jp = Array.make 1 0
+  and globals = Array.make prog.num_globals (Num(0)) in
+
+  let rec exec fp sp pc = match prog.text.(pc) with
+    Num i -> stack.(sp) <- (Num(i)) ; exec fp (sp+1) (pc+1)
+  | Stn s -> stack.(sp) <- (Stn(s)) ; exec fp (sp+1) (pc+1)
+    (** Member selection*)
+  | Mem s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
+      ("length", (Cho(len :: _))) -> (Num(len))
+    | ("start", (Cho(l))) -> (Num(List.nth l 2))
+    | ("duration", (Cho(l))) -> (Num(List.nth l 1))
+    | ("pitch" , (Not(p,d))) -> (Num(p))
+    | ("duration", (Not(p,d))) -> (Num(d))
+    | ("current", (Seq ([c; l] :: _ ))) -> (Num(c))
+    | ("length", (Seq ([c; l] :: _ ))) -> (Num(l))
+    | _ -> raise (Failure ("illegal selection attribute"))) ; exec fp sp (pc+1)
+    (** Casting (Num -> Number, Num -> Not, Not -> Chord, 0->Seq, Cho->Seq)*)
+  | Cst s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
+      ("Number", (Num i))-> (Num(i))
+    | ("Note", (Num i)) ->  (Not(i,4))
+    | ("Chord", (Not(p,d))) -> (Cho([1;d;0;p]))
+    | ("Sequence", (Num 0)) -> (Seq([[0;0]]))
+    | ("Sequence", (Cho(l))) -> (Seq([[(List.nth l 1); 1]; l]))
+    | _ -> raise (Failure ("illegal type cast"))) ; exec fp sp (pc+1)
+    (** Creating types (Not, Cho, Seq)*)
+  | Not (p, d) -> stack.(sp) <- (Not(p,d)) ; exec fp (sp+1) (pc+1)
+  | Cho (l) -> stack.(sp) <- (Cho(l)) ; exec fp (sp+1) (pc+1)
+  | Seq (ll) -> stack.(sp) <- (Seq(ll)) ; exec fp (sp+1) (pc+1)
+    (** Element Of*)
+  | Ele -> stack.(sp-2) <- (match (stack.(sp-1), stack.(sp-2)) with 
+      (Cho(l), Num(i)) -> (Not((List.nth l (i + 3)), List.nth l 1))
+    | (Seq(ll), Num(i)) -> (Cho(List.nth ll (i+1)))
+    | _ -> raise (Failure ("unexpected types for []"))) ; exec fp (sp-1) (pc+1)
+    (** Left Element Of *)
+  | Leo -> stack.(sp-3) <- (match (stack.(sp-1), stack.(sp-2), stack.(sp-3)) with 
+      (Cho(l), Num(i), Not(p,d)) -> (Cho(replace_element l i p 3))
+    | (Seq(ll), Num(i), Cho(l)) -> Seq(replace_element ll i l 1)
+    | _ -> raise (Failure ("assignment to [] failed"))) ; exec fp (sp-2) (pc+1)
+    (** Left Member Of *)
+  | Lmo (s) -> stack.(sp-2) <- (match (s, stack.(sp-1), stack.(sp-2)) with 
+      ("start", (Cho(l)), (Num i)) -> (Cho([(List.hd l); (List.nth l 1); i] @ (List.tl (List.tl (List.tl l)))))
+    | ("duration", (Cho(l)), (Num i)) -> (Cho([(List.hd l); i; (List.nth l 2)] @ (List.tl (List.tl (List.tl l)))))
+    | ("pitch" , (Not(p,d)), (Num i)) -> (Not(i, d))
+    | ("duration", (Not(p,d)), (Num i)) -> (Not(p, i))
+    | ("current", (Seq ([c; l] :: cs )), (Num i)) -> (Seq([i;l] :: cs))
+    | _ -> raise (Failure ("illegal selection attribute"))) ; exec fp (sp-1) (pc+1)
+  | Drp -> exec fp (sp-1) (pc+1)
+    (** Binary operations
+        Add
+        Sub (Num - Num)
+        Mult (Num * Num)
+        Div (Num / Num)
+        Mod (Num % Num)
+        DotAdd (Not .+ Num)
+        DotSub (Num .- Num)
+        And (Num && Num)
+        Or (Num || Num)
+        Equal (Num == Num)
+        Not Equal (Num != Num)
+        Less (Num < Num)
+        Leq (Num <= Num)
+        Greater (Num > Num)
+        Geq (Num >= Num) *)
+  | Bin op -> let opA = stack.(sp-2) and opB = stack.(sp-1) in     
+      stack.(sp-2) <- (let boolean i = if i then Num(1) else Num(0) in
+      match op with
+        Add -> (match (opA, opB) with 
+            (Num op1, Num op2) -> Num(op1 + op2)
+          | (Not(p,d), Num i) -> Not(p,d+i)
+          | (Not(p,d), Not(p2,d2)) -> Not(p, d+d2)
+          | (Cho(l), Not(p,d)) ->Cho(l @ [p])
+          | ((Seq ([c; l] :: cs )), (Not(p, d))) -> Seq([c+d; l+1] :: cs @ [[1;d;c;p]])
+          | ((Seq ([c; l] :: cs )), (Cho(chord))) -> Seq([c+(List.nth chord 1); l+1] :: cs @  
+                                    [[(List.hd chord); (List.nth chord 1); c] @ (List.tl (List.tl (List.tl chord)))])
+          | ((Seq ([c1; l1] :: cs1 )), (Seq ([c2; l2] :: cs2 ))) -> Seq([c1+c2; l1+l2] :: cs1 @ (shift_chords cs2 c1))
+          | _ -> raise (Failure ("unexpected types for +")))
+      | Sub -> (match (opA, opB) with 
+          (Num op1, Num op2) -> Num(op1 - op2)
+        | _ -> raise (Failure ("unexpected types for -")))
+      | Mult -> (match (opA, opB) with 
+          (Num op1, Num op2) -> Num(op1 * op2)
+        | _ -> raise (Failure ("unexpected types for -")))
+      | Div -> (match (opA, opB) with 
+          (Num op1, Num op2) -> Num(op1 / op2)
+        | _ -> raise (Failure ("unexpected types for -")))
+      | Mod -> (match (opA, opB) with 
+          (Num op1, Num op2) -> Num(op1 mod op2)
+        | _ -> raise (Failure ("unexpected types for %")))
+      | DotAdd -> (match (opA, opB) with 
+          (Not (p, d), Num op2) -> Not(p + op2, d) (* add pitch of Note to Number *)
+        | _ -> raise (Failure ("unexpected types for .+")))
+      | DotSub -> (match (opA, opB) with 
+          (Not (p, d), Num op2) -> Not(p - op2, d) 
+        | _ -> raise (Failure ("unexpected types for .-")))
+      | And -> (match (opA, opB) with 
+          (Num op1, Num op2) -> boolean (op1 != 0 && op2 != 0)
+        | _ -> raise (Failure ("unexpected types for &&")))
+      | Or -> (match (opA, opB) with 
+          (Num op1, Num op2) -> boolean (op1 == 1 || op2 == 1)
+        | _ -> raise (Failure ("unexpected types for ||")))
+      | Equal -> (match (opA, opB) with 
+          (Num op1, Num op2) -> boolean (op1 =  op2)
+		| (Not op1, Not op2) -> boolean (op1 =  op2)
+		| (Cho op1, Cho op2) -> boolean (op1 =  op2)
+		| (Seq op1, Seq op2) -> boolean (op1 =  op2)
+        | _ -> raise (Failure ("unexpected types for =")))
+      | Neq -> (match (opA, opB) with
+          (Num op1, Num op2) -> boolean (op1 != op2)
+		| (Not op1, Not op2) -> boolean (op1 <> op2) (* structural inequality *)
+		| (Cho op1, Cho op2) -> boolean (op1 <> op2)
+		| (Seq op1, Seq op2) -> boolean (op1 <> op2)
+        | _ -> raise (Failure ("unexpected types for !=")))
+      | Less -> (match (opA, opB) with 
+          (Num op1, Num op2) -> boolean (op1 <  op2)
+        | _ -> raise (Failure ("unexpected types for <")))
+      | Leq -> (match (opA, opB) with 
+          (Num op1, Num op2) -> boolean (op1 <= op2)
+        | _ -> raise (Failure ("unexpected types for <=")))
+      | Greater -> (match (opA, opB) with 
+          (Num op1, Num op2) -> boolean (op1 >  op2)
+        | _ -> raise (Failure ("unexpected types for >")))
+      | Geq -> (match (opA, opB) with 
+          (Num op1, Num op2) -> boolean (op1 >= op2)
+        | _ -> raise (Failure ("unexpected types for >="))));
+      exec fp (sp-1) (pc+1)
+  | Lod i -> stack.(sp)   <- globals.(i)  ; exec fp (sp+1) (pc+1)
+  | Str i -> globals.(i)  <- stack.(sp-1) ; exec fp sp     (pc+1)
+  | Lfp i -> stack.(sp)   <- stack.(fp+i) ; exec fp (sp+1) (pc+1)
+  | Sfp i -> stack.(fp+i) <- stack.(sp-1) ; exec fp sp     (pc+1)
+    (** Sjp, to set jump points for use by break and continue*)
+  | Sjp(start_jump,end_jump,command) -> if command=0 
+                                        then (jumps.(jp.(0)) <- pc+start_jump+2; jumps.(jp.(0)+1) <- pc+3+end_jump;
+                                             jp.(0)<-jp.(0)+2;
+                                             exec fp sp (pc+1))
+                                        else 
+                                            (if command<=2  
+                                             then exec fp sp jumps.(jp.(0)-command)
+                                             else (jp.(0)<-jp.(0)-2; 
+                                                   exec fp sp (pc+1)) ); 
+
+  (** this is the print command. change it to set tempo and play *)
+  | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline ("Tempo,"^string_of_int i); exec fp sp (pc+1)
+            | _ -> raise (Failure ("unexpected type for set_tempo")))
+    (** Play command*)
+  | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline (print_sequence s); exec fp sp (pc+1)
+            | Cho d -> let a = List.hd (List.tl d) in let c = List.hd (List.tl (List.tl d)) in
+                ignore(List.map print_endline (List.map (fun b -> if b > 0 
+                                                                  then string_of_int c^","^string_of_int a^","^string_of_int b 
+                                                                  else "") 
+                                                        (List.tl (List.tl (List.tl d)))));
+                exec fp sp (pc+1)
+            |_ -> raise (Failure ("unexpected type for play")))
+    (** Sequence constructor *)
+  | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
+    (** Chord constructor *)
+  | Jsr(-4) -> (match stack.(sp-1) with Num i ->
+                let rec chord l n m = if n>m then l else (match stack.(sp-n-1) with Not (pitch,duration) ->
+                                if n=1 then chord [m; duration; 0; pitch] (n+1) m else chord (l @ [pitch]) (n+1) m
+                                | _ -> raise (Failure "unexpected type for chord"))
+                    in let my_chord = (chord [] 1 i) in
+                    stack.(sp-i-1) <- (Cho(my_chord)) ; exec fp (sp-i) (pc+1)
+                | _ -> raise (Failure ("unexpected type for chord")))
+
+    (** Random number *)
+  | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
+            | _ -> raise (Failure ("unexpected type for rand")))
+    (** Set instrument (needs to be changed) *)
+  | Jsr(-6) -> (match stack.(sp-1) with Stn s -> print_endline ("Instrument,"^s); exec fp sp (pc+1)
+			| _ -> raise (Failure ("unexpected type for set_instrument")))
+  | Jsr i -> stack.(sp)   <- (Num(pc + 1))       ; exec fp (sp+1) i
+  | Ent i -> stack.(sp)   <- (Num(fp))           ; exec sp (sp+i+1) (pc+1)
+  | Rts i -> let new_fp = stack.(fp) and new_pc = stack.(fp-1) in
+    stack.(fp-i-1) <- stack.(sp-1) ; exec 
+                 (match new_fp with Num nfp -> nfp  
+                   | _ -> raise (Failure ("unexpected types for return"))) 
+                 (fp-i) 
+                 (match new_pc with Num npc -> npc  
+                   | _ -> raise (Failure ("unexpected types for return")))
+  | Beq i -> exec fp (sp-1) (pc + if 
+    (match stack.(sp-1) with Num temp -> temp =  0 
+      | _ -> raise (Failure ("unexpected types for return"))) then i else 1)
+  | Bne i -> exec fp (sp-1) (pc + if 
+    (match stack.(sp-1) with Num temp -> temp !=  0 
+      | _ -> raise  (Failure ("unexpected types for return"))) then i else 1)
+  | Bra i -> exec fp sp (pc+i)
+  | Hlt   -> ()
+
+  in exec 0 0 0
+\end{verbatim}
+\section{midilc.ml}
+\begin{verbatim}
+type action = Ast | Bytecode | Compile
+
+(** find out how to call java from inside ml? *)
+
+let _ =
+  let action = if Array.length Sys.argv > 1 then
+    List.assoc Sys.argv.(1) [ ("-a", Ast);
+			      ("-b", Bytecode);
+			      ("-c", Compile) ]
+  else Compile in
+  let lexbuf = Lexing.from_channel stdin in
+  let program = Parser.program Scanner.token lexbuf in
+  match action with
+    Ast -> let listing = Ast.string_of_program program
+           in print_string listing
+  | Bytecode -> let listing =
+      Bytecode.string_of_prog (Compile.translate program)
+    in print_endline listing
+  | Compile -> Execute.execute_prog (Compile.translate program)
+ 
+\end{verbatim}
+\section{parser.mly}
+\begin{verbatim}
+%{ open Ast %}
+
+%token SEMI LPAREN RPAREN LBRACE RBRACE COMMA LBRACKET RBRACKET CAST
+%token PLUS MINUS TIMES DIVIDE ASSIGN DOTPLUS DOTMINUS MOD
+%token EQ NEQ LT LEQ GT GEQ
+%token AND OR DOT AS
+%token RETURN IF ELSE FOR WHILE BREAK CONTINUE
+%token <int> LITERAL
+%token <string> ID
+%token <string> SELECT
+%token <string> NOTE
+%token <string> TYPE
+%token <string> STRLIT
+%token EOF
+
+%nonassoc NOELSE
+%nonassoc ELSE
+%right ASSIGN
+%left AS
+%left OR
+%left AND
+%left EQ NEQ
+%left LT GT LEQ GEQ
+%left MOD
+%left TIMES DIVIDE
+%left PLUS MINUS DOTPLUS DOTMINUS
+
+%start program
+%type <Ast.program> program
+
+%%
+
+program:
+   /* nothing */ { [], [] }
+ | program vdecl { ($2 :: fst $1), snd $1 }
+ | program fdecl { fst $1, ($2 :: snd $1) }
+
+fdecl:
+    id LPAREN formals_opt RPAREN LBRACE vdecl_list stmt_list RBRACE
+     { {
+	 fname = $1;
+	 formals = $3;
+	 locals = List.rev $6;
+	 body = List.rev $7 } }
+
+formals_opt:
+    /* nothing */ { [] }
+  | formal_list   { List.rev $1 }
+
+id:
+    TYPE ID { $2 }
+    | ID { $1}
+
+formal_list:
+  id                  { [$1]  }  /* List pair */
+  | formal_list COMMA id { $3 :: $1 } /* List pair */
+
+vdecl_list:
+    /* nothing */    { [] }
+  | vdecl_list vdecl { $2 :: $1 }
+ 
+
+vdecl:
+   /* INT ID SEMI { $2 } */
+   TYPE ID SEMI { $2 }
+    
+stmt_list:
+    /* nothing */  { [] }
+  | stmt_list stmt { $2 :: $1 }
+
+stmt:
+    expr SEMI { Expr($1) }
+  | RETURN expr SEMI { Return($2) }
+  | BREAK SEMI { Break }
+  | CONTINUE SEMI { Continue }
+  | LBRACE stmt_list RBRACE { Block(List.rev $2) }
+  | IF LPAREN expr RPAREN stmt %prec NOELSE { If($3, $5, Block([])) }
+  | IF LPAREN expr RPAREN stmt ELSE stmt    { If($3, $5, $7) }
+  | FOR LPAREN expr_opt SEMI expr_opt SEMI expr_opt RPAREN stmt
+     { For($3, $5, $7, $9) }
+  | WHILE LPAREN expr RPAREN stmt { While($3, $5,-1) }
+
+expr_opt:
+    /* nothing */ { Noexpr }
+  | expr          { $1 }
+
+expr:
+    NOTE               { NoteLiteral($1) }
+  | LITERAL            { Literal($1) }
+  | STRLIT { StringLiteral($1) }
+  | ID                 { Id($1) }
+  | ID LBRACKET expr RBRACKET { ElementOp($1, $3) }
+  | ID DOT SELECT      { MemberOp($1, $3) }
+  | ID AS TYPE         { Cast($3, $1) }
+  | expr DOTPLUS expr  { Binop($1, DotAdd, $3) }
+  | expr DOTMINUS expr { Binop($1, DotSub, $3) }
+  | expr PLUS   expr { Binop($1, Add,   $3) }
+  | expr MINUS  expr { Binop($1, Sub,   $3) }
+  | expr TIMES   expr { Binop($1, Mult,   $3) }
+  | expr DIVIDE  expr { Binop($1, Div,   $3) }
+  | expr MOD    expr { Binop($1, Mod,   $3) }
+  | expr EQ     expr { Binop($1, Equal, $3) }
+  | expr NEQ    expr { Binop($1, Neq,   $3) }
+  | expr LT     expr { Binop($1, Less,  $3) }
+  | expr LEQ    expr { Binop($1, Leq,   $3) }
+  | expr GT     expr { Binop($1, Greater,  $3) }
+  | expr GEQ    expr { Binop($1, Geq,   $3) }
+  | expr AND    expr { Binop($1, And,   $3) }
+  | expr OR     expr { Binop($1, Or,    $3) }
+  | ID DOT SELECT ASSIGN expr { LMemberOp($1, $3, $5) }
+  | ID LBRACKET expr RBRACKET ASSIGN expr { LElementOp($1, $3, $6) }
+  | ID ASSIGN expr   { Assign($1, $3) }
+  | ID LPAREN actuals_opt RPAREN { Call($1, $3) }
+  | LPAREN expr RPAREN { $2 }
+
+actuals_opt:
+    /* nothing */ { [] }
+  | actuals_list  { List.rev $1 }
+
+actuals_list:
+    expr                    { [$1] }
+  | actuals_list COMMA expr { $3 :: $1 }
+\end{verbatim}
+\section{scanner.mll}
+\begin{verbatim}
+{ open Parser }
+
+rule token = parse
+  [' ' '\t' '\r' '\n'] { token lexbuf } (* Whitespace *)
+| "/*"     { comment lexbuf }           (* Comments *)
+| '('      { LPAREN }
+| ')'      { RPAREN }
+| '{'      { LBRACE }
+| '}'      { RBRACE }
+| '['      { LBRACKET }
+| ']'	   { RBRACKET }
+| ';'      { SEMI }
+| ','      { COMMA }
+| '+'      { PLUS }
+| '-'      { MINUS }
+| '*'      { TIMES }
+| '/'      { DIVIDE }
+| '='      { ASSIGN }
+| "=="     { EQ }
+| "!="     { NEQ }
+| '<'      { LT }
+| "<="     { LEQ }
+| ">"      { GT }
+| ">="     { GEQ }
+| "as"     { AS } 
+| "if"     { IF }
+| "else"   { ELSE }
+| "for"    { FOR }
+| "while"  { WHILE }
+| "continue" { CONTINUE }
+| "return" { RETURN }
+| "break"  { BREAK }
+| "&&"	   { AND }
+| "||"	   { OR }
+| '.'	   { DOT }
+| ".+" 	   { DOTPLUS }
+| ".-"     { DOTMINUS }
+| "%"      { MOD }
+| "duration" | "pitch" | "length" | "current" | "start" as s { SELECT(s) }
+| "Number" | "Note" | "Chord" | "Sequence" | "Void" as typ  { TYPE(typ) }
+| ['A'-'G' 'R']['b' '#']?['0'-'9']?['w' 'h' 'q' 'e' 's']? as note { NOTE(note) }
+| ['0'-'9']+ as lxm { LITERAL(int_of_string lxm) }
+| '\"'['0'-'9' 'A'-'Z' ' ' 'a'-'z']+'\"' as stng { STRLIT(String.sub stng 1 ((String.length stng) - 2)) }
+| ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']* as lxm { ID(lxm) }
+| eof { EOF }
+| _ as char { raise (Failure("illegal character " ^ Char.escaped char)) }
+
+and comment = parse
+  "*/" { token lexbuf }
+| _    { comment lexbuf }
+\end{verbatim}
+\section{tests/pi-symphony.m}
+\begin{verbatim}
+/** author @Akiva */
+main(){
+    Sequence s1;
+    Sequence s2;
+    Sequence s3;
+    Sequence s4;
+    Sequence s5;
+    Sequence scale;
+    Number i;
+    Number j;
+    Number turn;
+    Chord c;
+    Number k;
+    Number pi1;
+    Number pi2;
+    Number pi;
+    Note n;
+    turn = 0;
+    s1 = new_sequence();
+    s2 = new_sequence();
+    s3 = new_sequence();
+    s5 = new_sequence();
+    scale = major_scale(Cq);
+    pi1 = 562951413;
+    pi2 = 323979853;
+    pi = pi1;
+    for(i = 0; i < 24; i=i+1){
+        if(pi == 0){ 
+            if(turn){
+                pi = pi1;
+                turn = 1-turn;
+            }
+            else{
+                pi = pi2;
+                turn = 1-turn;
+            }
+        }
+        n = scale[pi%10];
+        n.duration = pi%10;
+        s1 = s1+n;
+        s3= s3 + (n[0].+3);
+        pi = pi/10;
+    }
+    s4 = s1;
+    play(divide(s4) + divide(divide(transpose(s4,G3,C5)))+E5);
+    play(divide(s3) + repeat(D3s,Rs,s3.length)+repeat(G4s,Rs,s3.length/2));  
+    play(s5+repeat(s5+Ch+Rh+Gh,s5+R6h+R6h+G6h,3));
+    
+}
+
+transpose(s, n1, n2){
+    Number diff;
+    Number i;
+    Note k;
+    Sequence newseq;
+
+    diff = n1.pitch-n2.pitch;
+    newseq = new_sequence();
+
+    for(i = 0; i < s.length; i=i+1){
+        k = s[i];
+        newseq = newseq + (k[0] .+ diff);
+    }
+
+    return newseq;
+}
+
+repeat(n1,n2,times){
+    return do_repeat(n1,n2,times,new_sequence());
+}
+
+do_repeat(n1, n2, times, so_far){
+    if(times == 0)
+    {
+        return so_far;
+    }
+    return do_repeat(n1,n2, times-1, so_far+n1+n2);
+}
+
+major_scale(n1){
+    Sequence p;
+    Number i;
+    p  = new_sequence();
+    for(i = 0; i <= 16; i=i+1){
+        if(i==0 || i==2 || i==4 || i==5 || i==7 || i==9 || i== 11 || i==12 || i==14 || i==16){
+            p = p + (n1 .+ i);
+        }
+    }
+    return p;
+}
+
+Sequence divide(Sequence s) {
+  Sequence result;
+  Number dur;
+  Number i;
+  Chord temp;
+  
+  result = new_sequence();
+  for(i = 0; i < s.length; i=i+1) {
+    temp = s[i];
+    dur = temp.duration;
+    dur = dur/2;
+    temp.duration = dur;
+    result = result + temp;
+  }
+  result = result + result;
+  return result;
+}
+    
+\end{verbatim}
+\section{tests/test-add.m}
+\begin{verbatim}
+/**
+   Test add
+   Tests adding a duration to a note 
+   @author Fred
+   */
+
+main() {
+  Note a;
+  Sequence b;
+  Chord c;
+  b = new_sequence();
+  a = A3q + 4;
+  c = new_chord(a);
+  b = b + c;
+  b = b + b;
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-arpeggio.m}
+\begin{verbatim}
+/* Test arpeggio
+   Tests creating an arpeggio (sequence) from a chord.  Library function.
+   @author Fred
+    */
+
+main(){
+  Note a;
+  Chord c;
+  Sequence s;
+  Number i;
+  
+  c = new_chord(C,E,G);
+  s = arpeggiate(c);
+  play(s);
+}
+
+arpeggiate(c)
+{
+    Number n;
+	Number i;
+	Sequence s;
+	s = new_sequence();
+	n = c.length;
+	for(i = 0; i < n; i=i+1)
+	{
+		s = s + c[i];
+	}
+	return s;
+}
+\end{verbatim}
+\section{tests/test-casts.m}
+\begin{verbatim}
+/* Test upper casts
+   Tests casting note to chord, chord to sequence, and node to sequence 
+   @author Fred
+   */
+
+main() {
+  Note n;
+  Chord c;
+  Sequence s;
+  n = A;
+  s = new_sequence();
+  c = new_chord(n, n .+ 4, n .+ 7);
+  
+  s = s + c + n;
+  play(s);
+}
+\end{verbatim}
+\section{tests/test-chord.m}
+\begin{verbatim}
+/** Test chord
+  * 
+  * Construct a chord and play it
+  *
+  * @author Ben
+  */
+
+main() {
+  Note a;
+  Sequence b;
+  b = new_sequence();
+  a = A3q;
+  a = (a as Chord) + C3q + Eb3q;
+  b = b + a + a + a;
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-chromatic.m}
+\begin{verbatim}
+/* Test creating a chromatic scale
+   Tests that creating a chromatic scale using a function works.  Library function 
+   @author Fred
+   */
+
+main() {
+  Note a;
+  Number n;
+  Sequence b;
+  b = chromatic(C);
+  
+  play(b);
+
+}
+
+chromatic(root)
+{
+	Sequence seq;
+	Number n;
+	seq = new_sequence();
+	seq = seq + root;
+
+	for(n = 1; n < 12; n=n+1)
+	{
+		seq = seq + (root .+ n);
+	}
+	
+	return seq;
+}
+\end{verbatim}
+\section{tests/test-chromatic-subscript.m}
+\begin{verbatim}
+/* Test selecting from a chromatic scale
+   Tests that selecting from the chromatic scale using a function works 
+   @author Fred
+   */
+
+main() {
+  Note a;
+  Number n;
+  Sequence b;
+  b = new_sequence();
+  b = b + chromatic_select(C, 0) + chromatic_select(C, 5) + chromatic_select(C, 8);
+  
+  play(b);
+
+}
+
+chromatic_select(root, index)
+{
+	Sequence seq;
+	Chord c;
+	seq = chromatic(root);
+	
+	c = seq[index];
+	return c[0];
+}
+
+chromatic(root)
+{
+	Sequence seq;
+	Number n;
+	seq = new_sequence();
+	seq = seq + root;
+
+	for(n = 1; n < 12; n=n+1)
+	{
+		seq = seq + (root .+ n);
+	}
+	
+	return seq;
+}
+\end{verbatim}
+\section{tests/test-direct1.m}
+\begin{verbatim}
+/**
+ * Tests direct selection as lvalue.
+ * @author Ben
+ */
+
+main() {
+  Note a;
+  Note f;
+  Sequence b;
+  Chord c;
+  b = new_sequence();
+  a = A5q;
+  a = (a as Chord) + C5 + Eb5;
+  f = A6s;
+  c = (f as Chord) + C6 + Eb6;
+  c.duration = 32;
+  b = b + a;
+  b.current = 0;
+  b = b + c;
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-direct.m}
+\begin{verbatim}
+/*  Test direct selection
+    Transposes a chord from one key to another through direct selection 
+    @author Fred
+    */
+
+main(){
+  Note a;
+  Chord c;
+  Sequence s;
+  Number i;
+  
+  s = new_sequence();
+  
+  c = new_chord(C,E,G);
+  s = s + transpose(c, C, C) + transpose(c, C, E) + transpose(c, C, C) + transpose(c, C, G);
+  set_tempo(30);
+  play(s);
+}
+
+transpose(input, first, second)
+{
+    Number n;
+	n = first.pitch - second.pitch;
+	return shift(input, n);
+}
+
+shift(c, n)
+{
+	Number i;
+	Number len;
+	len = c.length;
+	for(i = 0; i < len; i=i+1)
+	{
+		c[i] = c[i] .+ n;
+	}
+	return c;
+}
+\end{verbatim}
+\section{tests/test-divide.m}
+\begin{verbatim}
+/* Test divide
+   Tests division operator.
+   @author Ben
+    */
+
+main() {
+  Note a;
+  Chord c;
+  Sequence s;
+  Sequence final;
+  Number i;
+  
+  c = new_chord(Ch,E,G, G#);
+  final = new_sequence();
+  s = new_sequence();
+  s = arpeggiate(c);
+  final = final + s;
+  
+  while(c.duration/2 != 0) {
+    s = divide(s);
+    final = final + s;
+    c = s[0];
+  }
+  set_instrument("58");
+  set_tempo(160);
+  play(final);
+}
+
+Sequence arpeggiate(Chord c) {
+  Number n;
+	Number i;
+	Sequence s;
+	s = new_sequence();
+	n = c.length;
+	for(i = 0; i < n; i=i+1)
+	{
+		s = s + c[i];
+	}
+	return s;
+}
+
+Sequence divide(Sequence s) {
+  Sequence result;
+  Number dur;
+  Number i;
+  Chord temp;
+  
+  result = new_sequence();
+  for(i = 0; i < s.length; i=i+1) {
+    temp = s[i];
+    dur = temp.duration;
+    dur = dur/2;
+    temp.duration = dur;
+    result = result + temp;
+  }
+  result = result + result;
+  return result;
+}
+\end{verbatim}
+\section{tests/test-dvorak.m}
+\begin{verbatim}
+/* Test integration
+   Try to reproduce part of Dvorak's String Quartet No 12, Op 96, "American"
+   first Mvmt.
+   @author Ben
+    */
+
+main() {
+  
+  set_instrument("Cello");
+  set_tempo(112);
+  
+  play(transpose(transpose(soprano(), F, C), F, Ab));
+  play(transpose(alto(), F, Ab));
+  play(transpose(transpose(tenor(), F, C), F, Ab));
+  play(transpose(shift(baritone(), (0-24)), F, Ab));
+}
+
+Sequence soprano() {
+  Sequence sop;
+  sop = new_sequence();
+  sop = sop + Re;
+  while(sop.current/16 < 5) {
+    sop = sop + F5s + A5s;
+  }
+  while(sop.current < 10) {
+    sop = sop + F5s + A5s;
+  }
+  sop = sop+arpeggiate(new_chord(F5s,C5,A,F,A,C5));
+  sop = sop + shift(melody(), 12);
+  return sop;
+}
+
+/** Alto track */
+Sequence alto() {
+  Sequence alt;
+  Number i;
+  
+  alt = new_sequence();
+  alt = alt + Rh + Re;
+  while(alt.current/16 < 2) { 
+    alt = alt + Es + Gs;
+  }
+  i = alt.current;
+  while((alt.current-i)/16 < 8) { 
+    alt = alt + Es + Cs;
+  }
+  return alt;
+}
+
+/** Tenor track */
+Sequence tenor() {
+  Sequence ten;
+  Number i;
+  
+  ten = new_sequence();
+  ten = ten + Rw + Rw;
+  ten = ten + shift(melody(), (0-12));
+  i = ten.current;
+  while((ten.current-i)/16 < 4) { 
+    ten = ten + F3s + A3s;
+  }
+  return ten;
+}
+Sequence baritone() {
+  Sequence bar;
+  
+  bar = new_sequence();
+  bar = bar + Rh + Rq + Re + Ce + (Ch + (16*4));
+  bar = bar + Ee + Ge + Ee + (C+2)+Rh+C5e+Re+Ee+Re+Ge+R+C5e+Ce;
+  bar = bar + (R+2)+A3e+Re
+  + arpeggiate(new_chord(Ce,E,G,C5,R,E5,C5,A5,G5,C5,R));
+  return bar;
+}
+
+Sequence arpeggiate(Chord c) {
+  Number n;
+	Number i;
+	Sequence s;
+	s = new_sequence();
+	n = c.length;
+	for(i = 0; i < n; i=i+1)
+	{
+		s = s + c[i];
+	}
+	return s;
+}
+
+Sequence melody() {
+  Sequence m;
+  m = new_sequence();
+  m = m + Fe + A + C5e + (D5e+1) + F5s + D5;
+  m = m + (C5e+1) + As + Fe + Gs + As + C5h;
+  m = m + (Ce+1) + Ds + Fs + Ds + Re;
+  m = m + (Ce+1) + Ds + Fs + Ds + Re;
+  m = m + Cs+Fs+As+C5s+(C5e+1)+As+(F+2)+Re;
+  return m;
+}
+
+Sequence transpose(Sequence s, Note source, Note target) {
+  Number diff;
+  Number i;
+  Number j;
+  Chord temp;
+
+  diff = (target.pitch - source.pitch)%12;
+  for(i = 0; i < s.length; i=i+1){
+    temp = s[i];
+    for(j = 0; j < temp.length; j = j+1) {
+      temp[j] = temp[j] .+ diff;
+    }
+    s[i] = temp;
+  }
+
+  return s;
+}
+
+Sequence shift(Sequence s, Number steps) {
+  Chord temp;
+  Number i;
+  Number j;
+  
+  for(i = 0; i < s.length; i=i+1){
+    temp = s[i];
+    for(j = 0; j < temp.length; j = j+1) {
+      temp[j] = temp[j] .+ steps;
+    }
+    s[i] = temp;
+  }
+
+  return s;
+}
+\end{verbatim}
+\section{tests/test-equality.m}
+\begin{verbatim}
+/* Test structural equality
+   Tests that checking equality of sequences, chords, and notes works
+   (Otherwise, there will be no output) 
+   @author Fred
+   */
+
+main() {
+  Note a;
+  Number n;
+  Sequence b;
+  Chord c;
+  b = new_sequence();
+  a = A3q;
+  a = (a as Chord) + C3q + Eb3q;
+  c = new_chord(C, E, G);
+  b = b + a + a + a;
+  n = 4;
+  
+  if(b == b && c == c && a == a)
+  {
+	play(b);
+  }
+}
+\end{verbatim}
+\section{tests/test-for1.m}
+\begin{verbatim}
+/**
+ * Tests a for loop without doing any particular operations in the loop.
+ * @author Akiva
+ */
+
+main()
+{
+  Note a;
+  Number i;
+  Sequence b;
+  
+  for (i = 0 ; i < 10 ; i = i + 1) {
+    a = B;
+  }
+  
+  b = new_sequence() + a;
+  play(b);
+}
+
+\end{verbatim}
+\section{tests/test-for2.m}
+\begin{verbatim}
+/** Test for loop
+  * 
+  * Test the for loop by adding chords to a sequence.
+  *
+  * @author Ben
+  */
+
+main() {
+  Note a; 
+  Sequence b;
+  Number i;
+  b = new_sequence();
+  a = Aq;
+  for (i = 0 ; i < 12 ; i = i + 1) {
+    b = b + a;
+    b = b + ((a as Chord) + (a .+ i));
+  }
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-for3.m}
+\begin{verbatim}
+/** Test for loop
+  * 
+  * Test the for loop by adding notes to a sequence.
+  *
+  * @author Ben
+  */
+
+main() {
+  Note a; 
+  Sequence b;
+  Number i;
+  b = new_sequence();
+  a = Aq;
+  
+  for (i = 0 ; i < 12 ; i = i + 1) {
+    b = b + (a as Chord) + (a .+ i);
+  }
+
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-for4.m}
+\begin{verbatim}
+/**
+ * Tests more complicated stuff in for loops.
+ * @author Akiva
+ */
+
+main() {
+  Sequence b;
+  Sequence c;
+  Chord d;
+  Chord e;
+  Chord f;
+  Note rest;
+  Note g;
+  Number i;
+
+  b = new_sequence();
+  c = new_sequence();
+  g = Fh;
+
+  d = new_chord(Fw,A,C);
+  e = new_chord(Gw,B,D);
+  f = new_chord(Cw,E,G);
+
+
+  for(i = 0; i <= 12; i=i+1){
+     if(i == 0 || i == 2 || i == 4 || i==5 || i==7 || i==9 || i==11 || i==12){
+         c = c + (g .+ i);
+    } else {
+         if(i%2 == 0){
+          c = c + f;
+         }
+         else {
+          c = c + e;
+         }
+    }
+  } 
+  c = c + d;
+  rest = Rh;
+  play(b);
+  play(c);
+}
+\end{verbatim}
+\section{tests/test-for5.m}
+\begin{verbatim}
+/**
+ *  This code demonstrates continue and break.
+ *
+ *  The output is shown to not include C#, as we continue on i==4.
+ *  In addition, the length of output is limited by the break command.
+ *  @author Akiva
+ */
+
+main(){
+  Note d;
+  Sequence c;
+  Number i;
+
+  c= new_sequence();
+  d = A;
+
+  for(i = 0; i < 200; i=i+1){
+    if(i==4){
+        continue;
+    } else {
+        c = c + (A .+ i);
+    }
+    if(i==12){
+        break;
+    }
+  }
+  play(c);
+}
+\end{verbatim}
+\section{tests/test-gen-harmony.m}
+\begin{verbatim}
+/* Test creating a melody and harmony
+   Tests by creating a simple melody and then a harmony for it
+   @author Fred
+   */
+
+main() {
+  Note e;
+  Note d;
+  Note c;
+  Note fc;
+  Note fd;
+  Sequence b;
+  
+  e = E4q;
+  d = D4q;
+  c = C4q;
+  fc = C4s;
+  fd = D4s;
+  
+  b = new_sequence();
+  b = b + e + d + c + e + d + c;
+  b = b + fc + fc + fc + fc;
+  b = b + fd + fd + fd + fd;
+  b = b + e + d + c;
+  
+  b = harmony(b, C);
+  set_tempo(30);
+  play(b);
+
+}
+
+harmony(s, key)
+{
+	Sequence out;
+	Chord c;
+	Note root;
+	Number len;
+	Number i;
+	len = s.length;
+	out = new_sequence();
+	for(i = 0; i < len; i = i+1)
+	{
+		c = s[i];
+		root = c[0];
+		out = out + in_major_chord(root, key);
+	}
+	
+	return out;
+}
+
+in_major_chord(root, key)
+{
+	Chord c;
+	if(key.pitch - root.pitch == 0 || 
+		key.pitch - root.pitch == 12 || key.pitch - root.pitch == (0-12) || 
+		key.pitch - root.pitch == 5 || key.pitch - root.pitch == (0-5) || 
+		key.pitch - root.pitch == 7 || key.pitch - root.pitch == (0-7))
+	{
+		c = major(root);
+	}
+	else
+	{
+		c = minor(root);
+	}
+	c = shift(c, (0-12));
+	return c;
+}
+
+shift(c, n)
+{
+	Number i;
+	Number len;
+	len = c.length;
+	for(i = 0; i < len; i=i+1)
+	{
+		c[i] = c[i] .+ n;
+	}
+	return c;
+}
+
+major(root)
+{
+	Chord c;
+	
+	c = new_chord(root);
+	
+	c = c + (root .+ 4);
+	c = c + (root .+ 7);
+	return c;
+}
+
+minor(root)
+{
+	Chord c;
+	
+	c = new_chord(root);
+	
+	c = c + (root .+ 3);
+	c = c + (root .+ 7);
+	return c;
+}
+	
+\end{verbatim}
+\section{tests/test-global.m}
+\begin{verbatim}
+/* Test global
+   Uses global variables to test them 
+   @author Fred
+   */
+
+Note a;
+Sequence b;
+Chord d;
+
+main() {
+  
+  b = new_sequence();
+  a = A3q;
+  a = (a as Chord) + C3q + Eb3q;
+  mod();
+  
+  play(b);
+}
+
+mod()
+{
+   b = b + a + a + a;
+}
+\end{verbatim}
+\section{tests/test-harmonicminor.m}
+\begin{verbatim}
+/* Test harmonicminor
+   Testing harmonic minor scale creation.  Library function 
+   @author Ye
+   */
+
+main() {
+  Note a;
+  Number n;
+  Sequence b;
+  b = harmonicminor(C);
+  
+  play(b);
+
+}
+
+harmonicminor(root)
+{
+	Sequence seq;
+	Number n;
+	seq = new_sequence();
+	seq = seq + root;
+
+	root = root .+ 2;
+	seq = seq + root;
+	
+	root = root .+ 1;
+	seq = seq + root;
+	
+	root = root .+ 2;
+	seq = seq + root;
+	
+	root = root .+ 2;
+	seq = seq + root;
+	
+	root = root .+ 1;
+	seq = seq + root;
+	
+	root = root .+ 3;
+	seq = seq + root;
+	
+	root = root .+ 1;
+	seq = seq + root;
+	
+	return seq;
+}
+\end{verbatim}
+\section{tests/test-inequality.m}
+\begin{verbatim}
+/* Test structural inequality
+   Tests that checking equality of sequences, chords, and notes works.
+   
+   The sequence plays only if all the inequalities work correctly.
+   @author Ye
+   */
+
+main() {
+  Number n1;
+  Number n2;
+  Note a1;
+  Note a2;
+  Note a3;
+  Sequence s1;
+  Sequence s2;
+  Sequence s3;
+  Chord c1;
+  Chord c2;
+  Chord c3;
+  
+  n1 = 4;
+  n2 = 8;
+  
+  /* different duration of the same note, and different notes of the same duration */
+  a1 = C;
+  a1.duration = n1;
+  a2 = C;
+  a2.duration = n2;
+  a3 = D;
+  a3.duration = n2;
+  
+  /* different duration of the same chord, and different chords of the same duration */
+  c1 = new_chord(C, E, G);
+  c1.duration = n1;
+  c2 = new_chord(C, E, G);
+  c2.duration = n2;
+  c3 = new_chord(C, E, A);
+  c3.duration = n2;
+  
+  /* different order of same chords in sequence, different sequences */
+  s1 = new_sequence();
+  s1 = s1 + c1;
+  s1 = s1 + c2;
+  s2 = new_sequence();
+  s2 = s2 + c2;
+  s2 = s2 + c1;
+  s3 = new_sequence();
+  s3 = s3 + c3;
+  s3 = s3 + a1;
+  
+  if(n1 != n2 && a1 != a2 && a2 != a3 && c1 != c2 && c2 != c3 && s1 != s2 && s2 != s3)
+  {
+	play(s1);
+  }
+}
+\end{verbatim}
+\section{tests/test-instrument.m}
+\begin{verbatim}
+/**
+ * Tests setting the instrument used.
+ *
+ * @author Fred
+ */
+
+main() {
+  Note a;
+  Sequence b;
+  Chord c;
+  b = new_sequence();
+  a = A3q;
+  a = (a as Chord) + C3q + Eb3q;
+  b = b + a + a + a;
+  set_instrument("Piano");
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-major.m}
+\begin{verbatim}
+/* Test major
+   Tests creating a major chord from its root.  Library function. 
+   @author Fred
+   */
+
+main(){
+  Sequence s;
+  Chord c;
+  s = new_sequence();
+  
+  c = major(C);
+  s = s + c;
+  set_tempo(30);
+  play(s);
+}
+
+major(root)
+{
+	Chord c;
+	
+	c = new_chord(root);
+	
+	c = c + (root .+ 4);
+	c = c + (root .+ 7);
+	return c;
+}
+\end{verbatim}
+\section{tests/test-majorscale.m}
+\begin{verbatim}
+/* Test majorscale
+   Testing major scale creation.  Library function 
+   @author Ye
+   */
+
+main() {
+  Note a;
+  Number n;
+  Sequence b;
+  b = majorscale(C);
+  
+  play(b);
+
+}
+
+majorscale(root)
+{
+	Sequence seq;
+	Number n;
+	seq = new_sequence();
+	seq = seq + root;
+
+	for(n = 1; n < 3; n=n+1)
+	{
+		root = root .+ 2;
+		seq = seq + root;
+	}
+	
+	root = root .+ 1;
+	seq = seq + root;
+	
+	for(n = 1; n < 4; n=n+1)
+	{
+		root = root .+ 2;
+		seq = seq + root;
+	}
+	
+	root = root .+ 1;
+	seq = seq + root;
+	
+	return seq;
+}
+\end{verbatim}
+\section{tests/test-melodicminor.m}
+\begin{verbatim}
+/* Test harmonicminor
+   Testing melodic minor scale creation.  Library function 
+   @author Ye
+   */
+
+main() {
+  Note a;
+  Number n;
+  Sequence b;
+  b = melodicminor(C);
+  
+  play(b);
+
+}
+
+melodicminor(root)
+{
+	Sequence seq;
+	Number n;
+	seq = new_sequence();
+	seq = seq + root;
+
+	root = root .+ 2;
+	seq = seq + root;
+	
+	root = root .+ 1;
+	seq = seq + root;
+	
+	root = root .+ 2;
+	seq = seq + root;
+	
+	root = root .+ 2;
+	seq = seq + root;
+	
+	root = root .+ 2;
+	seq = seq + root;
+	
+	root = root .+ 2;
+	seq = seq + root;
+	
+	root = root .+ 1;
+	seq = seq + root;
+	
+	return seq;
+}
+\end{verbatim}
+\section{tests/test-melody.m}
+\begin{verbatim}
+/* Test creating a melody
+   Tests by creating a simple melody 
+   @author Fred
+   */
+
+main() {
+  Note e;
+  Note d;
+  Note c;
+  Note fc;
+  Note fd;
+  Sequence b;
+  
+  e = E4q;
+  d = D4q;
+  c = C4q;
+  fc = C4s;
+  fd = D4s;
+  
+  
+  b = new_sequence();
+  b = b + e + d + c + e + d + c;
+  b = b + fc + fc + fc + fc;
+  b = b + fd + fd + fd + fd;
+  b = b + e + d + c;
+  
+  play(b);
+
+}
+\end{verbatim}
+\section{tests/test-minor.m}
+\begin{verbatim}
+/* Test minor
+   Tests creating a minor chord from its root.  Library function. 
+   @author Fred
+   */
+
+main(){
+  Sequence s;
+  Chord c;
+  s = new_sequence();
+  
+  c = minor(C);
+  s = s + c;
+  set_tempo(30);
+  play(s);
+}
+
+minor(root)
+{
+	Chord c;
+	
+	c = new_chord(root);
+	
+	c = c + (root .+ 3);
+	c = c + (root .+ 7);
+	return c;
+}
+\end{verbatim}
+\section{tests/test-multiply.m}
+\begin{verbatim}
+/**
+   Test multiply
+   Tests multiplying 
+   @author Ye
+   */
+
+main() {
+  Note a;
+  Sequence b;
+  Number n;
+  
+  b = new_sequence();
+  
+  a = A4s;
+  b = b + a;
+  
+  for (n = 1; n < 5; n = n + 1) {
+  		a.duration = a.duration * 2;
+  		b = b + a;
+  }
+
+  play(b);
+}\end{verbatim}
+\section{tests/test-naturalminorscale.m}
+\begin{verbatim}
+/* Test naturalminorscale.m
+   Testing natural minor scale creation.  Library function 
+   @author Ye
+   */
+
+main() {
+  Note a;
+  Number n;
+  Sequence b;
+  b = naturalminorscale(C);
+  
+  play(b);
+
+}
+
+naturalminorscale(root) {
+	Sequence seq;
+	Number n;
+	seq = new_sequence();
+	
+	/* natural minor starts on the 6th note of the major scale in the octave below */
+	root = root .+ (0 - 3);
+	seq = seq + root;
+
+	root = root .+ 2;
+	seq = seq + root;
+		
+	root = root .+ 1;
+	seq = seq + root;
+	
+	for(n = 1; n < 3; n=n+1)
+	{
+		root = root .+ 2;
+		seq = seq + root;
+	}
+	
+	root = root .+ 1;
+	seq = seq + root;
+	
+	for(n = 1; n < 3; n=n+1)
+	{
+		root = root .+ 2;
+		seq = seq + root;
+	}
+
+	
+	return seq;
+}
+\end{verbatim}
+\section{tests/test-note.m}
+\begin{verbatim}
+/** Test note literal
+  * 
+  * Construct a note literal and play it
+  *
+  * @author Ben
+  */
+
+main() {
+  Note a;
+  Sequence b;
+  a = A3q;
+  b = new_sequence() + a;
+  play(b);
+}
+
+Note myA() {
+  return Ab7;
+}
+\end{verbatim}
+\section{tests/test-numerical-equality.m}
+\begin{verbatim}
+/* Test numerical equality
+   Tests that checking equality of numbers works 
+   @author Fred
+   */
+
+main() {
+  Note a;
+  Number n;
+  Sequence b;
+  b = new_sequence();
+  a = A3q;
+  a = (a as Chord) + C3q + Eb3q;
+  b = b + a + a + a;
+  n = 4;
+  
+  if(n == 4)
+  {
+	play(b);
+  }
+  else
+  {
+    b = b + A3q;
+	play(b);
+  }
+}
+\end{verbatim}
+\section{tests/test-play-chord.m}
+\begin{verbatim}
+/* Test play chord
+   Tests playing a single chord 
+   @author Fred */
+
+main() {
+  Chord c;
+  Sequence s;
+  s = new_sequence();
+  c = new_chord(C, E, G);
+  s = s + c;
+  play(s);
+}
+\end{verbatim}
+\section{tests/test-play-note.m}
+\begin{verbatim}
+/* Test play note
+   Tests playing a single note 
+   @author Fred
+   */
+
+main() {
+  Note a;
+  Sequence s;
+  s = new_sequence();
+  a = A3q;
+  s = s + a;
+  play(s);
+}
+\end{verbatim}
+\section{tests/test-rand.m}
+\begin{verbatim}
+/**
+ * Test the random function. This test has to fail to be valid.
+ * @author Ben
+ */
+
+main() {
+  Note a; 
+  Sequence b;
+  Number i;
+  Number r;
+  b = new_sequence();
+  a = As;
+  for (i = 0 ; i < 20 ; i = i + 1) {
+    r = rand(15);
+    b = b + (a .+ r + r);
+  }
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-recursion.m}
+\begin{verbatim}
+/** Test recursion
+  *
+  * This test shows the power of recursion in MIDILC.
+  *
+  * Sequences are created using the get_new_seq method, which calls itself
+  * recursively to create ever more elaborate musical pieces.
+  *
+  * @author Akiva
+  */
+main(){
+    Number i;
+    Sequence seq;
+    i = 5;
+    seq = get_new_seq(i, new_sequence());
+    play(seq);
+}
+
+Sequence get_new_seq(Number i, Sequence seq){
+    seq = seq + (G.+(mult(i,5))) + seq + (C.+(mult(i,5))) + seq + (E.+(mult(i,5)));
+
+    if(i == 0){
+        return seq;
+    }
+    i = i-1;
+    
+    return get_new_seq(i, seq);
+}
+
+mult(original, times){
+    return do_mult(original, times-1, original);
+}
+
+do_mult(original, times, toreturn){
+    if(times <= 0){
+        return toreturn;
+    }
+    return do_mult(original, times-1, toreturn+original);
+}
+\end{verbatim}
+\section{tests/test-sequence.m}
+\begin{verbatim}
+/**
+ * Test sequences
+ * @author Fred
+ */
+
+main() {
+  Note a;
+  Sequence b;
+  Sequence seq;
+  Note root;
+  
+  Chord chor;
+  Chord chor2;
+  Chord chor3;
+  b = new_sequence();
+  seq = new_sequence();
+  root = C4q;
+  chor = (root as Chord) + E4q + G4q;
+  b = b + chor;
+  root = F4q;
+  chor2 = (root as Chord) + A5q + C5q;
+  root = G4q;
+  chor3 = (root as Chord) + B5q + D5q;
+  seq = seq + chor2 + chor3;
+  seq = b + seq;
+  play(seq);
+}
+\end{verbatim}
+\section{tests/test-shift.m}
+\begin{verbatim}
+/* Test selection
+   Tests selection by shifting notes' pitch 
+   @author Fred 
+   */
+
+main(){
+  Note a;
+  Chord c;
+  Chord d;
+  Sequence s;
+  Number i;
+  s = new_sequence();
+  
+  c = new_chord(C,E,G);
+  s = s + shift(c, 0) + shift(c, 4) + shift(c, 0) + shift(c, 7);
+  set_tempo(30);
+  play(s);
+}
+
+shift(c, n)
+{
+	Number i;
+	Number len;
+	len = c.length;
+	for(i = 0; i < len; i=i+1)
+	{
+		c[i] = c[i] .+ n;
+	}
+	return c;
+}
+\end{verbatim}
+\section{tests/test-stairway.m}
+\begin{verbatim}
+main(){
+  set_instrument("Voice Oohs");
+  set_tempo(80);
+  play(stairway1() + stairway2() + stairway1() + stairway3());
+}
+
+stairway1(){
+  Sequence s;
+  s = new_sequence();
+  s = s + new_chord(C5e, A3e) + C4e + E4e + A4e;
+  s = s + new_chord(B4e, G#e) + E4e + C4e + B4e;
+  s = s + new_chord(C5e, Ge) + E4e + C4e + C5e;
+  s = s + new_chord(F#4e, F#3e) + D4e + A3e + F#4e;
+  s = s + new_chord(E4e, F3e) + C4e + A3e + C4q;
+  s = s + E4e + C4e + A3e;
+  s = s + new_chord(A2e, D3e, G3e, B3e) + new_chord(A2e, E3e, A3e, C4e) + new_chord(A2q, E3e, A3e, C4e);
+  return s;
+}
+
+stairway2(){
+  Sequence f;
+  f = new_sequence() + Re + A2e + F3e + E3e;
+  return f;
+}
+
+stairway3(){
+  Sequence f;
+  f = new_sequence() + Rq + A2e + B2e;
+  return f;
+}
+\end{verbatim}
+\section{tests/test-sub.m}
+\begin{verbatim}
+/* Test subtraction
+   Tests subtracting a duration from a note 
+   @author Fred
+   */
+
+main() {
+  Note a;
+  Sequence b;
+  Chord c;
+  b = new_sequence();
+  a = A3q;
+  a.duration = a.duration - 1;
+  c = new_chord(a);
+  b = b + c;
+  b = b + b;
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-subscript.m}
+\begin{verbatim}
+/** Tests subscripting.
+  *
+  * @author Ben
+  */
+
+main() {
+  Note a;
+  Sequence b;
+  Chord c;
+  Chord temp;
+  Number s;
+  a = A5w;
+  b = new_sequence();
+  a = (a as Chord) + C5 + Eb5;
+  c = a;
+  c[1] = A6;
+  c[2] = A4;
+  b = b + a;
+  b = b + c;
+  b = b + c;
+  /* set the start time of a to the start time of the 3rd note */
+  temp = b[2];
+  s = temp.start;
+  a.start = s;
+  b[2] = a;
+  play(b);
+}
+\end{verbatim}
+\section{tests/test-tempo.m}
+\begin{verbatim}
+/**
+ * Tests setting the tempo
+ * @author Fred
+ */
+
+main() {
+  Note a;
+  Sequence b;
+  Chord c;
+  b = new_sequence();
+  a = A3q;
+  a = (a as Chord) + C3q + Eb3q;
+  b = b + a + a + a;
+  set_tempo(40);
+  play(b);
+}
+\end{verbatim}
 \end{document}
