@@ -670,7 +670,7 @@ A general style guide was used by the team during development.
 \end{tabular}
 \section{Roles and Responsibilities}
 \subsection{Akiva Bamberger}
-Designed initial structure of typing system and operators. Wrote parts of proposal on LRM. After working on the initial scanner and AST (of a statically typed prototype), worked to build the modules for the dynamically typed language Ben developed while working on executer and compiler. Worked on modules included printing sequences to the correct CSV output, constructing new chord objects, adding break and continue, and allowing users to treat the language as statically typed. Improved the bytecode, improved the implementation of some operators, and wrote many tests, working with Fred and Ye. Edited the final report.
+Designed initial structure of typing system and operators. Wrote parts of proposal and LRM. After working on the initial scanner and AST (of a statically typed prototype), worked to build the modules for the dynamically typed language Ben developed while working on executer and compiler. Worked on modules included printing sequences to the correct CSV output, constructing new chord objects, adding break and continue, and allowing users to treat the language as statically typed. Improved the bytecode, improved the implementation of some operators, and wrote many tests, working with Fred and Ye. Edited and wrote many parts of the final report.
 
 \subsection{Ben Mann}
 Worked with Fred to set up project milestones and start writing the final report.  Wrote proposal and sections 5 and 6 of the LRM.  Starting with MICROC, implemented the major features of the language, including the dynamic typing system, most of the operators; in other words, the necessary parts of the toplevel, scanner, AST, parser, compiler, and executor.  Designed and implemented the bytecode representation.  Wrote the first tests in the language for the basic features and wrote the first script to turn a file from MIDILC code into a .wav file that could be listened to for accuracy.  After the language compiled, distributed tasks to other team members and taught them how the type system and other details were implemented.
@@ -2679,7 +2679,176 @@ public class CSV2MIDI{
 }
 
 \end{verbatim}
+\section{components/InstrumentCheck.java}
+\begin{verbatim}
+/**
+ * InstrumentCheck.java
+ * 
+ * @author: Fredric
+ * Uses a file listing all usable instruments to check an instrument is valid
+ */
+import java.io.BufferedReader;
+import java.io.FileReader;
 
+public class InstrumentCheck {
+	public static int checkInstrument(String filename, String instrumentName, int min, int max)
+	{
+		try
+		{
+			BufferedReader br = new BufferedReader(new FileReader(filename));
+			String input;
+			String[] instruments = new String[(max - min) + 1];
+			while((input = br.readLine()) != null)
+			{
+				// separate the instrument number and name
+				int divider = input.indexOf(",");
+				int instrumentcount = Integer.parseInt(input.substring(0, divider).trim());
+				instruments[instrumentcount] = input.substring(divider + 1).trim();
+				
+				if(instruments[instrumentcount].compareToIgnoreCase(instrumentName) == 0)
+					return instrumentcount;
+			}
+		}
+		catch(Exception e)
+		{
+			;
+		}
+		return -1;
+	}
+
+}
+\end{verbatim}
+\section{sorted\_instruments.csv}
+\begin{verbatim}
+0,Piano
+1,Bright Piano
+2,Electric Grand
+3,Honky Tonk Piano
+4,Electric Piano 1
+5,Electric Piano 2
+6,Harpsichord
+7,Clavinet
+8,Celesta
+9,Glockenspiel
+10,Music Box
+11,Vibraphone
+12,Marimba
+13,Xylophone
+14,Tubular Bell
+15,Dulcimer
+16,Hammond Organ
+17,Perc Organ
+18,Rock Organ
+19,Church Organ
+20,Reed Organ
+21,Accordion
+22,Harmonica
+23,Tango Accordion
+24,Nylon Str Guitar
+25,Steel String Guitar
+26,Jazz Electric Gtr
+27,Clean Guitar
+28,Muted Guitar
+29,Overdrive Guitar
+30,Distortion Guitar
+31,Guitar Harmonics
+32,Acoustic Bass
+33,Fingered Bass
+34,Picked Bass
+35,Fretless Bass
+36,Slap Bass 1
+37,Slap Bass 2
+38,Syn Bass 1
+39,Syn Bass 2
+40,Violin
+41,Viola
+42,Cello
+43,Contrabass
+44,Tremolo Strings
+45,Pizzicato Strings
+46,Orchestral Harp
+47,Timpani
+48,Ensemble Strings
+49,Slow Strings
+50,Synth Strings 1
+51,Synth Strings 2
+52,Choir Aahs
+53,Voice Oohs
+54,Syn Choir
+55,Orchestra Hit
+56,Trumpet
+57,Trombone
+58,Tuba
+59,Muted Trumpet
+60,French Horn
+61,Brass Ensemble
+62,Syn Brass 1
+63,Syn Brass 2
+64,Soprano Sax
+65,Alto Sax
+66,Tenor Sax
+67,Baritone Sax
+68,Oboe
+69,English Horn
+70,Bassoon
+71,Clarinet
+72,Piccolo
+73,Flute
+74,Recorder
+75,Pan Flute
+76,Bottle Blow
+77,Shakuhachi
+78,Whistle
+79,Ocarina
+80,Syn Square Wave
+81,Syn Saw Wave
+82,Syn Calliope
+83,Syn Chiff
+84,Syn Charang
+85,Syn Voice
+86,Syn Fifths Saw
+87,Syn Brass and Lead
+88,Fantasia
+89,Warm Pad
+90,Polysynth
+91,Space Vox
+92,Bowed Glass
+93,Metal Pad
+94,Halo Pad
+95,Sweep Pad
+96,Ice Rain
+97,Soundtrack
+98,Crystal
+99,Atmosphere
+100,Brightness
+101,Goblins
+102,Echo Drops
+103,Sci Fi
+104,Sitar
+105,Banjo
+106,Shamisen
+107,Koto
+108,Kalimba
+109,Bag Pipe
+110,Fiddle
+111,Shanai
+112,Tinkle Bell
+113,Agogo
+114,Steel Drums
+115,Woodblock
+116,Taiko Drum
+117,Melodic Tom
+118,Syn Drum
+119,Reverse Cymbal
+120,Guitar Fret Noise
+121,Breath Noise
+122,Seashore
+123,Bird
+124,Telephone
+125,Helicopter
+126,Applause
+127,Gunshot
+\end{verbatim}
 \section{tests/pi-symphony.m}
 \begin{verbatim}
 /** author @Akiva */
