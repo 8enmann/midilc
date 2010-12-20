@@ -10,13 +10,11 @@
 \newpage
 \tableofcontents
 \newpage
-%commit
 \chapter{Introduction}
 The language, hereafter referred to as MIDILC (pronounced MIDDLE C, standing for MIDI
 Language Compiler), allows programmers to compose music. It compiles into MIDI format and
 has syntax that is similar to Java, changing the basic primitives and the meaning of various
 operators (Fig \ref{fig:types_in_midilc}).
-% TODO the figure says nothing about operators...
 \begin{figure}
 \center
 \begin{tabular}{|p{.2\textwidth}|p{.5\textwidth}|}
@@ -25,12 +23,14 @@ operators (Fig \ref{fig:types_in_midilc}).
 \verb|Note| & a musical note with pitch and duration \\ \hline
 \verb|Chord| & stores notes with equal durations and start times, represented by an integer list \\ \hline
 \verb|Sequence| & a sequence of notes and chords, represented by a list of integer lists \\ \hline
+\verb|+, -| & increase or decrease duration of notes; append to chords or sequences \\ \hline
+\verb|.+, .-| & increase or decrease pitch of notes \\ \hline
 \end{tabular}
-\caption{Types in the MIDILC language. }
+\caption{Types and selected operators in the MIDILC language. }
 \label{fig:types_in_midilc}
 \end{figure}
 
-The langauge is dynamically typed, but introduces preset types for the programmer most comfortable with the syntax of C or Java. Types must be used upon variable declaration, but are left optional for function declarations and arguments. Each type can be safely cast up in the following order: \verb|Number| $\rightarrow$ \verb|Note| $\rightarrow$ \verb|Chord| $\rightarrow$ \verb|Sequence|. The standard library, written in the language itself, supports major and minor chords, arpeggios, repetition, and other such basic and often used concepts. Note durations are specified in terms of whole notes (w), halves (h), quarters (q), eigths (e), and sixteenths (s). Sequences can either be appended to, which advances the ``current time'' by however long the appended sequence is, or else something can be inserted into a sequence at a given offset using subscripting. Functions are specified in the same way as in C.
+The langauge is dynamically typed. Types must be used upon variable declaration, but are left optional for function declarations and arguments. Each type can be safely cast up in the following order: \verb|Number| $\rightarrow$ \verb|Note| $\rightarrow$ \verb|Chord| $\rightarrow$ \verb|Sequence|. The standard library, written in the language itself, supports major and minor chords, arpeggios, repetition, and other such basic and often used concepts. Note durations are specified in terms of whole notes (w), halves (h), quarters (q), eigths (e), and sixteenths (s). Sequences can either be appended to, which advances the ``current time'' by however long the appended sequence is, or else something can be inserted into a sequence at a given offset using subscripting. Functions are specified in the same way as in C.
 
 Sequences and Chords can be output to the intermediate representation (IR) of CSV format using the play() function. In order to actually write the MIDI files, the CSV is fed to a Java program that interprets the CSV using the javax.sound.MIDI package.
 
@@ -51,292 +51,139 @@ main() {
 
 MIDILC’s basic types are Number, Note, Chord, and Sequence, the last three of which can be written into .midi files and played. All variables must be declared, one at a time, before they are called.
 
-% TODO this is wrong
+Numbers, the most basic type in MIDILC, supports integer values from $-2^{31}$ to $2^{31}-1$ MIDI instruments and notes.
 
-\noindent Numbers, the most basic type in MIDILC, supports integer values from 0 to 127. These numbers correspond to the 128 MIDI instruments and notes.
+\begin{verbatim}
+Number num; /*declares the variable num */
+num = 4; /* sets num to 4 */
+num = num + 1; /* increment num by 1, 
+                  so that it is now the value 5 */
 
-\vspace{5 mm}
+/** The following snippet will provide a Note, the simplest 
+of the playable musical types. */
 
-\verb|Number num;| /*declares the variable num */
+Note n; /* declares the variable n*/
 
-\verb|num = 4;| /* sets num to 4 */
+n = A; /* sets n to the note A, which by default is in 
+          the 3rd octave and a quarter note */
 
-\verb|num = num + 1;| /* increment num by 1, so that it is now the value 5 */
+/** Notes can also be initiated with more options:*/
+n = A4w; /* sets n to the note A, in the 4th octave, as a whole note */
+n = A4w + 4; /* sets n to A in the 4th octave as a whole note, 
+                adds 4 beats (a quarter note’s worth) to its duration */
+n = A4w .+ 4; /* sets n to A in the 4th octave as a whole note, then 
+                 increase its pitch by 4 half steps (to C sharp) */
+\end{verbatim}
 
-\vspace{5 mm}
+The next type, \verb|Chord|, can be constructed from scratch, or based on notes that already exist. Unlike Note, Chord objects must be initiated with the \verb|new_chord()| function. Notice that since the \verb|+=| operator is not supported, adding to a \verb|Chord| requires one to set the Chord to itself plus the added object.
 
-\noindent The following snippet will provide you with a Note, the simplest of the playable musical types.
+\begin{verbatim}
+Chord a;
+Chord b;
+Chord c;
+Chord d;
 
-\vspace{5 mm}
+a = new_chord(); /* initializes a Chord object that plays nothing */
+b = new_chord(C, E, G); /* initializes b to be a C major chord in the 
+                           (default) 3rd octave with (default) duration 
+                            of a quarter note*/
+c = new_chord(n); /* initializes c to be a chord containing Note n */
+a = a + n; /* adds the note n to a, which previously contained nothing playable */
+\end{verbatim}
 
-\verb|Note n;| /* declares the variable n*/
+Sequence objects can be thought of as a collection of Note, Chord, and other Sequence objects. Construction of new Sequence objects is similar to that of new Chord objects. Both Note and Chord objects can be added to a Sequence object, in any permutation.
+\begin{verbatim}
+Sequence s1; /* declares s1 */
+Sequence s2; /* declares s2 */
 
-\verb|n = A;| /* sets n to the note A, which by default is in 
+s1 = new_sequence();  /* initializes s1; empty sequence */
+s2 = new_sequence(); /* initializes s2; empty sequence */
+s1 = s1 + C4e; /* adds a note to s1 (4th octave C, eighth note duration) */
+s1 = s1 + R; /* adds a rest to s1 */
+s2 = s2 + a; /* adds Chord object a to s2 */
 
-\indent \indent \indent the 3rd octave and a quarter note */
+s2 = s2 + b; /* adds Chord object b to s2 */
+\end{verbatim}
 
-\vspace{5 mm}
+Finally, to print Sequence objects to .midi, the \verb|play()|function is invoked. \verb|play()| takes as an argument a \verb|Sequence|. Multiple calls of \verb|play()| in the same file will result in many Sequences played at once.
 
-\noindent Notes can also be initiated with more options:
-
-\vspace{5 mm}
-
-\verb|n = A4w;| /* sets n to the note A, in the 4th octave, as a whole note */
-
-\verb|n = A4w + 4;| /* sets n to A in the 4th octave as a whole note, 
-
-\indent \indent \indent and add 4 beats (a quarter note’s worth) to its duration */
-
-\verb|n = A4w .+ 4;| /* sets n to A in the 4th octave as a whole note, then 
-
-\indent \indent \indent increase its pitch by 4 half steps (to C sharp) */
-
-\vspace{5 mm}
-
-\noindent The next type, \verb|Chord|, can be constructed from scratch, or based on notes that already exist. Unlike Note, Chord objects must be initiated with the \verb|new_chord()| function. Notice that since the \verb|+=| operator is not supported, adding to a \verb|Chord| requires one to set the Chord to itself plus the added object.
-
-\vspace{5 mm}
-
-\verb|Chord a;|
-
-\verb|Chord b;|
-
-\verb|Chord c;|
-
-\verb|Chord d;|
-
-\verb|a = new_chord();| /* initializes a Chord object that plays nothing */
-
-\verb|b = new_chord(C, E, G);| /* initializes b to be a C major chord in the 
-
-\indent \indent \indent (default) 3rd octave with (default) duration of a quarter note*/
-
-\verb|c = new_chord(n);| /* initializes c to be a chord containing Note n */
-
-\verb|a = a + n;| /* adds the note n to a, which previously contained nothing playable */
-
-\vspace{5 mm}
-
-\noindent Sequence objects can be thought of as a collection of Note, Chord, and other Sequence objects. Construction of new Sequence objects is similar to that of new Chord objects. Both Note and Chord objects can be added to a Sequence object, in any permutation.
-
-\vspace{5 mm}
-
-\verb|Sequence s1;| /* declares s1 */
-
-\verb|Sequence s2;| /* declares s2 */
-
-\verb|s1 = new_sequence();|  /* initializes s1; empty sequence */
-
-\verb|s2 = new_sequence();|  /* initializes s2; empty sequence */
-
-\verb|s1 = s1 + C4e;| /* adds a note to s1 (4th octave C, eighth note duration) */
-
-\verb|s1 = s1 + R;| /* adds a rest to s1 */
-
-\verb|s2 = s2 + a;| /* adds Chord object a to s2 */
-
-\verb|s2 = s2 + b;| /* adds Chord object b to s2 */
-
-\vspace{5 mm}
-
-\noindent Finally, to print Sequence objects to .midi, the \verb|play()|function is invoked. \verb|play()| takes as an argument a \verb|Sequence| to be written out, and each time \verb|play()| is called, a new track is created. Thus, multiple calls of \verb|play()| in the same file will result in a multi-track .midi being created.
-
-\vspace{5 mm}
-
-\verb|play(s1);| /* prints s1 out as a track */
-
-\verb|play(s2);| /* prints s2 out as a second track */
-
-\vspace{5 mm}
-
-\noindent MIDILC does not give the user the responsibility of memory management. Therefore, to complete a basic program using the code snippets above, simply close the \verb|main()| function with the corresponding bracket.
+\begin{verbatim}
+play(s1); /* prints s1 out*/
+play(s2); /* prints s2 out*/
+\end{verbatim}
 
 To compile the program that you have just written, type the following into the command line:
 
-\vspace{5 mm}
+\begin{verbatim}
+./midilcc sample_program.m [sample_program_output]
+\end{verbatim}
 
-\verb|./midilcc sample_program.m [sample_program_output]|
+The last parameter is optional; if not given, a default name consisting of the name of the .m file with a .csv extenion will be given to the output CSV file. The compiler will print out any errors that may have occurred, and if the compilation was successful, a .csv file and a .midi file will be created in the same directory as the .m file. Simply open the .midi file with any media player to play it.
 
-\vspace{5 mm}
-
-\noindent The last parameter is optional; if not given, a default name consisting of the name of the .m file with a .csv extenion will be given to the output CSV file. The compiler will print out any errors that may have occurred, and if the compilation was successful, a .csv file and a .midi file will be created in the same directory as the .m file. Simply open the .midi file with any media player to play it.
 \section{Twinkle Twinkle Little Star}
 
-\indent The following tutorial will guide you through a simple program written in MIDILC, which produces a .midi file of the familiar tune “Twinkle Twinkle Little Star”. The full code can be found in the appendix.
+The following tutorial will guide you through a simple program written in MIDILC, which produces a .midi file of the familiar tune “Twinkle Twinkle Little Star”. The full code can be found in the appendix.
 	
 The source files of MIDILC are saved as .m text files. First, create a .m file; call it twinkle.m. We 
 will have one function, namely the \verb|main()| function, for all the code in this program. We declare the 
 \verb|main()| function, and declare all the variables used, one per line:	
 
-\vspace{5 mm}
+\begin{verbatim}
+/* twinkle twinkle little star*/
 
-	/* twinkle twinkle little star*/
+/** Function declaration for main(), necessary for
+    each MIDILC file */
+Void main(){
+  /** Declare variables */
+  Chord ch1;
+  Chord ch2;
+  Chord ch3;
+  Sequence s;
+  Number i;
+  Number r1;
+  Number r2;
+  
+  /** Initialize chords */
+  ch1 = new_chord(C,E,G);
+  ch2 = new_chord(C,F,A);
+  ch3 = new_chord(G3s,B3s,D4s,F4s);
+  
+  /** Initialize sequence */
+  s = new_sequence();
+ 
+  /** Build sequence up */
+  s = s + C + C;
+  s = s + ch1 + ch1 + ch2 + ch2 + ch1;
+  
+  s = s + arpeggiate(ch3) + F + F;
+  
+  s = s + E + E + D + D + C;
+  
+  set_tempo(125);
+  
+  play(s);
+}
 
-\verb|main() {|
+/** Function declaration for arpeggiate */
+Sequence arpeggiate(Chord chord)
+{
+    /* declare variables */
+    Number chord_length;
+    Number i;
+    Sequence s;
 
-		/* declare all the variables: Notes c through a, Sequences
-		first part and overall, and Number n */
+    /* build sequence */
+    s = new_sequence();
+    chord_length = chord.length;
+    for(i = 0; i < chord_length; i=i+1)
+    {
+        s = s + chord[i];
+    }
+    return s;
+}
+\end{verbatim}
 
-\verb|Note c;|
-
-\verb|Note d;|
-
-\verb|Note e;|
-
-\verb|Note f;|
-
-\verb|Note g;|
-
-\verb|Note a;|
-
-\verb|Sequence firstpart;|
-
-\verb|Sequence overall;|
-
-\verb|Number n;|
-
-\vspace{5 mm}
-
-\noindent The next step is to initialize all the variables. We will start with the \verb|Note| objects.
-
-\vspace{5 mm}
-
-/* set each of the notes to a quarter note in the 4th octave, note name as 
-indicated by the capital letters */
-
-	\verb|c = C4q;| /* note C, in the 4th octave, quarter-note duration */
-	
-	\verb|d = D4q;|
-	
-	\verb|e = E4q;|
-	
-	\verb|f = F4q;|
-	
-	\verb|g = G4q;|
-	
-	\verb|a = A4q;|
-
-\vspace{5 mm}
-
-\noindent Next, we initialize the \verb|Sequence| objects. Notice that unlike \verb|Note|, we must call on the new_sequence() function.
-
-\vspace{5 mm}
-
-	/* initialize sequences */
-	
-	\verb|firstpart = new_sequence();|
-	
-	\verb|overall = new_sequence();|
-
-\vspace{5 mm}
-
-\noindent Now, we are ready to add notes to the \verb|Sequence| objects. Let’s start with 
-firstpart, which we will use to store the first two stanzas of the song.
-
-\vspace{5 mm}
-
-	/* add the first two stanzas of the song to 
-	
-	the \verb|Sequence| firstpart */
-	
-	\verb|firstpart = firstpart + c;|
-	
-	\verb|firstpart = firstpart + c;|
-	
-	\verb|firstpart = firstpart + g;|
-	
-	\verb|firstpart = firstpart + g;|
-	
-	\verb|firstpart = firstpart + a;|
-	
-	\verb|firstpart = firstpart + a;|
-	
-	/* make the last note's duration two quarter notes long 
-	
-	(4 beats longer, 16th note per beat) */
-	
-	\verb|firstpart = firstpart + (g + 4);|
-	
-	\vspace{3 mm}
-		
-	\verb|firstpart = firstpart + f;|
-	
-	\verb|firstpart = firstpart + f;|
-	
-	\verb|firstpart = firstpart + e;|
-	
-	\verb|firstpart = firstpart + e;|
-	
-	\verb|firstpart = firstpart + d;|
-	
-	\verb|firstpart = firstpart + d;|
-	
-	\verb|firstpart = firstpart + (c + 4);|
-	
-\vspace{5 mm}
-
-\noindent Next, we will start building the main sequence (overall), using a loop 
-for the middle two identical stanzas of the song.
-
-\vspace{5 mm}
-
-	/* add the first part to the overall \verb|Sequence| */
-	
-	\verb|overall = overall + firstpart;|
-	
-	\vspace{3 mm}
-	
-	/* add the middle section of the song to overall twice, 
-by using a for-loop */
-
-	
-	\verb|for (n = 0; n < 2; n = n+1) {|
-	
-		\indent \verb|overall = overall + g;|
-	
-		\indent \verb|overall = overall + g;|
-	
-		\indent \verb|overall = overall + f;|
-	
-		\indent \verb|overall = overall + f;|
-	
-		\indent \verb|overall = overall + e;|
-	
-		\indent \verb|overall = overall + e;|
-	
-		\indent \verb|overall = overall + (d + 4);|
-	
-	\verb|}
-	
-	\vspace{3 mm}
-	
-	/* add firstpart to overall again, since they repeat*/
-	
-	\verb|overall = overall + firstpart;|
-	
-\vspace{5 mm}
-
-\noindent We are almost ready to write the program out to a .csv file. Let us 
-lower the tempo of the song from the default 120 beats per minute (bpm) 
-to 90, then call on the play() function to create the CSV file.
-
-\vspace{5 mm}
-
-	/* set tempo from default 120 to 90, since it is a slow song */
-	
-	\verb|set_tempo(90);|
-	
-	/* call on play() to create the csv file */
-	
-	\verb|play(overall);|
-	
-\verb|}|
-
-\vspace{5 mm}
-
-\noindent Congratulations, you have just written your first MIDILC program! 
-To compile the program, invoke the MIDILC compiler (midilcc), as 
-described in the previous section.
+Congratulations, you have just written your first MIDILC program! To compile the program, invoke the MIDILC compiler (midilcc), as  described in the previous section.
 
 \chapter{Language Reference Manual}
 
@@ -431,6 +278,8 @@ Due to the nature of the primitive types, very few conversions are supported in 
 
 In MIDILC, expressions include one or more operators and a number of operands that follow certain associativity rules. Operators may change the value of an operand or leave it alone. 
 
+Expressions (Fig 3.2) can be used for assignment or other operations. Associativity of these assignments can be overrridden by parentheses (Fig 3.3). Associativity of operators followed the table shown in figure \ref{fig:order_of_operations}.
+
 \begin{figure}
 \center
 \begin{tabular}{|c|c|}
@@ -441,9 +290,6 @@ $operation\mbox{-}expression$   & \verb|Ab7 .+ 4| \\ \hline
 \label{fig:expressions}
 \caption{Examples of expressions}
 \end{figure}
-
-Expressions (Fig \ref{fig:expressions}) can be used for assignment or other operations. Associativity of these assignments can be overrridden by parentheses (Fig \ref{fig:associativity}). Associativity of operators followed the table shown in figure \ref{fig:order_of_operations}.
-
 \begin{figure}
 \center
 \begin{tabular}{|p{.25\textwidth}|c|p{.25\textwidth}|}
@@ -479,14 +325,13 @@ Identifiers, constants, parenthesized expression & Primary expression & Primary	
 \label{fig:order_of_operations}
 \caption{Order of operations for built in operators}
 \end{figure}
-
 \subsection{Primary Expressions}
 \subsubsection{Identifiers}
 An lvalue or function designator (discussed in Built-In Functions).
 \subsubsection{Constants}
 An object of constant value (discussed in Built-In Functions).
 \subsubsection{Parenthesized Expressions}
-Parenthesized expressions allow a user to change the order of operations. They are executed before the operations and can be used as part of a larger expression (Fig \ref{fig:associativity}).
+Parenthesized expressions allow a user to change the order of operations. They are executed before the operations and can be used as part of a larger expression (Fig 3.3).
 \subsection{Postfix}
 Postfix calls are made as follows:
 
@@ -537,11 +382,27 @@ Casting allows a user to explicitly change the Type of an object, according to t
 This would allow us to use the + operator of Sequences instead of the + operator of Notes.
 \subsection{Binary Operations}
 
-
-%TODO work on this section (mult/divide, dotadd/dotminus, add/subtract)
 \subsubsection{Mult/Divide}
+Used to multiply or divide two \verb|Number| objects.
+
+Syntax is as follows:\\
+
+\begin{tabular}{l l}
+$mult\mbox{-}divide\mbox{-}expression$ & $\rightarrow argument\mbox{-}expression$ \\
+& $\rightarrow mult\mbox{-}divide\mbox{-}expression * argument\mbox{-}expression$\\
+& $\rightarrow mult\mbox{-}divide\mbox{-}expression / argument\mbox{-}expression$
+\end{tabular}
 
 \subsubsection{DotAdd/DotMinus}
+Used to increment or decrease the pitch of a \verb|Note| object.
+
+Syntax is as follows:\\
+
+\begin{tabular}{l l}
+$dot\mbox{-}plus\mbox{-}minus\mbox{-}expression$ & $\rightarrow argument\mbox{-}expression$ \\
+& $\rightarrow add\mbox{-}expression .+ argument\mbox{-}expression$\\
+& $\rightarrow add\mbox{-}expression .- argument\mbox{-}expression$
+\end{tabular}
 
 \subsubsection{Add/Subtract}
 Used to add or subtract two \verb|Number| objects. When applied to objects of type \verb|Note|, \verb|Chord|, or \verb|Sequence|, results in a \verb|Sequence| object with given elements concatenated. If two or more objects of different type are concatenated, the element of highest cast determines the cast. That is, a \verb|Note| added to a \verb|Sequence| would return a new \verb|Sequence| with the given note appended as a degenerate \verb|Chord| to the end.
@@ -761,7 +622,7 @@ If the end of a function is reached before the execution of an explicit \verb|re
 \section{Development Process}
 The team met once a week on Sundays to set milestones and deadlines as well as discuss progress and set design goals. The language was first designed using a collaborative approach, using whiteboards to brainstorm and Google Docs to save notes.
 
-THe team used an SVN repository hosted on Google Code to store code. Development was done using open source text editors, including vim, Eclipse, and gedit. Code was written in OCaml for the compiler and in Java for the Assembler. The Intermediate Representation (IR) for the code was in CSV format, which was created by executing the bytecode. Team members updated the repository at the end of each development session. E-mail and Google Docs were used for realtime collaboration.
+The team used an SVN repository hosted on Google Code to store code. Development was done using open source text editors, including vim, Eclipse, and gedit. Code was written in OCaml for the compiler and in Java for the Assembler. The Intermediate Representation (IR) for the code was in CSV format, which was created by executing the bytecode. Team members updated the repository at the end of each development session. E-mail and Google Docs were used for realtime collaboration.
 
 With a few exceptions each module was accompanied with tests written by the module's author. Team members were expected to supply both a test and an expected output, which could be used to verify the success of a test by each team member. Scripts were written to quickly test the code and compare it to the standard.
 \section{Style Guide}
@@ -809,15 +670,31 @@ A general style guide was used by the team during development.
 \end{tabular}
 \section{Roles and Responsibilities}
 \subsection{Akiva Bamberger}
+Designed initial structure of typing system and operators. Worked on LRM. After working on the initial scanner and AST (of a statically typed prototype), worked to build the modules for the dynamically typed language Ben developed while working on executer and compiler. Worked on modules included printing sequences to the correct CSV output, constructing new chord objects, adding break and continue, and allowing users to treat the language as statically typed. Improved the bytecode, improved the implementation of some operators, and wrote many tests, working with Fred and Ye. Edited the final report.
+
 \subsection{Ben Mann}
 Worked with Fred to set up project milestones and start writing the final report.  Wrote sections 5 and 6 of the LRM.  Starting with MICROC, implemented the major features of the language, including the dynamic typing system, most of the operators; in other words, the necessary parts of the toplevel, scanner, AST, parser, compiler, and executor.  Designed and implemented the bytecode representation.  Wrote the first tests in the language for the basic features and wrote the first script to turn a file from MIDILC code into a .wav file that could be listened to for accuracy.  After the language compiled, distributed tasks to other team members and taught them how the type system and other details were implemented.
+
 \subsection{Fred Lowenthal}
+My contributions to the written portions of the project were contributing to the proposal and LRM, and planning and writing parts of the final report 
+
+In terms of contributions to the project development, I worked on the initial parser (though many changes were made afterwards).  I also modified the assembler to handle setting instruments and tempo, through the programming and requisite research.  I also implemented some parts of the compiler and executor (and several necessary parser/AST/lexer/bytecode changes as necessary) for the tempo and instrument functions, along with adding the requisite String literal type.  I also finished implementing several operators.
 \subsection{Ye Liu}
+Worked on the proposal and LRM. Worked with Fred on the assembler, modifying it and taking out extra MIDI detais that are out of the scope of MIDILC. Wrote test cases for library functions (most scales), and some newer features (multiply). Worked on assembling the final report.
+
 \section{Languages and Tools Used}
-% TODO mention that we found the CSV2MIDI library online and modified it
-The team used O'Caml, Java, and bash scripting to complete the langauge. The tools used included: gedit and Vim for editing O'Caml; Eclipse for editing Java; and gedit for editing bash scripts. The javax.swing.midi library proved most useful for transcribing MIDI from CSV. timidity, a .midi-to-.wav converter, was used to convert .wav files from the MIDI output by the assembler. A Google code hosted SVN repository was used for version control. E-mail and Google Docs were used to share documentation.
+The team used O'Caml, Java, and bash scripting to complete the langauge. The tools used included: gedit and Vim for editing O'Caml; Eclipse for editing Java; and gedit for editing bash scripts. The javax.swing.midi library proved most useful for transcribing MIDI from CSV. A CSV2MIDI library was also used, originally authored by Stephen Steffes (http://www.penguinpeepshow.com/CSV2MIDI.php). timidity, a .midi-to-.wav converter, was used to convert .wav files from the MIDI output by the assembler. A Google code hosted SVN repository was used for version control. E-mail and Google Docs were used to share documentation.
 
 \section{Project Log}
+\subsection{SVN Activity}
+\subsubsection{Size of directories}
+\includegraphics[width=.8\textwidth]{svngraphs/dirsizepie.png}
+\subsubsection{Size of code as a function of time}
+\includegraphics[width=.8\textwidth]{svngraphs/loc.png}
+\subsubsection{Actions by time of day}
+\includegraphics[width=.8\textwidth]{svngraphs/actbytimeofday.png}
+
+\subsection{SVN Log}
 \begin{verbatim}
 ------------------------------------------------------------------------
 r117 | Akiva.Bamberger | 2010-12-18 16:51:20 -0500 (Sat, 18 Dec 2010) | 2 lines
@@ -1347,19 +1224,21 @@ Adding a file for source files...
 \includegraphics[width=\textwidth]{blockdiagram.png}
 
 \section{Interface between components}
-% TODO the reference is broken
-The input is a .m file written according to the LRM and the diagram in figure \ref{fig:block_diagram}. The input file is converted into tokens by the scanner/lexer, parsed into an abstract syntax tree, compiled into bytecode, and is further compiled into a CSV by the bytecode interpreter. Finally, the CSV file is assembled into a MIDI file by the Java-based assembler, which can then be played on any standard media player.  The two outputs generated by each .m source file is a .csv file containing CSV information, and a .midi file to be played.  All components are written in OCAML except for the assembler, which is written in Java.  The parser is generated by OCAMLYACC.  The media player is not included here and can be written in any language.
+The input is a .m file written according to the LRM and the block diagram shown in the above figure. The input file is converted into tokens by the scanner/lexer, parsed into an abstract syntax tree, compiled into bytecode, and is further compiled into a CSV by the bytecode interpreter. Finally, the CSV file is assembled into a MIDI file by the Java-based assembler, which can then be played on any standard media player.  The two outputs generated by each .m source file is a .csv file containing CSV information, and a .midi file to be played.  All components are written in OCAML except for the assembler, which is written in Java.  The parser is generated by OCAMLYACC.  The media player is not included here and can be written in any language.
 
 The MIDILC language logically consists of a lexer, parser, bytecode compiler, and assembler.  As the lexer reads in tokens, it invokes the parser.  At this point, syntax errors prevent the compiler from running and output an error.  When parsing is finished, the bytecode compiler is invoked, which generates a series of human-readable CSV bytecodes, which mimic the MIDI structure.  It is at this point that runtime errors (such as granularity issues or bounds check violation) are generated.  Finally, the assembler is run on the CSV to output a type Standard MIDI File.
 \section{Who Implemented What}
 Fred, Akiva, and Ben: Lexer, Parser, Bytecode, Executor, Compiler
 
 \noindent Fred and Ye: Assembler
+
+\noindent View the section on Project Log for more details.
 \chapter{Test Plan}
 \section{Representative Source}
 \subsection{For Loop}
 \subsubsection{Source Code}
 \begin{verbatim}
+/** Adds many notes to a sequence using a simple for loop */
 main() {
   Note a; 
   Sequence b;
@@ -1463,6 +1342,7 @@ main() {
 \subsection{Set Instrument}
 \subsubsection{Source code}
 \begin{verbatim}
+/** Sets instrument of .MIDI */
 main() {
   Note a;
   Sequence b;
@@ -1528,6 +1408,7 @@ main() {
 \subsection{Arpeggiate}
 \subsubsection{Source Code}
 \begin{verbatim}
+/** Demonstrates how a function declarations and calls work*/
 main(){
   Note a;
   Chord c;
@@ -1624,103 +1505,109 @@ An automated test suite, based off of the MICROC test suite, was used for regres
 
 Each person performed tests on their own parts of the language. The tests for the features of the complete language, as well as the library functions, were divided among the group. Here is a list of what each member implemented.
 
-\noindent Ben:
 
+\begin{verbatim}
+Ben:
 	test-add.m
-	
 	test-chord.m
-	
 	test-direct1.m
-	
 	test-divide.m
-	
 	test-dvorak.m
-	
 	test-for2.m
-	
 	test-for3.m
-	
 	test-note.m
-	
 	test-rand.m
-	
 	test-subscript.m
 
-
-\noindent Fred:
-
+Fred:
 	test-arpeggio.m
-	
 	test-casts.m
-	
 	test-chromatic.m
-	
 	test-chromatic-subscript.m
-	
 	test-direct.m
-	
 	test-equality.m
-	
 	test-gen-harmony.m
-	
 	test-global.m
-	
 	test-major.m
-	
 	test-instrument.m
-	
 	test-minor.m
-	
-	test-melody.m
-	
-	test-numerical-inequality.m
-	
 	test-shift.m
-	
+	test-melody.m
+	test-numerical-inequality.m
 	test-sub.m
-	
 	test-play-chord.m
-	
 	test-play-note.m
-	
 	test-sequence.m
-	
 	test-tempo.m
 
-\noindent Akiva:
-	
+Akiva:	
 	pi-symphony.m
-	
 	test-for1.m
-	
 	test-for4.m
-	
 	test-for5.m
-	
 	test-recursion.m
-	
 	test-stairway.m
-	
-\noindent Ye:
-	
+
+Ye:	
 	test-harmonicminor.m
-	
 	test-inequality.m
-	
 	test-majorscale.m
-	
 	test-melodicminor.m
-	
 	test-multiply.m
-	
 	test-naturalminor.m
+\end{verbatim}
 
 \chapter{Lessons Learned}
 \section{Most Important Lessons}
 \subsection{Akiva Bamberger}
+Flexibility was a big plus working on this team project. The initial implementation was ultimately scrapped for a more dynamic system. The libraries used for transcribing CSV to MIDI required integration of Java code. In addition to the changes in design along the way, there were many different level of abstractions being worked on at the same time. Working on break/continue required not only a change to the way \verb|while| loops were used, but also how \verb|for| loops were encountered.
+
+I also learned that working with a team could be fun albeit competitive when building a new language. I enjoyed working with the code and building modules to improve the work of my teammates. I also liked the competitive nature with which we wrote tests (e.g. to demonstrate the static scoping and applicative order of the language) and transcribed popular music (like Stairway of Heaven) to MIDILC.
+
+I also enjoyed using simple text editors rather than complicated IDEs for development. Using Emacs rather than bash for testing O'Caml code was very important as well. The use of an SVN repository for development was great, except for issues with merges. In the future, I would prefer to work with a Git repository, I think.
+
 \subsection{Ben Mann}
+More so than in other class projects, the scale of the task of creating a language required a solid understanding of the concepts taught in the PLT course.  At first glance, it was not at all clear how to implement the features we wanted to include.  Taking the time to fully understand the example code provided (the MicroC language) helped me to make fast progress when I finally began implementation.  Then, once understanding was complete, delegating remaining tasks to the team members was much easier.  At first, I spent too much time explaining what I had figured out.  I learned to give pointers to relevant references, such as websites or code in the repository instead of taking time that I could be spending building out more features and demos.
+
+I also learned that it is often easier simply to start working than to argue about the best way for something to be done.  Frequently, we were on the verge of getting bogged down in details, but when I started actually writing the code, implementation details worked themselves out, often thanks to the O'Caml compiler.  
+
+Lastly, I learned that the command line is often much easier to work with than an IDE.  Trying to get Eclipse running on all of the team members' machines proved more time consuming than it was worth.  Simple text editors and the Linux shell provided all of the power and flexibility required.  
+Having a source repository with version control, a mailing list that automatically updated with repository changes, an automated test suite, and Google Docs for real time collaboration made working with the team and keeping track of everyone's progress much easier.  These are features I had grown accustomed to in the corporate world and knew they would significantly contribute to the team's success.
 \subsection{Fred Lowenthal}
+My team took quite some time to truly get started, and by then, it became difficult to meet up and 
+for everyone to contribute effectively due to the team members’ schedules, and I learned that, 
+workload aside, we should have started earlier to avoid those problems. Also, we tried working 
+individually, but I found that working as our group was much more effective and efficient than only
+making individual contributions.
+
+Since I have a considerable amount of experience with working with MIDI, I didn’t experience many 
+problems with developing the output of our language, apart from doing some amounts of research, but 
+I didn’t realize until later on that some issues could have been avoided by working with other team 
+members more to make sure that everyone’s starting on the same level.
+
+I also learned that, despite our original intention to do so, it doesn’t work to separate the 
+different language components into assignments for different people (i.e. one person works on the 
+parser, another on the assembler, another on the AST, etc.). This came into play as a good part of 
+my work on the parser had to be redone for design decisions.
+
+Although I was originally very frustrated with working in OCaml, I learned to appreciate it more while working on the project, as it lent itself very well to developing a language (despite the difficulties in often having to figure out the "OCaml way" of doing things.
+
+I also learned how using a real source control system was crucial to my team's success; I had previously worked on a team project using a Google group for source control, which caused lots of problems and time wasted with resolving concurrency issues and finding things.
 \subsection{Ye Liu}
+What I have learned from this experience is how hard it is to catch up in a group project of this scale once you get behind. There will always be lots of work to do, and there will never be more free time to catch up on what you miss. Being upset that you are behind schedule, not knowing how to catch up, and being scared of asking for help or clarification will only make things worse. 
+
+I also learned the importance of testing. By testing each component individually and gradually building up the complexity of our test cases, we were able to solve problems as they occur. I was used to writing all the code first and testing as a whole later on, but the process was always tedious, even for fairly small projects. For a project of this size, incremental testing made it clearer to see where errors came from, our progress, and also helped reduce the need to deal with dependencies when a file that others depend on are found to have errors.
+
 \section{Advice for Future Teams}
+Test early and often – even with programs in our own language, since they are often harder to debug 
+than programs in C or Java.
+
+Try to figure out, while still deciding on the language specifications, what will be easier or more 
+difficult to implement. Some decisions we made didn’t necessarily lend themselves well to simple 
+implementation.
+
+Try to work as a group as much as possible, and to distribute the workload evenly that way.
+
+SVN log messages, SVN update emails, and TODO lists are your friends.
 \chapter{Appendix}
 \end{document}
