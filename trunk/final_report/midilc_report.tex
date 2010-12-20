@@ -2044,7 +2044,8 @@ let execute_prog prog =
     | ("current", (Seq ([c; l] :: _ ))) -> (Num(c))
     | ("length", (Seq ([c; l] :: _ ))) -> (Num(l))
     | _ -> raise (Failure ("illegal selection attribute"))) ; exec fp sp (pc+1)
-    (** Casting (Num -> Number, Num -> Not, Not -> Chord, 0->Seq, Cho->Seq)  @author Ben*)
+    (** Casting (Num -> Number, Num -> Not, Not -> Chord, 0->Seq, Cho->Seq)
+        @author Ben*)
   | Cst s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
       ("Number", (Num i))-> (Num(i))
     | ("Note", (Num i)) ->  (Not(i,4))
@@ -2093,7 +2094,7 @@ let execute_prog prog =
         Leq (Num <= Num)
         Greater (Num > Num)
         Geq (Num >= Num) 
-        @author Ben *)
+        @author Ben/Akiva/Fred *)
   | Bin op -> let opA = stack.(sp-2) and opB = stack.(sp-1) in     
       stack.(sp-2) <- (let boolean i = if i then Num(1) else Num(0) in
       match op with
@@ -2164,7 +2165,8 @@ let execute_prog prog =
   | Str i -> globals.(i)  <- stack.(sp-1) ; exec fp sp     (pc+1)
   | Lfp i -> stack.(sp)   <- stack.(fp+i) ; exec fp (sp+1) (pc+1)
   | Sfp i -> stack.(fp+i) <- stack.(sp-1) ; exec fp sp     (pc+1)
-    (** Sjp, to set jump points for use by break and continue  @author Akiva*)
+    (** Sjp, to set jump points for use by break and continue 
+         @author Akiva*)
   | Sjp(start_jump,end_jump,command)
             -> if command=0 
                then (jumps.(jp.(0)) <- pc+start_jump+2; 
@@ -2177,11 +2179,12 @@ let execute_prog prog =
                  else (jp.(0)<-jp.(0)-2; 
                exec fp sp (pc+1)) ); 
 
-  (** this is the print command. change it to set tempo and play  @author Fred*)
+  (** this is the print command. change it to set tempo and play 
+        @author Fred*)
   | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline ("Tempo,"
                         ^string_of_int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for set_tempo")))
-    (** Play command  @author Ben*)
+    (** Play command  @author Akiva*)
   | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline
                             (print_sequence s); exec fp sp (pc+1)
             | Cho d -> let a = List.hd (List.tl d) in let c = 
@@ -2213,7 +2216,7 @@ let execute_prog prog =
   | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) 
                  <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for rand")))
-    (** Set instrument (needs to be changed)  @author Fred*)
+    (** Set instrument @author Fred*)
   | Jsr(-6) -> (match stack.(sp-1) with Stn s -> print_endline ("Instrument,"^s); 
                                                  exec fp sp (pc+1)
 			| _ -> raise (Failure ("unexpected type for set_instrument")))
@@ -2839,6 +2842,245 @@ Sequence divide(Sequence s) {
   result = result + result;
   return result;
 }
+\end{verbatim}
+\section{components/CSV2MIDI.java}
+\begin{verbatim}
+/**
+ * CSV2MIDI.java
+ * 
+ * @author: Ye
+ * Modified from Stephen Steffes: http://www.penguinpeepshow.com/CSV2MIDI.php 
+ * to support language-specific constructs
+ * 
+ * @author: Fredric
+ * Modified to change initial instrument, and send tempo meta-event
+ * 
+ * Converts .csv files to MIDI files using the javax.sound.midi package
+ */
+
+import java.io.*;
+import javax.sound.midi.*;
+import java.lang.*;
+
+
+public class CSV2MIDI{
+	public static final byte[] getIntBytes(int input)
+	{
+		byte[] retval = new byte[3];
+		
+		retval[0] = (byte)(input >> 16 & 0xff);
+		retval[1] = (byte)(input >> 8 & 0xff);
+		retval[2] = (byte)(input & 0xff);
+		
+		return retval;
+	}
+	
+	public static final String INSTRUMENTFILE = "sorted_instruments.csv";
+	public static final int MININST = 0;
+	public static final int MAXINST = 127;
+
+	public static void main(String[] args)	throws InvalidMidiDataException {
+
+		//***** Get Inputs *****
+		if (args.length != 2)
+			printUsageAndExit();
+	
+		File outputFile = new File(args[1]);
+		Sequence sequence = null;
+
+		//Open and save the CSV file
+		CSV csvFile=new CSV(args[0]);
+		csvFile.fillVector();
+
+		//instrument and timingRes are default.
+		int timingRes=4, instrument = 1;
+
+		//***** Initialize Sequencer *****
+	try{
+            //initialize sequencer with timingRes
+			sequence = new Sequence(Sequence.PPQ, timingRes);   
+		}catch (InvalidMidiDataException e){
+			e.printStackTrace();
+			System.exit(1);
+		}
+
+		//***** Create tracks and notes *****
+		/* Track objects cannot be created by invoking their constructor
+		   directly. Instead, the Sequence object does the job. So we
+		   obtain the Track there. This links the Track to the Sequence
+		   automatically.
+		*/
+		Track track = sequence.createTrack();                    //create track
+
+	    // channel/velocity set to default; note/tick/duration will depend on input.
+		int channel=0,velocity=90;
+		int note=0,tick=0,duration=0;
+		
+		int currentCSVPos = 0;
+		
+		// instrument
+		String str = csvFile.data.elementAt(currentCSVPos).toString();
+		if(str.compareToIgnoreCase("Instrument") == 0)
+		{
+			currentCSVPos += 2;
+			String instrumentName = csvFile.data.elementAt(currentCSVPos).toString();
+			instrumentName = instrumentName.trim();
+			try
+			{
+				instrument = Integer.parseInt(instrumentName);
+				// if the instrument is a number, check its range
+				if(instrument < MININST || instrument > MAXINST)
+				{
+					System.out.println("Instrument # " + instrument + " 
+                        is not a valid instrument.\nReverting to Piano");
+					instrument = 1;
+				}
+			}
+			catch(NumberFormatException e)
+			{		
+				// look up the instrument's number from the file if it isn't a number
+				instrument = InstrumentCheck.checkInstrument(INSTRUMENTFILE, 
+                                instrumentName, MININST, MAXINST);
+				if(instrument == -1)
+				{
+					System.out.println("Instrument: " + instrumentName +
+                         " is not a valid instrument.\nReverting to Piano");
+					instrument = 1;
+				}
+				
+				// handle a blank instrument name
+				if(instrumentName.length() < 1)
+					currentCSVPos -= 1;
+			
+			}
+			finally
+			{
+				currentCSVPos += 2;
+			}
+		}
+		else
+		{
+			currentCSVPos = 0;
+		}
+		
+		ShortMessage sm = new ShortMessage( );
+        sm.setMessage(ShortMessage.PROGRAM_CHANGE, 
+            instrument, 0);  //put in instrument in this track
+	    track.add(new MidiEvent(sm, 0));
+	    
+		int oldPos = currentCSVPos;	
+		// tempo
+		str = csvFile.data.elementAt(currentCSVPos).toString();
+		if(str.compareToIgnoreCase("Tempo") == 0)
+		{
+			currentCSVPos += 2;
+			int tempo = Integer.parseInt(csvFile.data.elementAt(currentCSVPos).toString().trim());
+			int MPQN = 60000000 / tempo;
+			// Microseconds per quarter-note = Microseconds per minute / Beats Per Minute
+			MetaMessage mm = new MetaMessage();
+			// MetaEvent: Type = 81, Length = 3
+			mm.setMessage(81, getIntBytes(MPQN), 3);
+			track.add(new MidiEvent(mm, 0));
+			currentCSVPos += 2;
+		}
+		else
+		{
+			currentCSVPos = oldPos;
+		}
+		
+
+			
+		//go through each of the following lines and add notes
+		for(;currentCSVPos<csvFile.data.size();){			
+            //loop through rest of CSV file
+			try{							  //check that the current CSV position is an integer
+				tick=Integer.parseInt(csvFile.data.
+                    elementAt(currentCSVPos).toString());  //first number is tick
+				currentCSVPos+=2;
+				duration=Integer.parseInt(csvFile.data.
+                    elementAt(currentCSVPos).toString());  //second number is duration
+				currentCSVPos+=2;
+				note=Integer.parseInt(csvFile.data.
+                elementAt(currentCSVPos).toString());  //next number is note pitch
+				currentCSVPos+=2;
+
+                //add note to the track
+				track.add(createNoteOnEvent(note,tick,channel,velocity));
+                //add a noteOffEvent to terminate this note
+				track.add(createNoteOffEvent(note,tick+duration,channel));				
+			}catch(NumberFormatException e){
+           		//current CSV position not an integer
+				currentCSVPos++;
+			}
+		}
+
+
+		// Print track information
+		System.out.println( "\nTrack: ");
+     	for ( int j = 0; j < track.size(); j++ ) {
+			MidiEvent event = track.get( j );
+ 			System.out.println(" tick "+event.getTick()+", "+
+            MessageInfo.toString(event.getMessage()));
+ 		} // for
+
+
+
+		/* Now we just save the Sequence to the file we specified.
+		   The '0' (second parameter) means saving as SMF type 0.
+		   (type 1 is for multiple tracks).
+		*/
+		try{
+			MidiSystem.write(sequence, 1, outputFile);
+		}catch (IOException e){
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
+
+
+
+
+
+
+	// note representation: tick, duration, pitch
+  //turns note on
+	private static MidiEvent createNoteOnEvent(int nKey,
+         long lTick,int channel,int velocity){
+		return createNoteEvent(ShortMessage.NOTE_ON,nKey,velocity,lTick,channel);
+	}
+
+	//turns note off
+	private static MidiEvent createNoteOffEvent(int nKey, 
+            long lTick,int channel){
+         //set note to 0 velocity
+		return createNoteEvent(ShortMessage.NOTE_OFF,nKey,0,lTick,channel);  
+	}
+
+	//turns note on or off
+	private static MidiEvent createNoteEvent(int nCommand,int nKey,
+                        int nVelocity,long lTick,int channel){
+		ShortMessage message = new ShortMessage();
+		try{
+			message.setMessage(nCommand,channel,nKey,nVelocity);
+		}catch (InvalidMidiDataException e){
+			e.printStackTrace();
+			System.exit(1);
+		}
+		MidiEvent event = new MidiEvent(message,lTick);
+		return event;
+	}
+
+	private static void printUsageAndExit(){
+		out("usage:");
+		out("java CSV2MIDI <infile.csv> <outfile.midi>");
+		System.exit(1);
+	}
+
+	private static void out(String strMessage){
+		System.out.println(strMessage);
+	}
+}
+
 \end{verbatim}
 \section{tests/test-dvorak.m}
 \begin{verbatim}
