@@ -670,10 +670,10 @@ A general style guide was used by the team during development.
 \end{tabular}
 \section{Roles and Responsibilities}
 \subsection{Akiva Bamberger}
-Designed initial structure of typing system and operators. Worked on LRM. After working on the initial scanner and AST (of a statically typed prototype), worked to build the modules for the dynamically typed language Ben developed while working on executer and compiler. Worked on modules included printing sequences to the correct CSV output, constructing new chord objects, adding break and continue, and allowing users to treat the language as statically typed. Improved the bytecode, improved the implementation of some operators, and wrote many tests, working with Fred and Ye. Edited the final report.
+Designed initial structure of typing system and operators. Wrote parts of proposal on LRM. After working on the initial scanner and AST (of a statically typed prototype), worked to build the modules for the dynamically typed language Ben developed while working on executer and compiler. Worked on modules included printing sequences to the correct CSV output, constructing new chord objects, adding break and continue, and allowing users to treat the language as statically typed. Improved the bytecode, improved the implementation of some operators, and wrote many tests, working with Fred and Ye. Edited the final report.
 
 \subsection{Ben Mann}
-Worked with Fred to set up project milestones and start writing the final report.  Wrote sections 5 and 6 of the LRM.  Starting with MICROC, implemented the major features of the language, including the dynamic typing system, most of the operators; in other words, the necessary parts of the toplevel, scanner, AST, parser, compiler, and executor.  Designed and implemented the bytecode representation.  Wrote the first tests in the language for the basic features and wrote the first script to turn a file from MIDILC code into a .wav file that could be listened to for accuracy.  After the language compiled, distributed tasks to other team members and taught them how the type system and other details were implemented.
+Worked with Fred to set up project milestones and start writing the final report.  Wrote proposal and sections 5 and 6 of the LRM.  Starting with MICROC, implemented the major features of the language, including the dynamic typing system, most of the operators; in other words, the necessary parts of the toplevel, scanner, AST, parser, compiler, and executor.  Designed and implemented the bytecode representation.  Wrote the first tests in the language for the basic features and wrote the first script to turn a file from MIDILC code into a .wav file that could be listened to for accuracy.  After the language compiled, distributed tasks to other team members and taught them how the type system and other details were implemented.
 
 \subsection{Fred Lowenthal}
 My contributions to the written portions of the project were contributing to the proposal and LRM, and planning and writing parts of the final report 
@@ -1612,7 +1612,8 @@ SVN log messages, SVN update emails, and TODO lists are your friends.
 \chapter{Appendix}
 \section{ast.ml}
 \begin{verbatim}
-type op = Add | Sub | Mult | Div |  Equal | Neq | Less | Leq | Greater | Geq | Or | And | DotAdd | DotSub| Mod
+type op = Add | Sub | Mult | Div |  Equal | Neq | Less | Leq | 
+          Greater | Geq | Or | And | DotAdd | DotSub| Mod
 
 type expr =
     Literal of int
@@ -1702,19 +1703,19 @@ let string_of_program (vars, funcs) =
 \section{bytecode.ml}
 \begin{verbatim}
 type bstmt =
-    Num of int              (* Push a literal *)
-  | Cho of int list         (* Push a Chord [len; dur; start; p; p; p...] *)
-  | Seq of int list list    (* Push a sequence [[cur;len];[cho];[cho]...] *)
-  | Not of (int * int)      (* Push a Note (pitch, duration) *)
-  | Stn of string           (* Push a string literal *)
-  | Ele                     (* access an element of a sequence *)
-  | Leo                     (* Assign to an element of a sequence *)
-  | Sjp of (int * int * int)(* Set/get jump points *)
-  | Cst of string           (* Cast to a different type *)
-  | Mem of string           (* access a member of a data type using the field name *)
-  | Lmo of string           (* Assign to a member of a data type *)
+    Num of int              (* Push a literal @author Ben *)
+  | Cho of int list         (* Push a Chord [len; dur; start; p; p; p...]  @author Ben *)
+  | Seq of int list list    (* Push a sequence [[cur;len];[cho];[cho]...]  @author Ben *)
+  | Not of (int * int)      (* Push a Note (pitch, duration)  @author Ben *)
+  | Stn of string           (* Push a string literal  @author Fred *)
+  | Ele                     (* access an element of a sequence  @author Ben *)
+  | Leo                     (* Assign to an element of a sequence  @author Ben *)
+  | Sjp of (int * int * int)(* Set/get jump points  @author Akiva *)
+  | Cst of string           (* Cast to a different type  @author Ben *)
+  | Mem of string           (* access a member of a data type using the field name  @author Ben *)
+  | Lmo of string           (* Assign to a member of a data type  @author Ben *)
   | Drp                     (* Discard a value *)
-  | Bin of Ast.op           (* Perform arithmetic on top of stack *)
+  | Bin of Ast.op           (* Perform arithmetic on top of stack  @author Ben *)
   | Lod of int    (* Fetch global variable *)
   | Str of int    (* Store global variable *)
   | Lfp of int    (* Load frame pointer relative *)
@@ -1732,18 +1733,21 @@ type prog = {
     text : bstmt array; (* Code for all the functions *)
   }
   
+(*  @author Ben *)
 let string_of_list l = 
   let rec help_string_of_list l s = match l
   with [] -> s ^ "]"
   | head :: tail -> help_string_of_list tail (s ^ (string_of_int head) ^ ";") in
   help_string_of_list l "["
     
+(*  @author Ben *)
 let string_of_list_list l =
   let rec help_string_of_list_list l s = match l
   with [] -> s ^ "]"
   | head :: tail -> help_string_of_list_list tail 
             (s ^ (string_of_list head) ^ ";") in help_string_of_list_list l "["
     
+(*  @author Akiva *)
 let print_sequence m = 
   let rec help_print_sequence l s = match l 
   with [] -> s 
@@ -1764,6 +1768,7 @@ let print_sequence m =
       ^"\n" in 
   help_print_sequence (List.rev (List.tl m)) ""
     
+(* @author Ben *)
 let string_of_stmt = function
     Num(i) -> "Num " ^ string_of_int i
   | Not(i,j) -> "Not " ^ "(" ^ string_of_int i ^ "," ^ 
@@ -1807,6 +1812,7 @@ let string_of_stmt = function
   | Bra(i) -> "Bra " ^ string_of_int i
   | Hlt    -> "Hlt"
 
+(* @author Ben *)
 let string_of_prog p =
   string_of_int p.num_globals ^ " global variables\n" ^
   let funca = Array.mapi
@@ -1838,7 +1844,7 @@ let string_map_pairs map pairs =
 
 (** Note map, used to map from note literals to pitch integers *)
 let note_map = StringMap.add "C" 0 StringMap.empty
-(* Rest is given value of -500; pitches less than 0 are not printed in the end. *)
+(* Rest is given value of -500; pitches less than 0 are not printed in the end. @author Ben/Akiva *)
 let note_map = StringMap.add "R" (-500) note_map
 let note_map = StringMap.add "D" 2 note_map
 let note_map = StringMap.add "E" 4 note_map
@@ -1852,7 +1858,7 @@ let note_map = StringMap.add "q" 4 note_map
 let note_map = StringMap.add "e" 2 note_map
 let note_map = StringMap.add "s" 1 note_map
 
-(** Returns the pitch, duration of a note *)
+(** Returns the pitch, duration of a note  @author Ben *)
 let int_of_note n =
   let a = Array.make 4 0 in
   a.(0) <- StringMap.find (String.sub n 0 1) note_map;
@@ -2006,20 +2012,20 @@ open Bytecode
    ...
    Arg n *)
  
-(* Increase the start time of each chord in the sequence by shift *)   
+(* Increase the start time of each chord in the sequence by shift  @author Ben *)   
 let shift_chords chord_list shift =
   let shift_chord chord =
     [(List.hd chord); (List.nth chord 1); (List.nth chord 2) + shift] 
         @ (List.tl (List.tl (List.tl chord)))
   in List.map shift_chord chord_list
   
-(** Replace element of list*)
+(** Replace element of list  @author Ben*)
 let replace_element l i n skip = 
   let a = Array.of_list l in
   a.(i+skip) <- n; Array.to_list a
 
 let execute_prog prog =
-  (** Stack, Globals, and Jump variables *)
+  (** Stack, Globals, and Jump variables  @author Ben/Akiva*)
   let stack = Array.make 1024 (Num(0))
   and jumps = Array.make 20 0 
   and jp = Array.make 1 0
@@ -2028,7 +2034,7 @@ let execute_prog prog =
   let rec exec fp sp pc = match prog.text.(pc) with
     Num i -> stack.(sp) <- (Num(i)) ; exec fp (sp+1) (pc+1)
   | Stn s -> stack.(sp) <- (Stn(s)) ; exec fp (sp+1) (pc+1)
-    (** Member selection*)
+    (** Member selection  @author Ben *)
   | Mem s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
       ("length", (Cho(len :: _))) -> (Num(len))
     | ("start", (Cho(l))) -> (Num(List.nth l 2))
@@ -2038,7 +2044,7 @@ let execute_prog prog =
     | ("current", (Seq ([c; l] :: _ ))) -> (Num(c))
     | ("length", (Seq ([c; l] :: _ ))) -> (Num(l))
     | _ -> raise (Failure ("illegal selection attribute"))) ; exec fp sp (pc+1)
-    (** Casting (Num -> Number, Num -> Not, Not -> Chord, 0->Seq, Cho->Seq)*)
+    (** Casting (Num -> Number, Num -> Not, Not -> Chord, 0->Seq, Cho->Seq)  @author Ben*)
   | Cst s -> stack.(sp-1) <- (match (s, stack.(sp-1)) with 
       ("Number", (Num i))-> (Num(i))
     | ("Note", (Num i)) ->  (Not(i,4))
@@ -2046,21 +2052,21 @@ let execute_prog prog =
     | ("Sequence", (Num 0)) -> (Seq([[0;0]]))
     | ("Sequence", (Cho(l))) -> (Seq([[(List.nth l 1); 1]; l]))
     | _ -> raise (Failure ("illegal type cast"))) ; exec fp sp (pc+1)
-    (** Creating types (Not, Cho, Seq)*)
+    (** Creating types (Not, Cho, Seq)  @author Ben*)
   | Not (p, d) -> stack.(sp) <- (Not(p,d)) ; exec fp (sp+1) (pc+1)
   | Cho (l) -> stack.(sp) <- (Cho(l)) ; exec fp (sp+1) (pc+1)
   | Seq (ll) -> stack.(sp) <- (Seq(ll)) ; exec fp (sp+1) (pc+1)
-    (** Element Of*)
+    (** Element Of  @author Ben*)
   | Ele -> stack.(sp-2) <- (match (stack.(sp-1), stack.(sp-2)) with 
       (Cho(l), Num(i)) -> (Not((List.nth l (i + 3)), List.nth l 1))
     | (Seq(ll), Num(i)) -> (Cho(List.nth ll (i+1)))
     | _ -> raise (Failure ("unexpected types for []"))) ; exec fp (sp-1) (pc+1)
-    (** Left Element Of *)
+    (** Left Element Of  @author Ben*)
   | Leo -> stack.(sp-3) <- (match (stack.(sp-1), stack.(sp-2), stack.(sp-3)) with 
       (Cho(l), Num(i), Not(p,d)) -> (Cho(replace_element l i p 3))
     | (Seq(ll), Num(i), Cho(l)) -> Seq(replace_element ll i l 1)
     | _ -> raise (Failure ("assignment to [] failed"))) ; exec fp (sp-2) (pc+1)
-    (** Left Member Of *)
+    (** Left Member Of  @author Ben *)
   | Lmo (s) -> stack.(sp-2) <- (match (s, stack.(sp-1), stack.(sp-2)) with 
       ("start", (Cho(l)), (Num i)) -> (Cho([(List.hd l); (List.nth l 1); i] 
                 @ (List.tl (List.tl (List.tl l)))))
@@ -2086,7 +2092,8 @@ let execute_prog prog =
         Less (Num < Num)
         Leq (Num <= Num)
         Greater (Num > Num)
-        Geq (Num >= Num) *)
+        Geq (Num >= Num) 
+        @author Ben *)
   | Bin op -> let opA = stack.(sp-2) and opB = stack.(sp-1) in     
       stack.(sp-2) <- (let boolean i = if i then Num(1) else Num(0) in
       match op with
@@ -2116,7 +2123,8 @@ let execute_prog prog =
           (Num op1, Num op2) -> Num(op1 mod op2)
         | _ -> raise (Failure ("unexpected types for %")))
       | DotAdd -> (match (opA, opB) with 
-          (Not (p, d), Num op2) -> Not(p + op2, d) (* add pitch of Note to Number *)
+          (Not (p, d), Num op2) -> Not(p + op2, d) 
+          (* add pitch of Note to Number  @author Ben *)
         | _ -> raise (Failure ("unexpected types for .+")))
       | DotSub -> (match (opA, opB) with 
           (Not (p, d), Num op2) -> Not(p - op2, d) 
@@ -2156,7 +2164,7 @@ let execute_prog prog =
   | Str i -> globals.(i)  <- stack.(sp-1) ; exec fp sp     (pc+1)
   | Lfp i -> stack.(sp)   <- stack.(fp+i) ; exec fp (sp+1) (pc+1)
   | Sfp i -> stack.(fp+i) <- stack.(sp-1) ; exec fp sp     (pc+1)
-    (** Sjp, to set jump points for use by break and continue*)
+    (** Sjp, to set jump points for use by break and continue  @author Akiva*)
   | Sjp(start_jump,end_jump,command)
             -> if command=0 
                then (jumps.(jp.(0)) <- pc+start_jump+2; 
@@ -2169,11 +2177,11 @@ let execute_prog prog =
                  else (jp.(0)<-jp.(0)-2; 
                exec fp sp (pc+1)) ); 
 
-  (** this is the print command. change it to set tempo and play *)
+  (** this is the print command. change it to set tempo and play  @author Fred*)
   | Jsr(-2) -> (match stack.(sp-1) with Num i ->  print_endline ("Tempo,"
                         ^string_of_int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for set_tempo")))
-    (** Play command*)
+    (** Play command  @author Ben*)
   | Jsr(-1) -> (match stack.(sp-1) with Seq s ->  print_endline
                             (print_sequence s); exec fp sp (pc+1)
             | Cho d -> let a = List.hd (List.tl d) in let c = 
@@ -2187,9 +2195,9 @@ let execute_prog prog =
                             (List.tl (List.tl (List.tl d)))));
                 exec fp sp (pc+1)
             |_ -> raise (Failure ("unexpected type for play")))
-    (** Sequence constructor *)
+    (** Sequence constructor  @author Ben *)
   | Jsr(-3) -> stack.(sp) <- (Seq([[0;0]])) ; exec fp (sp+1) (pc+1)
-    (** Chord constructor *)
+    (** Chord constructor  @author Akiva *)
   | Jsr(-4) -> (match stack.(sp-1) with Num i ->
                 let rec chord l n m = if n>m then l else (match stack.(sp-n-1) 
                                         with Not (pitch,duration) ->
@@ -2201,11 +2209,11 @@ let execute_prog prog =
                     stack.(sp-i-1) <- (Cho(my_chord)) ; exec fp (sp-i) (pc+1)
                 | _ -> raise (Failure ("unexpected type for chord")))
 
-    (** Random number *)
+    (** Random number  @author Ben *)
   | Jsr(-5) -> (match stack.(sp-1) with Num i ->  stack.(sp-1) 
                  <- Num(Random.self_init () ; Random.int i); exec fp sp (pc+1)
             | _ -> raise (Failure ("unexpected type for rand")))
-    (** Set instrument (needs to be changed) *)
+    (** Set instrument (needs to be changed)  @author Fred*)
   | Jsr(-6) -> (match stack.(sp-1) with Stn s -> print_endline ("Instrument,"^s); 
                                                  exec fp sp (pc+1)
 			| _ -> raise (Failure ("unexpected type for set_instrument")))
@@ -2232,8 +2240,6 @@ let execute_prog prog =
 \section{midilc.ml}
 \begin{verbatim}
 type action = Ast | Bytecode | Compile
-
-(** find out how to call java from inside ml? *)
 
 let _ =
   let action = if Array.length Sys.argv > 1 then
